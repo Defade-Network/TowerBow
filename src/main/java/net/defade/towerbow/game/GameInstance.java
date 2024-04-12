@@ -1,6 +1,7 @@
 package net.defade.towerbow.game;
 
 import net.defade.towerbow.map.TowerBowMapGenerator;
+import net.defade.towerbow.teams.TeamsManager;
 import net.defade.towerbow.utils.GameEventNode;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -14,6 +15,8 @@ public class GameInstance extends InstanceContainer {
     private final GameEventNode gameEventNode = new GameEventNode(this, MinecraftServer.getGlobalEventHandler());
 
     private boolean acceptsPlayers = true;
+
+    private final TeamsManager teamsManager = new TeamsManager(this);
 
     public GameInstance(GameManager gameManager) {
         super(UUID.randomUUID(), DimensionType.OVERWORLD);
@@ -33,6 +36,20 @@ public class GameInstance extends InstanceContainer {
 
     public GameEventNode getEventNode() {
         return gameEventNode;
+    }
+
+    public TeamsManager getTeams() {
+        return teamsManager;
+    }
+
+    /**
+     * Starts the game.
+     * This function will make sure that everything is ready to start the game.
+     */
+    public void startGame() {
+        setAcceptsPlayers(false);
+
+        teamsManager.giveAllPlayersTeams();
     }
 
     public void destroy() {

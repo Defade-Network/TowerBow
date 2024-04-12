@@ -92,6 +92,7 @@ public class GameStartHandler implements Runnable {
                 case 0 -> {
                     task.cancel();
                     eventNode.unregister();
+                    gameInstance.startGame();
                 }
             }
         }
