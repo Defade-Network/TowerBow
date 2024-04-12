@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class GameManager {
+    private static final int MAX_GAME_INSTANCES = 20;
+
     private final Set<GameInstance> gameInstances = new HashSet<>();
 
     public GameManager() {
@@ -39,6 +41,8 @@ public class GameManager {
         GameInstance gameInstance = new GameInstance(this);
         MinecraftServer.getInstanceManager().registerInstance(gameInstance);
         gameInstances.add(gameInstance);
+
+        MinecraftServer.getServerApi().setAllowPlayers(gameInstances.size() < MAX_GAME_INSTANCES);
     }
 
     public void unregisterGame(GameInstance gameInstance) {
