@@ -7,13 +7,15 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    repositories {
+        mavenCentral()
+        maven("https://repo.defade.net/defade") {
+            name = "DefadeRepository"
+            credentials(PasswordCredentials::class)
+        }
+    }
 }
 
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:5.9.1"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-}
-
-tasks.test {
-    useJUnitPlatform()
+    implementation("net.defade:minestom:1.20.4-b4be863")
 }
