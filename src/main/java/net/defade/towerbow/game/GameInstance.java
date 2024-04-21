@@ -1,5 +1,6 @@
 package net.defade.towerbow.game;
 
+import net.defade.towerbow.map.LitChunk;
 import net.defade.towerbow.map.TowerBowMapGenerator;
 import net.defade.towerbow.teams.TeamsManager;
 import net.defade.towerbow.utils.GameEventNode;
@@ -22,7 +23,9 @@ public class GameInstance extends InstanceContainer {
         super(UUID.randomUUID(), DimensionType.OVERWORLD);
         this.gameManager = gameManager;
 
+        setChunkSupplier(LitChunk::new);
         setGenerator(new TowerBowMapGenerator());
+
         new GameStartHandler(this);
     }
 
