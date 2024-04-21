@@ -38,7 +38,7 @@ public class GameStartHandler implements Runnable {
 
     public GameStartHandler(GameInstance gameInstance) {
         this.gameInstance = gameInstance;
-        this.eventNode = new GameEventNode(gameInstance, gameInstance.getEventNode().getNode());
+        this.eventNode = new GameEventNode(gameInstance.getEventNode());
 
         task = gameInstance.scheduler().scheduleTask(this, TaskSchedule.immediate(), TaskSchedule.tick(1));
 
