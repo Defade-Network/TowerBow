@@ -17,5 +17,5 @@ repositories {
 }
 
 dependencies {
-    implementation("net.defade:minestom:1.20.4-b4be863")
+    implementation("net.defade:minestom:1.20.4-726941df6a")
 }

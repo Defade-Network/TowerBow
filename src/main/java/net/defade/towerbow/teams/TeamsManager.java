@@ -54,7 +54,7 @@ public class TeamsManager {
 
     public void giveAllPlayersTeams() {
         gameInstance.getPlayers().stream()
-                .filter(player -> getTeam(player) != null)
+                .filter(player -> getTeam(player) == null)
                 .forEach(this::givePlayerAvailableTeam);
     }
 }
