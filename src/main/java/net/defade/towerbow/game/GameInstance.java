@@ -1,5 +1,6 @@
 package net.defade.towerbow.game;
 
+import net.defade.towerbow.fight.FightHandler;
 import net.defade.towerbow.fight.InventoryManager;
 import net.defade.towerbow.map.LitChunk;
 import net.defade.towerbow.map.TowerBowMapGenerator;
@@ -8,18 +9,19 @@ import net.defade.towerbow.utils.GameEventNode;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.attribute.Attribute;
-import net.minestom.server.attribute.AttributeModifier;
-import net.minestom.server.attribute.AttributeOperation;
+import net.minestom.server.entity.attribute.Attribute;
+import net.minestom.server.entity.attribute.AttributeModifier;
+import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.timer.TaskSchedule;
+import net.minestom.server.utils.NamespaceID;
 import net.minestom.server.world.DimensionType;
 import java.util.UUID;
 
 public class GameInstance extends InstanceContainer {
-    private static final AttributeModifier PLAYER_SLOW_MODIFIER = new AttributeModifier(UUID.randomUUID(), "player_slow", -10000, AttributeOperation.ADDITION);
+    private static final AttributeModifier FREEZE_PLAYER_MODIFIER = new AttributeModifier(NamespaceID.from("defade:freeze_player"), -10000, AttributeOperation.ADD_VALUE);
 
     private final GameManager gameManager;
     private final GameEventNode gameEventNode = new GameEventNode(this, MinecraftServer.getGlobalEventHandler());
@@ -28,6 +30,7 @@ public class GameInstance extends InstanceContainer {
 
     private final TeamsManager teamsManager = new TeamsManager(this);
     private final InventoryManager inventoryManager = new InventoryManager(this);
+    private final FightHandler fightHandler = new FightHandler(this);
 
     public GameInstance(GameManager gameManager) {
         super(UUID.randomUUID(), DimensionType.OVERWORLD);
@@ -68,13 +71,14 @@ public class GameInstance extends InstanceContainer {
         Potion blindness = new Potion(PotionEffect.BLINDNESS, (byte) 1, 5 * 20);
         getPlayers().forEach(player -> {
             player.addEffect(blindness);
-            player.getAttribute(Attribute.MOVEMENT_SPEED).addModifier(PLAYER_SLOW_MODIFIER);
+            player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(FREEZE_PLAYER_MODIFIER);
         });
         scheduler().scheduleTask(() -> {
-            getPlayers().forEach(player -> player.getAttribute(Attribute.MOVEMENT_SPEED).removeModifier(PLAYER_SLOW_MODIFIER));
+            getPlayers().forEach(player -> player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).removeModifier(FREEZE_PLAYER_MODIFIER));
         }, TaskSchedule.seconds(5), TaskSchedule.immediate());
 
         inventoryManager.giveStartItems();
+        fightHandler.enablePvp(true);
     }
 
     public void destroy() {

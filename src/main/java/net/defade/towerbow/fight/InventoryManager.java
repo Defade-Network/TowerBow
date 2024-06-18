@@ -34,6 +34,8 @@ public class InventoryManager {
         player.getInventory().setItemStack(0, Items.GOLDEN_PICKAXE);
         player.getInventory().setItemStack(1, Items.BOW);
         player.getInventory().setItemStack(8, Items.GOLDEN_APPLE);
+
+        player.getInventory().setItemStack(9, Items.ARROW);
     }
 
     private void registerForbiddenItemMoves() {
@@ -61,7 +63,7 @@ public class InventoryManager {
         });
 
         // Register the golden apple pickup event
-        gameInstance.getEventNode().getEntityNode().addListener(PickupItemEvent.class, pickupItemEvent -> {
+        gameInstance.getEventNode().getEntityInstanceNode().addListener(PickupItemEvent.class, pickupItemEvent -> {
             if (!(pickupItemEvent.getEntity() instanceof Player player)) return;
 
             if (pickupItemEvent.getItemEntity().getItemStack().isSimilar(Items.GOLDEN_APPLE)) {
