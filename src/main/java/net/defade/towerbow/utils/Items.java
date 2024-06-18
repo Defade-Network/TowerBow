@@ -12,16 +12,10 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class Items {
-    public static final Function<Team, ItemStack> HELMET = team -> switch (team) {
-        case ORANGE -> ItemStack.of(Material.ORANGE_STAINED_GLASS);
-        case PURPLE -> ItemStack.of(Material.PURPLE_STAINED_GLASS);
-    };
+    public static final Function<Team, ItemStack> HELMET = team -> ItemStack.of(team.playerHelmet());
 
     public static final Function<Team, ItemStack> CHESTPLATE = team -> {
-        DyedItemColor teamColor = switch (team) {
-            case ORANGE -> new DyedItemColor(0xFFA500);
-            case PURPLE -> new DyedItemColor(0x800080);
-        };
+        DyedItemColor teamColor = new DyedItemColor(team.color());
 
         return ItemStack.of(Material.LEATHER_CHESTPLATE)
                 .with(ItemComponent.DYED_COLOR, teamColor)

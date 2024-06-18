@@ -2,7 +2,6 @@ package net.defade.towerbow.teams;
 
 import net.defade.towerbow.game.GameInstance;
 import net.minestom.server.entity.Player;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +11,7 @@ public class TeamsManager {
     private static final int MAX_PLAYERS_PER_TEAM = 6;
 
     private final GameInstance gameInstance;
+    private final GameTeams gameTeams = Team.getRandomTeams(); // Each game can have different team colors
     private final Map<Player, Team> teams = new HashMap<>();
 
     public TeamsManager(GameInstance gameInstance) {
@@ -38,10 +38,10 @@ public class TeamsManager {
     }
 
     public void givePlayerAvailableTeam(Player player) {
-        if (getPlayers(Team.ORANGE).size() <= getPlayers(Team.PURPLE).size()) {
-            setTeam(player, Team.ORANGE);
+        if (getPlayers(gameTeams.firstTeam()).size() <= getPlayers(gameTeams.secondTeam()).size()) {
+            setTeam(player, gameTeams.firstTeam());
         } else {
-            setTeam(player, Team.PURPLE);
+            setTeam(player, gameTeams.secondTeam());
         }
     }
 
