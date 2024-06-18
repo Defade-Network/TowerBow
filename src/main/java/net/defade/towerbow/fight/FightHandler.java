@@ -19,7 +19,7 @@ import net.minestom.server.event.trait.EntityInstanceEvent;
 
 public class FightHandler {
     private static final EventNode<EntityInstanceEvent> PVP_NODE = PvPConfig.emptyBuilder()
-            .attack(AttackConfig.DEFAULT)
+            .attack(AttackConfig.defaultBuilder().attackCooldown(false).build())
             .armorTool(ArmorToolConfig.DEFAULT)
             .damage(DamageConfig.DEFAULT)
             .food(FoodConfig.emptyBuilder(false)
