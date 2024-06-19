@@ -11,6 +11,8 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
+import net.minestom.server.event.EventListener;
+import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.potion.Potion;
@@ -78,19 +80,39 @@ public class GameInstance extends InstanceContainer {
         setAcceptsPlayers(false);
 
         teamsManager.giveAllPlayersTeams();
+        inventoryManager.giveStartItems();
 
         // Give blindness to all players for 5 seconds and don't allow them to move
         Potion blindness = new Potion(PotionEffect.BLINDNESS, (byte) 1, 5 * 20);
         getPlayers().forEach(player -> {
             player.addEffect(blindness);
             player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(FREEZE_PLAYER_MODIFIER);
+            player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).addModifier(FREEZE_PLAYER_MODIFIER);
         });
-        scheduler().scheduleTask(() -> {
-            getPlayers().forEach(player -> player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).removeModifier(FREEZE_PLAYER_MODIFIER));
-        }, TaskSchedule.seconds(5), TaskSchedule.immediate());
 
-        inventoryManager.giveStartItems();
-        fightHandler.enablePvp(true);
+        long startTime = System.currentTimeMillis();
+        getEventNode().getPlayerNode().addListener(
+                EventListener.builder(PlayerMoveEvent.class)
+                        .expireWhen(playerMoveEvent -> System.currentTimeMillis() + 5000 > startTime)
+                        .handler(playerMoveEvent -> playerMoveEvent.setCancelled(true)) // Some players might use hacked clients, so we cancel the event on the server side
+                        .build()
+        );
+
+        scheduler().scheduleTask(() -> {
+            // Allow players to move again and give them a jump boost
+            Potion jumpBoost = new Potion(PotionEffect.JUMP_BOOST, (byte) 1, 30 * 20);
+            getPlayers().forEach(player -> {
+                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).removeModifier(FREEZE_PLAYER_MODIFIER);
+                player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).removeModifier(FREEZE_PLAYER_MODIFIER);
+
+                player.addEffect(jumpBoost);
+
+                scheduler().scheduleTask(() -> {
+                    // After 30s, we enable PvP
+                    fightHandler.enablePvp(true);
+                }, TaskSchedule.seconds(30), TaskSchedule.stop());
+            });
+        }, TaskSchedule.seconds(5), TaskSchedule.stop());
     }
 
     public void destroy() {
