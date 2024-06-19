@@ -2,7 +2,6 @@ package net.defade.towerbow.game;
 
 import net.defade.towerbow.fight.FightHandler;
 import net.defade.towerbow.fight.InventoryManager;
-import net.defade.towerbow.map.LitChunk;
 import net.defade.towerbow.map.TowerBowMapGenerator;
 import net.defade.towerbow.teams.TeamsManager;
 import net.defade.towerbow.utils.GameEventNode;
@@ -15,12 +14,21 @@ import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
+import net.minestom.server.registry.DynamicRegistry;
 import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.utils.NamespaceID;
 import net.minestom.server.world.DimensionType;
 import java.util.UUID;
 
 public class GameInstance extends InstanceContainer {
+    private static DynamicRegistry.Key<DimensionType> TOWERBOW_DIMENSION = MinecraftServer.getDimensionTypeRegistry()
+            .register(
+                    NamespaceID.from("defade:towerbow"),
+                    DimensionType.builder()
+                            .ambientLight(1.0F) // Fully lit
+                            .build()
+            );
+
     private static final AttributeModifier FREEZE_PLAYER_MODIFIER = new AttributeModifier(NamespaceID.from("defade:freeze_player"), -10000, AttributeOperation.ADD_VALUE);
 
     private final GameManager gameManager;
@@ -33,10 +41,9 @@ public class GameInstance extends InstanceContainer {
     private final FightHandler fightHandler = new FightHandler(this);
 
     public GameInstance(GameManager gameManager) {
-        super(UUID.randomUUID(), DimensionType.OVERWORLD);
+        super(UUID.randomUUID(), TOWERBOW_DIMENSION);
         this.gameManager = gameManager;
 
-        setChunkSupplier(LitChunk::new);
         setGenerator(new TowerBowMapGenerator());
 
         new GameStartHandler(this);
