@@ -32,6 +32,7 @@ public class InventoryManager {
         player.getInventory().setBoots(Items.BOOTS);
 
         player.getInventory().setItemStack(0, Items.GOLDEN_PICKAXE);
+        player.getInventory().setItemInOffHand(Items.COBBLESTONE);
         player.getInventory().setItemStack(1, Items.BOW);
         player.getInventory().setItemStack(8, Items.GOLDEN_APPLE);
 
@@ -41,7 +42,6 @@ public class InventoryManager {
     private void registerForbiddenItemMoves() {
         // Don't let the player move the armor
         gameInstance.getEventNode().getPlayerNode().addListener(InventoryPreClickEvent.class, inventoryClickEvent -> {
-            System.out.println(inventoryClickEvent.getSlot());
             if (inventoryClickEvent.getSlot() >= 41 && inventoryClickEvent.getSlot() <= 44) { // Armor slots are 41-44
                 inventoryClickEvent.setCancelled(true);
             }

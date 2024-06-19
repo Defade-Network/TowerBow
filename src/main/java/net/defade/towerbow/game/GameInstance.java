@@ -2,7 +2,7 @@ package net.defade.towerbow.game;
 
 import net.defade.towerbow.fight.FightHandler;
 import net.defade.towerbow.fight.InventoryManager;
-import net.defade.towerbow.map.TowerBowMapGenerator;
+import net.defade.towerbow.map.WorldHandler;
 import net.defade.towerbow.teams.TeamsManager;
 import net.defade.towerbow.utils.GameEventNode;
 import net.kyori.adventure.text.Component;
@@ -24,7 +24,7 @@ import net.minestom.server.world.DimensionType;
 import java.util.UUID;
 
 public class GameInstance extends InstanceContainer {
-    private static DynamicRegistry.Key<DimensionType> TOWERBOW_DIMENSION = MinecraftServer.getDimensionTypeRegistry()
+    private static final DynamicRegistry.Key<DimensionType> TOWERBOW_DIMENSION = MinecraftServer.getDimensionTypeRegistry()
             .register(
                     NamespaceID.from("defade:towerbow"),
                     DimensionType.builder()
@@ -50,7 +50,7 @@ public class GameInstance extends InstanceContainer {
         super(UUID.randomUUID(), TOWERBOW_DIMENSION);
         this.gameManager = gameManager;
 
-        setGenerator(new TowerBowMapGenerator());
+        WorldHandler.register(this);
         setWorldBorder(WORLD_BORDER);
 
         new GameStartHandler(this);

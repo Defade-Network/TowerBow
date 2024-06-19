@@ -64,4 +64,6 @@ public class Items {
             .with(ItemComponent.UNBREAKABLE, new Unbreakable(false));
 
     public static final ItemStack ARROW = ItemStack.of(Material.ARROW);
+
+    public static final ItemStack COBBLESTONE = ItemStack.of(Material.COBBLESTONE).withAmount(3);
 }
