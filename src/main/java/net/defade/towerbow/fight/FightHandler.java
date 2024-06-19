@@ -12,10 +12,13 @@ import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.teams.TeamsManager;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.damage.Damage;
+import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.entity.EntityShootEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
+import net.minestom.server.instance.WorldBorder;
+import net.minestom.server.timer.TaskSchedule;
 
 public class FightHandler {
     private final EventNode<EntityInstanceEvent> PVP_NODE = PvPConfig.emptyBuilder()
@@ -65,6 +68,8 @@ public class FightHandler {
 
     public FightHandler(GameInstance gameInstance) {
         this.gameInstance = gameInstance;
+
+        enableWorldBorderDamage();
     }
 
     public void enablePvp(boolean enable) {
@@ -73,5 +78,46 @@ public class FightHandler {
         } else {
             gameInstance.getEventNode().getEntityInstanceNode().removeChild(PVP_NODE);
         }
+    }
+
+    private void enableWorldBorderDamage() {
+        gameInstance.scheduler().scheduleTask(() -> {
+            WorldBorder worldBorder = gameInstance.getWorldBorder();
+
+            for (Player player : gameInstance.getPlayers()) {
+                if (!worldBorder.inBounds(player)) {
+
+                    double closestDistanceToBorder = getClosestDistanceToBorder(player, worldBorder);
+
+                    // If the player is within 5 blocks of the border, calculate the damage to be inflicted
+                    double damageThreshold = closestDistanceToBorder + 5;
+                    if (damageThreshold < 0) {
+                        double damage = Math.max(1, Math.floor(-(damageThreshold) * 0.6));
+                        player.damage(new Damage(
+                                DamageType.OUTSIDE_BORDER,
+                                null,
+                                null,
+                                null,
+                                (float) damage
+                        ));
+                    }
+                }
+            }
+        }, TaskSchedule.immediate(), TaskSchedule.tick(1));
+    }
+
+    private static double getClosestDistanceToBorder(Player player, WorldBorder worldBorder) {
+        double radius = worldBorder.diameter() / 2;
+
+        double distanceToEastBorder = player.getPosition().x() - (worldBorder.centerX() - radius);
+        double distanceToWestBorder = (worldBorder.centerX() + radius) - player.getPosition().x();
+        double distanceToNorthBorder = player.getPosition().z() - (worldBorder.centerZ() - radius);
+        double distanceToSouthBorder = (worldBorder.centerZ() + radius) - player.getPosition().z();
+
+        // Find the minimum distance to the border
+        return Math.min(
+                Math.min(distanceToWestBorder, distanceToEastBorder),
+                Math.min(distanceToNorthBorder, distanceToSouthBorder)
+        );
     }
 }

@@ -35,7 +35,7 @@ public class GameInstance extends InstanceContainer {
     public static final int MAP_SIZE = 100; // 100x100 blocks
 
     private static final AttributeModifier FREEZE_PLAYER_MODIFIER = new AttributeModifier(NamespaceID.from("defade:freeze_player"), -10000, AttributeOperation.ADD_VALUE);
-    private static final WorldBorder WORLD_BORDER = new WorldBorder(MAP_SIZE, 0, 0, 0, 0);
+    private static final WorldBorder INITIAL_WORLD_BORDER = new WorldBorder(MAP_SIZE, 0, 0, 0, 0); // World border at the start of the game
 
     private final GameManager gameManager;
     private final GameEventNode gameEventNode = new GameEventNode(this, MinecraftServer.getGlobalEventHandler());
@@ -51,7 +51,7 @@ public class GameInstance extends InstanceContainer {
         this.gameManager = gameManager;
 
         WorldHandler.register(this);
-        setWorldBorder(WORLD_BORDER);
+        setWorldBorder(INITIAL_WORLD_BORDER);
 
         new GameStartHandler(this);
     }
@@ -113,6 +113,8 @@ public class GameInstance extends InstanceContainer {
                 }, TaskSchedule.seconds(30), TaskSchedule.stop());
             });
         }, TaskSchedule.seconds(5), TaskSchedule.stop());
+
+        scheduleWorldBorderShrink();
     }
 
     public void destroy() {
@@ -120,5 +122,12 @@ public class GameInstance extends InstanceContainer {
         getPlayers().forEach(player -> player.kick(Component.text("The instance is being destroyed.").color(NamedTextColor.RED)));
         MinecraftServer.getInstanceManager().unregisterInstance(this);
         gameEventNode.unregister();
+    }
+
+    private void scheduleWorldBorderShrink() {
+        // Schedule the world border to shrink after 10 minutes
+        scheduler().scheduleTask(() -> {
+            setWorldBorder(new WorldBorder(50, 0, 0, 0, 0), 60); // Shrink to 50x50 over 60 seconds
+        }, TaskSchedule.seconds(2), TaskSchedule.stop());
     }
 }
