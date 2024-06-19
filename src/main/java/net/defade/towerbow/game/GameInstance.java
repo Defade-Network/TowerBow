@@ -12,6 +12,7 @@ import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.registry.DynamicRegistry;
@@ -29,7 +30,10 @@ public class GameInstance extends InstanceContainer {
                             .build()
             );
 
+    public static final int MAP_SIZE = 100; // 100x100 blocks
+
     private static final AttributeModifier FREEZE_PLAYER_MODIFIER = new AttributeModifier(NamespaceID.from("defade:freeze_player"), -10000, AttributeOperation.ADD_VALUE);
+    private static final WorldBorder WORLD_BORDER = new WorldBorder(MAP_SIZE, 0, 0, 0, 0);
 
     private final GameManager gameManager;
     private final GameEventNode gameEventNode = new GameEventNode(this, MinecraftServer.getGlobalEventHandler());
@@ -45,6 +49,7 @@ public class GameInstance extends InstanceContainer {
         this.gameManager = gameManager;
 
         setGenerator(new TowerBowMapGenerator());
+        setWorldBorder(WORLD_BORDER);
 
         new GameStartHandler(this);
     }
