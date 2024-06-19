@@ -18,7 +18,7 @@ import net.minestom.server.event.entity.EntityShootEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 
 public class FightHandler {
-    private static final EventNode<EntityInstanceEvent> PVP_NODE = PvPConfig.emptyBuilder()
+    private final EventNode<EntityInstanceEvent> PVP_NODE = PvPConfig.emptyBuilder()
             .attack(AttackConfig.defaultBuilder().attackCooldown(false).build())
             .armorTool(ArmorToolConfig.DEFAULT)
             .damage(DamageConfig.DEFAULT)
