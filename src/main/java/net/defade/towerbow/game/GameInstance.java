@@ -128,6 +128,6 @@ public class GameInstance extends InstanceContainer {
         // Schedule the world border to shrink after 10 minutes
         scheduler().scheduleTask(() -> {
             setWorldBorder(new WorldBorder(50, 0, 0, 0, 0), 60); // Shrink to 50x50 over 60 seconds
-        }, TaskSchedule.seconds(2), TaskSchedule.stop());
+        }, TaskSchedule.minutes(10), TaskSchedule.stop());
     }
 }
