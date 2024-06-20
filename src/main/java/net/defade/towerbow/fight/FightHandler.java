@@ -16,6 +16,7 @@ import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.entity.EntityShootEvent;
+import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.timer.TaskSchedule;
@@ -61,6 +62,19 @@ public class FightHandler {
 
                 if (teamsManager.getTeam(player) == teamsManager.getTeam(damager)) {
                     entityDamageEvent.setCancelled(true);
+                }
+            })
+            .addListener(PlayerTickEvent.class, playerTickEvent -> { // Damage the player if below a certain height
+                if (playerTickEvent.getPlayer().getPosition().y() < 15) { // TODO: determine right height and damage
+                    playerTickEvent.getPlayer().damage(
+                            new Damage(
+                                    DamageType.FALL,
+                                    null,
+                                    null,
+                                    null,
+                                    1
+                            )
+                    );
                 }
             });
 
