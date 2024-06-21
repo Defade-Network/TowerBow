@@ -1,10 +1,12 @@
 package net.defade.towerbow.game.state;
 
 import net.defade.towerbow.game.GameInstance;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
@@ -25,6 +27,13 @@ public class GameWaitingStartHandler extends GameStateHandler {
             10, 20,
             11, 10,
             12, 5
+    );
+
+    private final BossBar bossBar = BossBar.bossBar(
+            Component.text(""),
+            1.0f,
+            BossBar.Color.BLUE,
+            BossBar.Overlay.PROGRESS
     );
 
     private int countdown = Integer.MAX_VALUE;
@@ -58,6 +67,8 @@ public class GameWaitingStartHandler extends GameStateHandler {
             int connectedPlayers = gameInstance.getPlayers().size();
             if(countdown > PLAYER_COUNTDOWN.getOrDefault(connectedPlayers, Integer.MAX_VALUE)) countdown = PLAYER_COUNTDOWN.get(connectedPlayers);
             gameInstance.setAcceptsPlayers(connectedPlayers < 12);
+
+            player.showBossBar(bossBar);
         });
     }
 
@@ -79,15 +90,17 @@ public class GameWaitingStartHandler extends GameStateHandler {
         getGameEventNode().getInstanceNode().addListener(InstanceTickEvent.class, instanceTickEvent -> {
             GameInstance gameInstance = (GameInstance) instanceTickEvent.getInstance();
 
+            updateBossBar(PLAYER_COUNTDOWN.getOrDefault(gameInstance.getPlayers().size(), Integer.MAX_VALUE));
+
             int connectedPlayers = gameInstance.getPlayers().size();
             if(connectedPlayers <= 1) {
                 countdown = Integer.MAX_VALUE;
+                ticks = 0;
                 return;
             }
 
-            if(ticks == 20) {
+            if(ticks % 20 == 0) {
                 countdown--;
-                ticks = 0;
 
                 switch (countdown) {
                     case 60, 40, 30, 20, 10, 5, 4, 3, 2, 1 -> gameInstance.sendMessage(
@@ -102,5 +115,33 @@ public class GameWaitingStartHandler extends GameStateHandler {
 
             ticks++;
         });
+    }
+
+    private void updateBossBar(int countdownTime) {
+        if (countdown == Integer.MAX_VALUE) { // We're not counting down
+            bossBar.name(
+                    Component.text("En attente de joueurs... ")
+                            .color(NamedTextColor.YELLOW)
+                            .decoration(TextDecoration.BOLD, true)
+            );
+        } else {
+            bossBar.name(
+                    Component.text("Démarrage... ")
+                            .color(NamedTextColor.YELLOW)
+                            .decoration(TextDecoration.BOLD, true)
+                            .append(Component.text("(").color(NamedTextColor.GRAY))
+                            .append(Component.text(countdown + " secondes").color(NamedTextColor.WHITE))
+                            .append(Component.text(")").color(NamedTextColor.GRAY)
+                            ));
+
+            bossBar.progress(1.0f - ((float) (ticks) / ((countdownTime * 20))));
+        }
+    }
+
+    @Override
+    public void unregister() {
+        super.unregister();
+
+        MinecraftServer.getBossBarManager().destroyBossBar(bossBar);
     }
 }
