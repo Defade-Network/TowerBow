@@ -22,10 +22,18 @@ public class GameEventNode {
     private final EventNode<PlayerEvent> playerNode;
 
     public GameEventNode(GameEventNode parent) {
-        this(parent.gameInstance, parent.childNode);
+        this(parent, true);
+    }
+
+    public GameEventNode(GameEventNode parent, boolean register) {
+        this(parent.gameInstance, parent.childNode, register);
     }
 
     public GameEventNode(GameInstance gameInstance, EventNode<Event> parentNode) {
+        this(gameInstance, parentNode, true);
+    }
+
+    public GameEventNode(GameInstance gameInstance, EventNode<Event> parentNode, boolean register) {
         this.gameInstance = gameInstance;
         this.parentNode = parentNode;
 
@@ -33,7 +41,7 @@ public class GameEventNode {
         this.entityInstanceNode = EventNode.type("game_event_node_entity_instance", ENTITY_INSTANCE_FILTER, ((event, entity) -> gameInstance == entity.getInstance()));
         this.playerNode = EventNode.type("game_event_node_player", EventFilter.PLAYER, ((playerEvent, player) -> gameInstance == player.getInstance()));
 
-        this.parentNode.addChild(childNode);
+        if (register) this.parentNode.addChild(childNode);
 
         this.childNode.addChild(instanceNode);
         this.childNode.addChild(entityInstanceNode);
@@ -50,6 +58,10 @@ public class GameEventNode {
 
     public EventNode<PlayerEvent> getPlayerNode() {
         return playerNode;
+    }
+
+    public void register() {
+        parentNode.addChild(childNode);
     }
 
     public void unregister() {
