@@ -95,6 +95,8 @@ public class GamePlayingHandler extends GameStateHandler {
             player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).addModifier(FREEZE_PLAYER_MODIFIER);
 
             player.showBossBar(bossBar);
+
+            player.setFoodSaturation(0); // Disable food saturation
         });
 
         long startTime = System.currentTimeMillis();
