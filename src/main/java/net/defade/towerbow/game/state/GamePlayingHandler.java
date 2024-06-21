@@ -1,8 +1,7 @@
-package net.defade.towerbow.game.state.playing;
+package net.defade.towerbow.game.state;
 
 import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.game.GameInstance;
-import net.defade.towerbow.game.state.GameStateHandler;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;

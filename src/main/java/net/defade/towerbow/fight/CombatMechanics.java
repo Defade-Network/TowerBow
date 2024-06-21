@@ -1,11 +1,19 @@
 package net.defade.towerbow.fight;
 
-import io.github.togar2.pvp.config.*;
+import io.github.togar2.pvp.config.ArmorToolConfig;
+import io.github.togar2.pvp.config.AttackConfig;
+import io.github.togar2.pvp.config.DamageConfig;
+import io.github.togar2.pvp.config.FoodConfig;
+import io.github.togar2.pvp.config.PotionConfig;
+import io.github.togar2.pvp.config.ProjectileConfig;
+import io.github.togar2.pvp.config.PvPConfig;
 import io.github.togar2.pvp.projectile.AbstractArrow;
 import net.defade.towerbow.game.GameInstance;
+import net.defade.towerbow.game.state.GameState;
 import net.defade.towerbow.teams.TeamsManager;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.damage.Damage;
@@ -13,6 +21,7 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.entity.EntityShootEvent;
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent;
+import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.tag.Tag;
 
@@ -28,6 +37,8 @@ public class CombatMechanics {
         disableFriendlyFire();
 
         registerLongShots();
+
+        registerDeathHandler();
     }
 
     private EventNode<EntityInstanceEvent> createPvPNode() {
@@ -116,6 +127,25 @@ public class CombatMechanics {
                         );
                     }
                 });
+    }
+
+    private void registerDeathHandler() {
+        combatMechanicsNode.addListener(PlayerDeathEvent.class, playerDeathEvent -> {
+            GameInstance gameInstance = (GameInstance) playerDeathEvent.getPlayer().getInstance();
+            Player player = playerDeathEvent.getPlayer();
+
+            player.setGameMode(GameMode.SPECTATOR);
+            player.setRespawnPoint(player.getPosition());
+
+            // Check if all the players of his team are dead
+            boolean allPlayersInTeamDead = gameInstance.getTeams().getPlayers(gameInstance.getTeams().getTeam(player))
+                    .stream()
+                    .noneMatch(teamPlayer -> teamPlayer.getGameMode() != GameMode.SPECTATOR);
+
+            if (allPlayersInTeamDead) {
+                gameInstance.setGameState(GameState.FINISHED);
+            }
+        });
     }
 
     public static EventNode<EntityInstanceEvent> create() {

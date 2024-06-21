@@ -1,7 +1,6 @@
 package net.defade.towerbow.game.state;
 
 import net.defade.towerbow.game.GameInstance;
-import net.defade.towerbow.game.state.playing.GamePlayingHandler;
 
 import java.util.function.Function;
 
