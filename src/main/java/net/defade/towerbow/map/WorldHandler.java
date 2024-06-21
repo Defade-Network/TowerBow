@@ -4,9 +4,14 @@ import it.unimi.dsi.fastutil.Pair;
 import net.defade.towerbow.game.GameInstance;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.Player;
+import net.minestom.server.entity.damage.Damage;
+import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.instance.InstanceTickEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerBlockPlaceEvent;
+import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.generator.GenerationUnit;
 import net.minestom.server.instance.generator.Generator;
@@ -21,19 +26,58 @@ public class WorldHandler implements Generator {
     The queue should thus be a FIFO queue.
     */
 
+    private final GameInstance gameInstance;
+
     public WorldHandler(GameInstance gameInstance) {
+        this.gameInstance = gameInstance;
+
+        disableFloorBreaking();
+        registerBlockDecay();
+        registerWorldBorderDamage();
+
+        gameInstance.setGenerator(this);
+    }
+
+    @Override
+    public void generate(@NotNull GenerationUnit generationUnit) {
+        // The zone is 100x100. Check if the generation unit is inside this zone or if it crosses it.
+        Point absoluteStart = generationUnit.absoluteStart();
+        Point absoluteEnd = generationUnit.absoluteEnd();
+
+        // Check if the generation unit is inside the zone
+        if (absoluteStart.blockX() >= -50 && absoluteEnd.blockX() <= 50 && absoluteStart.blockZ() >= -50 && absoluteEnd.blockZ() <= 50) {
+            generationUnit.modifier().fillHeight(0, 1, Block.BLUE_STAINED_GLASS);
+        } else {
+            int startX = Math.max(-50, absoluteStart.blockX());
+            int endX = Math.min(50, absoluteEnd.blockX());
+            int startZ = Math.max(-50, absoluteStart.blockZ());
+            int endZ = Math.min(50, absoluteEnd.blockZ());
+
+            generationUnit.modifier().fill(new Pos(startX, 0, startZ), new Pos(endX, 1, endZ), Block.BLUE_STAINED_GLASS);
+        }
+    }
+
+    private void disableFloorBreaking() {
+        gameInstance.getEventNode().getInstanceNode().addListener(PlayerBlockBreakEvent.class, event -> {
+            if (event.getBlock().registry().material() == Material.BLUE_STAINED_GLASS) { // Don't allow players to break the floor
+                event.setCancelled(true);
+            }
+        });
+    }
+
+    private void registerBlockDecay() {
         gameInstance.getEventNode().getInstanceNode()
-                .addListener(PlayerBlockBreakEvent.class, event -> {
-                    if (event.getBlock().registry().material() == Material.BLUE_STAINED_GLASS) { // Don't allow players to break the floor
-                        event.setCancelled(true);
-                    }
-                })
                 .addListener(PlayerBlockPlaceEvent.class, event -> {
                     event.consumeBlock(false);
 
                     // Register the block to be updated in the list.
-                    blockQueue.add(Pair.of(System.currentTimeMillis() + 3 * 1000, event.getBlockPosition()));
-                }).addListener(InstanceTickEvent.class, event -> {
+                    blockQueue.add(Pair.of(System.currentTimeMillis() + 90 * 1000, event.getBlockPosition()));
+                })
+                .addListener(PlayerBlockBreakEvent.class, event -> {
+                    // Remove the block from the list if it was placed
+                    blockQueue.removeIf(pair -> pair.right().equals(event.getBlockPosition()));
+                })
+                .addListener(InstanceTickEvent.class, event -> {
                     long currentTime = System.currentTimeMillis();
 
                     while (!blockQueue.isEmpty()) {
@@ -50,36 +94,57 @@ public class WorldHandler implements Generator {
                             gameInstance.setBlock(block.right(), Block.MOSSY_COBBLESTONE);
 
                             // Add the block to the queue to be updated again in 90 seconds
-                            blockQueue.add(Pair.of(currentTime + 3 * 1000, block.right()));
+                            blockQueue.add(Pair.of(currentTime + 90 * 1000, block.right()));
                         } else if (blockType.registry().material() == Material.MOSSY_COBBLESTONE) {
                             gameInstance.setBlock(block.right(), Block.AIR);
                         }
                     }
                 });
-
-        gameInstance.setGenerator(this);
     }
 
-    @Override
-    public void generate(@NotNull GenerationUnit generationUnit) {
-        // The zone is 100x100. Check if the generation unit is inside this zone or if it crosses it.
-        Point absoluteStart = generationUnit.absoluteStart();
-        Point absoluteEnd = generationUnit.absoluteEnd();
-        
-        // Check if the generation unit is inside the zone
-        if (absoluteStart.blockX() >= -50 && absoluteEnd.blockX() <= 50 && absoluteStart.blockZ() >= -50 && absoluteEnd.blockZ() <= 50) {
-            generationUnit.modifier().fillHeight(0, 1, Block.BLUE_STAINED_GLASS);
-        } else {
-            int startX = Math.max(-50, absoluteStart.blockX());
-            int endX = Math.min(50, absoluteEnd.blockX());
-            int startZ = Math.max(-50, absoluteStart.blockZ());
-            int endZ = Math.min(50, absoluteEnd.blockZ());
+    private void registerWorldBorderDamage() {
+        gameInstance.getEventNode().getInstanceNode().addListener(InstanceTickEvent.class, instanceTickEvent -> {
+            Instance instance = instanceTickEvent.getInstance();
+            WorldBorder worldBorder = instance.getWorldBorder();
 
-            generationUnit.modifier().fill(new Pos(startX, 0, startZ), new Pos(endX, 1, endZ), Block.BLUE_STAINED_GLASS);
-        }
+            for (Player player : instance.getPlayers()) {
+                if (!worldBorder.inBounds(player)) {
+
+                    double closestDistanceToBorder = getClosestDistanceToBorder(player, worldBorder);
+
+                    // If the player is within 5 blocks of the border, calculate the damage to be inflicted
+                    double damageThreshold = closestDistanceToBorder + 5;
+                    if (damageThreshold < 0) {
+                        double damage = Math.max(1, Math.floor(-(damageThreshold) * 0.6));
+                        player.damage(new Damage(
+                                DamageType.OUTSIDE_BORDER,
+                                null,
+                                null,
+                                null,
+                                (float) damage
+                        ));
+                    }
+                }
+            }
+        });
     }
 
     public static void register(GameInstance gameInstance) {
         new WorldHandler(gameInstance);
+    }
+
+    private static double getClosestDistanceToBorder(Player player, WorldBorder worldBorder) {
+        double radius = worldBorder.diameter() / 2;
+
+        double distanceToEastBorder = player.getPosition().x() - (worldBorder.centerX() - radius);
+        double distanceToWestBorder = (worldBorder.centerX() + radius) - player.getPosition().x();
+        double distanceToNorthBorder = player.getPosition().z() - (worldBorder.centerZ() - radius);
+        double distanceToSouthBorder = (worldBorder.centerZ() + radius) - player.getPosition().z();
+
+        // Find the minimum distance to the border
+        return Math.min(
+                Math.min(distanceToWestBorder, distanceToEastBorder),
+                Math.min(distanceToNorthBorder, distanceToSouthBorder)
+        );
     }
 }

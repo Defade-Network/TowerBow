@@ -1,24 +1,17 @@
 package net.defade.towerbow.game;
 
-import net.defade.towerbow.fight.FightHandler;
 import net.defade.towerbow.fight.InventoryManager;
+import net.defade.towerbow.game.state.GameState;
+import net.defade.towerbow.game.state.GameStateHandler;
 import net.defade.towerbow.map.WorldHandler;
 import net.defade.towerbow.teams.TeamsManager;
 import net.defade.towerbow.utils.GameEventNode;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.entity.attribute.Attribute;
-import net.minestom.server.entity.attribute.AttributeModifier;
-import net.minestom.server.entity.attribute.AttributeOperation;
-import net.minestom.server.event.EventListener;
-import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.WorldBorder;
-import net.minestom.server.potion.Potion;
-import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.registry.DynamicRegistry;
-import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.utils.NamespaceID;
 import net.minestom.server.world.DimensionType;
 import java.util.UUID;
@@ -33,8 +26,6 @@ public class GameInstance extends InstanceContainer {
             );
 
     public static final int MAP_SIZE = 100; // 100x100 blocks
-
-    private static final AttributeModifier FREEZE_PLAYER_MODIFIER = new AttributeModifier(NamespaceID.from("defade:freeze_player"), -10000, AttributeOperation.ADD_VALUE);
     private static final WorldBorder INITIAL_WORLD_BORDER = new WorldBorder(MAP_SIZE, 0, 0, 0, 0); // World border at the start of the game
 
     private final GameManager gameManager;
@@ -44,7 +35,8 @@ public class GameInstance extends InstanceContainer {
 
     private final TeamsManager teamsManager = new TeamsManager(this);
     private final InventoryManager inventoryManager = new InventoryManager(this);
-    private final FightHandler fightHandler = new FightHandler(this);
+
+    private GameStateHandler gameStateHandler; // The mechanics handler for the current state
 
     public GameInstance(GameManager gameManager) {
         super(UUID.randomUUID(), TOWERBOW_DIMENSION);
@@ -53,7 +45,7 @@ public class GameInstance extends InstanceContainer {
         WorldHandler.register(this);
         setWorldBorder(INITIAL_WORLD_BORDER);
 
-        new GameStartHandler(this);
+        setGameState(GameState.WAITING_START);
     }
 
     public boolean acceptsPlayers() {
@@ -79,42 +71,9 @@ public class GameInstance extends InstanceContainer {
     public void startGame() {
         setAcceptsPlayers(false);
 
+        setGameState(GameState.PLAYING);
         teamsManager.giveAllPlayersTeams();
-        inventoryManager.giveStartItems();
-
-        // Give blindness to all players for 5 seconds and don't allow them to move
-        Potion blindness = new Potion(PotionEffect.BLINDNESS, (byte) 1, 5 * 20);
-        getPlayers().forEach(player -> {
-            player.addEffect(blindness);
-            player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(FREEZE_PLAYER_MODIFIER);
-            player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).addModifier(FREEZE_PLAYER_MODIFIER);
-        });
-
-        long startTime = System.currentTimeMillis();
-        getEventNode().getPlayerNode().addListener(
-                EventListener.builder(PlayerMoveEvent.class)
-                        .expireWhen(playerMoveEvent -> System.currentTimeMillis() + 5000 > startTime)
-                        .handler(playerMoveEvent -> playerMoveEvent.setCancelled(true)) // Some players might use hacked clients, so we cancel the event on the server side
-                        .build()
-        );
-
-        scheduler().scheduleTask(() -> {
-            // Allow players to move again and give them a jump boost
-            Potion jumpBoost = new Potion(PotionEffect.JUMP_BOOST, (byte) 1, 30 * 20);
-            getPlayers().forEach(player -> {
-                player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).removeModifier(FREEZE_PLAYER_MODIFIER);
-                player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).removeModifier(FREEZE_PLAYER_MODIFIER);
-
-                player.addEffect(jumpBoost);
-
-                scheduler().scheduleTask(() -> {
-                    // After 30s, we enable PvP
-                    fightHandler.enablePvp(true);
-                }, TaskSchedule.seconds(30), TaskSchedule.stop());
-            });
-        }, TaskSchedule.seconds(5), TaskSchedule.stop());
-
-        scheduleWorldBorderShrink();
+        inventoryManager.giveStartItems(); // TODO: manage inventory with a state handler
     }
 
     public void destroy() {
@@ -124,10 +83,12 @@ public class GameInstance extends InstanceContainer {
         gameEventNode.unregister();
     }
 
-    private void scheduleWorldBorderShrink() {
-        // Schedule the world border to shrink after 10 minutes
-        scheduler().scheduleTask(() -> {
-            setWorldBorder(new WorldBorder(50, 0, 0, 0, 0), 60); // Shrink to 50x50 over 60 seconds
-        }, TaskSchedule.minutes(10), TaskSchedule.stop());
+    public void setGameState(GameState gameState) {
+        if (gameStateHandler != null) {
+            gameStateHandler.unregister();
+        }
+
+        gameStateHandler = gameState.createStateHandler(this);
+        gameStateHandler.register();
     }
 }
