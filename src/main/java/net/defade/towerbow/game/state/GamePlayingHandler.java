@@ -1,5 +1,6 @@
 package net.defade.towerbow.game.state;
 
+import net.defade.towerbow.bonus.BonusBlockManager;
 import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.teams.GameTeams;
@@ -35,6 +36,7 @@ public class GamePlayingHandler extends GameStateHandler {
     private static final int IMMUNITY_TICKS = 30 * 20; // 30 seconds
 
     private final GameInstance gameInstance;
+    private final BonusBlockManager bonusBlockManager;
 
     private final BossBar bossBar = BossBar.bossBar(
             Component.text(),
@@ -46,10 +48,12 @@ public class GamePlayingHandler extends GameStateHandler {
 
     private PlayingState playingState = PlayingState.IMMOBILE;
     private int tickCounter = 0; // Used to schedule tasks and events like the world border shrinking
+    private int ticksBeforeNextBonusBlock = 4 * 60 * 20; // The first bonus block will spawn after 4 minutes
 
     public GamePlayingHandler(GameInstance gameInstance) {
         super(gameInstance);
         this.gameInstance = gameInstance;
+        this.bonusBlockManager = new BonusBlockManager(gameInstance);
 
         getGameEventNode().getInstanceNode().addListener(InstanceTickEvent.class, instanceTickEvent -> {
             tickCounter++;
@@ -76,7 +80,7 @@ public class GamePlayingHandler extends GameStateHandler {
 
                     sidebar.createLine(new Sidebar.ScoreboardLine(
                             "bonus_block",
-                            getBonusBlockComponent("??:??"), // TODO when bonus blocks will be implemented
+                            getBonusBlockComponent("4:00"),
                             4,
                             Sidebar.NumberFormat.blank()
                     ));
@@ -114,6 +118,12 @@ public class GamePlayingHandler extends GameStateHandler {
                 }
                 case TICKS_BEFORE_WORLD_BORDER_SHRINK ->
                         gameInstance.setWorldBorder(new WorldBorder(50, 0, 0, 0, 0), 60); // Shrink to 50x50 over 60 seconds
+            }
+
+            if (tickCounter == ticksBeforeNextBonusBlock) {
+                ticksBeforeNextBonusBlock += 60 * 20; // Add 1 minute
+
+                bonusBlockManager.spawnBonusBlock();
             }
         });
     }
@@ -213,7 +223,9 @@ public class GamePlayingHandler extends GameStateHandler {
         int borderShrinkSecondsLeft = Math.max(ticksLeftBeforeBorderShrink, 0) / 20;
         String borderShrinkFormattedTime = String.format("%02d:%02d", borderShrinkSecondsLeft / 60, borderShrinkSecondsLeft % 60);
 
-        String bonusBlockFormattedTime = "??:??"; // TODO when bonus blocks will be implemented
+        int ticksLeftBeforeBonusBlock = ticksBeforeNextBonusBlock - tickCounter;
+        int bonusBlockSecondsLeft = Math.max(ticksLeftBeforeBonusBlock, 0) / 20;
+        String bonusBlockFormattedTime = String.format("%02d:%02d", bonusBlockSecondsLeft / 60, bonusBlockSecondsLeft % 60);
 
         teamSidebar.values().forEach(sidebar -> {
             sidebar.updateLineContent("bonus_block", getBonusBlockComponent(bonusBlockFormattedTime));
