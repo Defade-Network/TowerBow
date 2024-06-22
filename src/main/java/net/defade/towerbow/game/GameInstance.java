@@ -71,12 +71,12 @@ public class GameInstance extends InstanceContainer {
     public void startGame() {
         setAcceptsPlayers(false);
 
-        setGameState(GameState.PLAYING);
-
         getPlayers().forEach(player -> player.setEnableRespawnScreen(false)); // Disable respawn screen
 
         teamsManager.giveAllPlayersTeams();
         inventoryManager.giveStartItems(); // TODO: manage inventory with a state handler
+
+        setGameState(GameState.PLAYING);
     }
 
     public void destroy() {
