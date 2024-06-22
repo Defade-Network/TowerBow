@@ -10,6 +10,7 @@ import java.util.Set;
 
 public class GameManager {
     private static final int MAX_GAME_INSTANCES = 20;
+    private static final int MAX_PLAYERS = 12; // TODO
 
     private final Set<GameInstance> gameInstances = new HashSet<>();
 

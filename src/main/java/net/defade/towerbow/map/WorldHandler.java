@@ -18,13 +18,15 @@ import net.minestom.server.instance.generator.Generator;
 import net.minestom.server.item.Material;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayDeque;
+import java.util.PriorityQueue;
 import java.util.Queue;
 
 public class WorldHandler implements Generator {
-    private final Queue<Pair<Long, Point>> blockQueue = new ArrayDeque<>(); /* The Long is the timestamp of the block. We want to check if the time
+    /* The Long is the timestamp of the block. We want to check if the time
     has been elapsed so instead of checking the whole list we'll check only the first elements and stop once we reach a block that shouldn't be changed yet.
     The queue should thus be a FIFO queue.
     */
+    private final Queue<Pair<Long, Point>> blockQueue = new PriorityQueue<>((a, b) -> (int) (a.left() - b.left()));
 
     private final GameInstance gameInstance;
 
@@ -55,6 +57,15 @@ public class WorldHandler implements Generator {
 
             generationUnit.modifier().fill(new Pos(startX, 0, startZ), new Pos(endX, 1, endZ), Block.BLUE_STAINED_GLASS);
         }
+    }
+
+    /**
+     * Register a block to be updated in the future.
+     * @param pos The position of the block
+     * @param time The time in milliseconds when the block should be updated
+     */
+    public void registerBlockDecay(Point pos, long time) {
+        blockQueue.add(Pair.of(System.currentTimeMillis() + time, pos));
     }
 
     private void disableFloorBreaking() {
