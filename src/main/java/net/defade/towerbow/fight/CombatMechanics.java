@@ -24,14 +24,18 @@ import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEve
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.tag.Tag;
+import java.util.UUID;
 
 public class CombatMechanics {
+    public static final Tag<Integer> PLAYER_KILLS = Tag.Integer("kills");
+    private static final Tag<UUID> LAST_DAMAGER_UUID = Tag.UUID("last_damager"); // Used to store the last player who damaged the player
+
     private static final Tag<Pos> PLAYER_SHOOT_POS = Tag.Structure("arrow_touched_ground", Pos.class); // Position at which the player shot the arrow
     private static final Tag<Boolean> ARROW_TOUCHED_GROUND = Tag.Boolean("arrow_touched_ground"); // Used to check if the arrow can be considered a longshot
 
     private final EventNode<EntityInstanceEvent> combatMechanicsNode;
 
-    private CombatMechanics() {
+    private CombatMechanics(GameInstance gameInstance) {
         this.combatMechanicsNode = createPvPNode();
         disableArrowSpread();
         disableFriendlyFire();
@@ -39,6 +43,8 @@ public class CombatMechanics {
         registerLongShots();
 
         registerDeathHandler();
+
+        registerKillCounter(gameInstance);
     }
 
     private EventNode<EntityInstanceEvent> createPvPNode() {
@@ -148,7 +154,22 @@ public class CombatMechanics {
         });
     }
 
-    public static EventNode<EntityInstanceEvent> create() {
-        return new CombatMechanics().combatMechanicsNode;
+    private void registerKillCounter(GameInstance gameInstance) {
+        gameInstance.getPlayers().forEach(player -> player.setTag(PLAYER_KILLS, 0));
+
+        combatMechanicsNode.addListener(EntityDamageEvent.class, entityDamageEvent -> {
+            if (!(entityDamageEvent.getDamage().getSource() instanceof Player damager)) return;
+
+            entityDamageEvent.getEntity().setTag(LAST_DAMAGER_UUID, damager.getUuid());
+        }).addListener(PlayerDeathEvent.class, playerDeathEvent -> {
+            Player killer = gameInstance.getPlayerByUuid(playerDeathEvent.getPlayer().getTag(LAST_DAMAGER_UUID));
+            if (killer == null || killer == playerDeathEvent.getPlayer()) return; // Ignore self kills
+
+            killer.setTag(PLAYER_KILLS, killer.getTag(PLAYER_KILLS) + 1);
+        });
+    }
+
+    public static EventNode<EntityInstanceEvent> create(GameInstance gameInstance) {
+        return new CombatMechanics(gameInstance).combatMechanicsNode;
     }
 }

@@ -29,6 +29,10 @@ public class TeamsManager {
         teams.put(player, team);
     }
 
+    public GameTeams getGameTeams() {
+        return gameTeams;
+    }
+
     public Team getTeam(Player player) {
         return teams.get(player);
     }

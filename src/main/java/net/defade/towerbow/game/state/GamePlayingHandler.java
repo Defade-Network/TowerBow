@@ -2,12 +2,16 @@ package net.defade.towerbow.game.state;
 
 import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.game.GameInstance;
+import net.defade.towerbow.teams.GameTeams;
 import net.defade.towerbow.teams.Team;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.entity.GameMode;
+import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
@@ -49,7 +53,7 @@ public class GamePlayingHandler extends GameStateHandler {
 
         getGameEventNode().getInstanceNode().addListener(InstanceTickEvent.class, instanceTickEvent -> {
             tickCounter++;
-            updateBossBar();
+            updateScoreboard();
 
             if (playingState == PlayingState.IMMOBILE && tickCounter == 5 * 20) {
                 Potion jumpBoost = new Potion(PotionEffect.JUMP_BOOST, (byte) 1, IMMUNITY_TICKS);
@@ -90,7 +94,7 @@ public class GamePlayingHandler extends GameStateHandler {
 
             switch (tickCounter) {
                 case IMMUNITY_TICKS -> { // The players lost their jump boost effect, we can now enable damages
-                    getGameEventNode().getEntityInstanceNode().addChild(CombatMechanics.create());
+                    getGameEventNode().getEntityInstanceNode().addChild(CombatMechanics.create(gameInstance));
 
                     getGameEventNode().getEntityInstanceNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
                         if (playerTickEvent.getPlayer().getPosition().y() < 15) { // TODO: determine right height and damage
@@ -204,7 +208,7 @@ public class GamePlayingHandler extends GameStateHandler {
         });
     }
 
-    private void updateBossBar() {
+    private void updateScoreboard() {
         int ticksLeftBeforeBorderShrink = TICKS_BEFORE_WORLD_BORDER_SHRINK - tickCounter;
         int borderShrinkSecondsLeft = Math.max(ticksLeftBeforeBorderShrink, 0) / 20;
         String borderShrinkFormattedTime = String.format("%02d:%02d", borderShrinkSecondsLeft / 60, borderShrinkSecondsLeft % 60);
@@ -215,6 +219,8 @@ public class GamePlayingHandler extends GameStateHandler {
             sidebar.updateLineContent("bonus_block", getBonusBlockComponent(bonusBlockFormattedTime));
             sidebar.updateLineContent("border", getBorderShrinkComponent(borderShrinkFormattedTime));
         });
+
+        if (playingState == PlayingState.PLAYING) gameInstance.getPlayers().forEach(player -> player.sendActionBar(generateActionBarForPlayer(player)));
 
         if (tickCounter <= IMMUNITY_TICKS) {
             bossBar.name(Component.text("Invincibilité").color(NamedTextColor.YELLOW).decoration(TextDecoration.BOLD, true)
@@ -249,6 +255,28 @@ public class GamePlayingHandler extends GameStateHandler {
         );
 
         bossBar.progress(1.0f - ((float) tickCounter / TICKS_BEFORE_WORLD_BORDER_SHRINK));
+    }
+
+    private Component generateActionBarForPlayer(Player player) {
+        GameTeams gameTeams = gameInstance.getTeams().getGameTeams();
+        Component component = Component.text("");
+
+        for (Player playerInTeam : gameInstance.getTeams().getPlayers(gameTeams.firstTeam())) {
+            TextColor heartColor = playerInTeam.getGameMode() == GameMode.SPECTATOR ? NamedTextColor.BLACK : TextColor.color(gameTeams.firstTeam().color());
+            component = component.append(Component.text("❤ ").color(heartColor));
+        }
+
+        component = component
+                .append(Component.text("| ").color(NamedTextColor.GRAY))
+                .append(Component.text(player.getTag(CombatMechanics.PLAYER_KILLS) + " kills").color(NamedTextColor.YELLOW))
+                .append(Component.text(" | ").color(NamedTextColor.GRAY));
+
+        for (Player playerInTeam : gameInstance.getTeams().getPlayers(gameTeams.secondTeam())) {
+            TextColor heartColor = playerInTeam.getGameMode() == GameMode.SPECTATOR ? NamedTextColor.BLACK : TextColor.color(gameTeams.secondTeam().color());
+            component = component.append(Component.text("❤ ").color(heartColor));
+        }
+
+        return component;
     }
 
     private static Component getBonusBlockComponent(String time) {
