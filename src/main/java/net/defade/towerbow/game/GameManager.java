@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class GameManager {
+    public static final int MIN_PLAYERS = 4;
+    public static final int MAX_PLAYERS = 12;
     private static final int MAX_GAME_INSTANCES = 20;
 
     private final Set<GameInstance> gameInstances = new HashSet<>();

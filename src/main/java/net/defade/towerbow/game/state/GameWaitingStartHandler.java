@@ -1,6 +1,7 @@
 package net.defade.towerbow.game.state;
 
 import net.defade.towerbow.game.GameInstance;
+import net.defade.towerbow.game.GameManager;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -29,6 +30,7 @@ public class GameWaitingStartHandler extends GameStateHandler {
             12, 5
     );
 
+    private final GameInstance gameInstance;
     private final BossBar bossBar = BossBar.bossBar(
             Component.text(""),
             1.0f,
@@ -36,11 +38,11 @@ public class GameWaitingStartHandler extends GameStateHandler {
             BossBar.Overlay.PROGRESS
     );
 
-    private int countdown = Integer.MAX_VALUE;
-    private int ticks = 0;
+    private int tickCountdown = Integer.MAX_VALUE;
 
     public GameWaitingStartHandler(GameInstance gameInstance) {
         super(gameInstance);
+        this.gameInstance = gameInstance;
 
         registerJoinMessages();
         registerLeaveMessages();
@@ -65,7 +67,10 @@ public class GameWaitingStartHandler extends GameStateHandler {
             player.teleport(new Pos(0, 1, 0));
 
             int connectedPlayers = gameInstance.getPlayers().size();
-            if(countdown > PLAYER_COUNTDOWN.getOrDefault(connectedPlayers, Integer.MAX_VALUE)) countdown = PLAYER_COUNTDOWN.get(connectedPlayers);
+            if (connectedPlayers >= GameManager.MIN_PLAYERS) {
+                tickCountdown = Math.min(tickCountdown, PLAYER_COUNTDOWN.get(connectedPlayers) * 20);
+            }
+
             gameInstance.setAcceptsPlayers(connectedPlayers < 12);
 
             player.showBossBar(bossBar);
@@ -83,6 +88,10 @@ public class GameWaitingStartHandler extends GameStateHandler {
                                     .append(Component.text(" a quitté la partie. ")).color(TextColor.color(255, 0, 0)))
                             .append(Component.text("(" + (instance.getPlayers().size() - 1) + "/12)").color(TextColor.color(157, 157, 157)))
             );
+
+            if (instance.getPlayers().size() - 1 < GameManager.MIN_PLAYERS) {
+                tickCountdown = Integer.MAX_VALUE;
+            }
         });
     }
 
@@ -90,51 +99,46 @@ public class GameWaitingStartHandler extends GameStateHandler {
         getGameEventNode().getInstanceNode().addListener(InstanceTickEvent.class, instanceTickEvent -> {
             GameInstance gameInstance = (GameInstance) instanceTickEvent.getInstance();
 
-            updateBossBar(PLAYER_COUNTDOWN.getOrDefault(gameInstance.getPlayers().size(), Integer.MAX_VALUE));
+            updateBossBar(PLAYER_COUNTDOWN.getOrDefault(gameInstance.getPlayers().size(), 1));
 
             int connectedPlayers = gameInstance.getPlayers().size();
-            if(connectedPlayers <= 1) {
-                countdown = Integer.MAX_VALUE;
-                ticks = 0;
+            if (connectedPlayers < GameManager.MIN_PLAYERS) {
                 return;
             }
 
-            if(ticks % 20 == 0) {
-                countdown--;
+            tickCountdown--;
 
-                switch (countdown) {
-                    case 60, 40, 30, 20, 10, 5, 4, 3, 2, 1 -> gameInstance.sendMessage(
-                            Component.text("» ").color(TextColor.color(NamedTextColor.GRAY))
-                                    .append(Component.text("La partie commence dans ").color(TextColor.color(255, 255, 75)))
-                                    .append(Component.text(countdown).color(TextColor.color(250, 65, 65)))
-                                    .append(Component.text(" secondes.").color(TextColor.color(255, 255, 75)).decoration(TextDecoration.BOLD, false))
-                    );
-                    case 0 -> gameInstance.startGame();
-                }
+            switch (tickCountdown * 20) {
+                case 60, 40, 30, 20, 10, 5, 4, 3, 2, 1 -> gameInstance.sendMessage(
+                        Component.text("» ").color(TextColor.color(NamedTextColor.GRAY))
+                                .append(Component.text("La partie commence dans ").color(TextColor.color(255, 255, 75)))
+                                .append(Component.text(tickCountdown / 20).color(TextColor.color(250, 65, 65)))
+                                .append(Component.text(" secondes.").color(TextColor.color(255, 255, 75)).decoration(TextDecoration.BOLD, false))
+                );
+                case 0 -> gameInstance.startGame();
             }
-
-            ticks++;
         });
     }
 
     private void updateBossBar(int countdownTime) {
-        if (countdown == Integer.MAX_VALUE) { // We're not counting down
+        if (gameInstance.getPlayers().size() < GameManager.MIN_PLAYERS) {
             bossBar.name(
                     Component.text("En attente de joueurs... ")
                             .color(NamedTextColor.YELLOW)
                             .decoration(TextDecoration.BOLD, true)
             );
+            bossBar.progress(1.0f);
         } else {
             bossBar.name(
                     Component.text("Démarrage... ")
                             .color(NamedTextColor.YELLOW)
                             .decoration(TextDecoration.BOLD, true)
                             .append(Component.text("(").color(NamedTextColor.GRAY))
-                            .append(Component.text(countdown + " secondes").color(NamedTextColor.WHITE))
+                            .append(Component.text(tickCountdown / 20 + " secondes").color(NamedTextColor.WHITE))
                             .append(Component.text(")").color(NamedTextColor.GRAY)
                             ));
 
-            bossBar.progress(1.0f - ((float) (ticks) / ((countdownTime * 20))));
+            bossBar.progress((float) tickCountdown / (countdownTime * 20));
         }
     }
 
