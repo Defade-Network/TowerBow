@@ -6,11 +6,14 @@ import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.teams.GameTeams;
 import net.defade.towerbow.teams.Team;
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.title.Title;
+import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
@@ -27,7 +30,10 @@ import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.scoreboard.Sidebar;
+import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.utils.NamespaceID;
+
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,12 +70,24 @@ public class GamePlayingHandler extends GameStateHandler {
             if (playingState == PlayingState.IMMOBILE && tickCounter == 5 * 20) {
                 Potion jumpBoost = new Potion(PotionEffect.JUMP_BOOST, (byte) 2, IMMUNITY_TICKS);
                 gameInstance.getPlayers().forEach(player -> {
+
                     player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).removeModifier(FREEZE_PLAYER_MODIFIER);
                     player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).removeModifier(FREEZE_PLAYER_MODIFIER);
+                    player.getAttribute(Attribute.PLAYER_BLOCK_INTERACTION_RANGE).setBaseValue(4.5);
 
                     player.addEffect(jumpBoost);
 
                     player.showBossBar(bossBar);
+
+                    // Starting sound
+                    player.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDER_DRAGON_GROWL).pitch(1.2F).volume(0.5F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_PLING).pitch(2.0F).volume(1F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_PLING).pitch(1.0F).volume(1F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_PLING).pitch(0.0F).volume(1F).build(), player.getPosition());
+
+                    player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(250),Duration.ofMillis(1500),Duration.ofMillis(250)));
+                    player.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+                    player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<yellow>Montez vite!</yellow>"));
                 });
 
                 playingState = PlayingState.INVINCIBLE;
@@ -102,6 +120,14 @@ public class GamePlayingHandler extends GameStateHandler {
                 case IMMUNITY_TICKS -> { // The players lost their jump boost effect, we can now enable damages
                     getGameEventNode().getEntityInstanceNode().addChild(CombatMechanics.create(gameInstance));
 
+                    // Invincibility lost sound
+                    gameInstance.getPlayers().forEach(player -> {
+                        player.playSound(Sound.sound().type(SoundEvent.ITEM_TRIDENT_THUNDER).pitch(1F).volume(0.5F).build(), player.getPosition());
+                        player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(250),Duration.ofMillis(1500),Duration.ofMillis(250)));
+                        player.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+                        player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<gray>Période d'invincibilité terminée!</gray>"));
+                    });
+
                     getGameEventNode().getEntityInstanceNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
                         if (playerTickEvent.getPlayer().getPosition().y() < 15) { // TODO: determine right height and damage
                             playerTickEvent.getPlayer().damage(
@@ -111,21 +137,42 @@ public class GamePlayingHandler extends GameStateHandler {
                                             null,
                                             null,
                                             1
+
                                     )
                             );
+
+                            playerTickEvent.getPlayer().sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(750)));
+                            playerTickEvent.getPlayer().sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MONTEZ VITE!!</b></dark_red>"));
+                            playerTickEvent.getPlayer().sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Vous êtes trop bas!</red>"));
                         }
                     });
 
                     playingState = PlayingState.PLAYING;
                 }
-                case TICKS_BEFORE_WORLD_BORDER_SHRINK ->
+                case TICKS_BEFORE_WORLD_BORDER_SHRINK -> {
                         gameInstance.setWorldBorder(new WorldBorder(50, 0, 0, 0, 0), 60); // Shrink to 50x50 over 60 seconds
+                        // Border shrinking sound & message
+                        gameInstance.getPlayers().forEach(player -> {
+                            player.playSound(Sound.sound().type(SoundEvent.ENTITY_ELDER_GUARDIAN_CURSE).pitch(0F).volume(0.5F).build(), player.getPosition());
+                            player.sendMessage(MM.deserialize(
+                                    "<dark_red>\uD83C\uDFF9 <b>BORDURE!</b></dark_red> <red>La bordure réduit jusqu'au centre!</red>"
+                            ));
+                        });
+                }
             }
 
             if (tickCounter == ticksBeforeNextBonusBlock) {
                 ticksBeforeNextBonusBlock += 60 * 20; // Add 1 minute
 
                 bonusBlockManager.spawnBonusBlock();
+                gameInstance.sendMessage(MM.deserialize(
+                        "<dark_purple>\uD83C\uDFF9 <b>BLOC BONUS!</b></dark_purple> <light_purple>Un bloc bonus est apparu!</light_purple>"
+                ));
+                gameInstance.getPlayers().forEach(player -> {
+                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_OMINOUS_ACTIVATE).pitch(1F).volume(0.5F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.ENTITY_EVOKER_PREPARE_SUMMON).pitch(2F).volume(0.5F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_OPEN_SHUTTER).pitch(1F).volume(0.5F).build(), player.getPosition());
+                });
             }
         });
     }
@@ -140,6 +187,7 @@ public class GamePlayingHandler extends GameStateHandler {
             player.addEffect(blindness);
             player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(FREEZE_PLAYER_MODIFIER);
             player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).addModifier(FREEZE_PLAYER_MODIFIER);
+            player.getAttribute(Attribute.PLAYER_BLOCK_INTERACTION_RANGE).setBaseValue(0);
 
             player.setFoodSaturation(0); // Disable food saturation
         });
@@ -246,6 +294,8 @@ public class GamePlayingHandler extends GameStateHandler {
             bossBar.color(BossBar.Color.YELLOW);
 
             bossBar.progress(1.0f - ((float) tickCounter / IMMUNITY_TICKS));
+
+            gameInstance.getPlayers().forEach(player -> player.sendActionBar(MM.deserialize("<gray>Montez! Vous êtes invincible.</gray>")));
             return;
         }
 

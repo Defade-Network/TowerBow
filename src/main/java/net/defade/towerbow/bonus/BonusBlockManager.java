@@ -2,17 +2,28 @@ package net.defade.towerbow.bonus;
 
 import io.github.togar2.pvp.projectile.AbstractArrow;
 import net.defade.towerbow.game.GameInstance;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.title.Title;
+import net.kyori.adventure.title.TitlePart;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.block.BlockHandler;
+import net.minestom.server.network.packet.server.play.ParticlePacket;
+import net.minestom.server.particle.Particle;
+import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
 import net.minestom.server.utils.NamespaceID;
 import org.jetbrains.annotations.NotNull;
+
+import java.time.Duration;
 import java.util.Map;
 
 public class BonusBlockManager implements BlockHandler {
+    private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final Tag<String> BONUS_BLOCK_TAG = Tag.String("bonus_block");
     private static final Block[] WOOL_BLOCKS = new Block[] {
             Block.WHITE_WOOL,
@@ -67,12 +78,22 @@ public class BonusBlockManager implements BlockHandler {
 
     @Override
     public void tick(@NotNull BlockHandler.Tick tick) {
-        if (gameInstance.getWorldAge() % 30 == 0) {
+        if (gameInstance.getWorldAge() % 20 == 0) {
             Block block = tick.getBlock();
             gameInstance.setBlock(tick.getBlockPosition(), getRandomBlock(block)
                     .withHandler(this)
                     .withNbt(block.nbt())
             );
+            gameInstance.playSound(Sound.sound().type(SoundEvent.BLOCK_BEACON_AMBIENT).pitch(1F).volume(2F).build(), tick.getBlockPosition()); //Bonus bloc ambient sound
+            ParticlePacket particlePacket = new ParticlePacket(
+                    Particle.END_ROD,
+                    true,
+                    tick.getBlockPosition().add(0.5,0.5,0.5),
+                    new Vec(0, 0, 0),
+                    0.1F,
+                    20
+            );
+            gameInstance.sendGroupedPacket(particlePacket);
         }
     }
 
@@ -98,7 +119,28 @@ public class BonusBlockManager implements BlockHandler {
                 bonusBlock.onHit(shooter);
                 gameInstance.setBlock(projectileCollideWithBlockEvent.getCollisionPosition(), Block.AIR);
 
-                shooter.sendMessage(Component.text("Vous avez obtenu un bonus de type " + block.getTag(BONUS_BLOCK_TAG) + "!"));
+                gameInstance.getPlayers().forEach(player -> {
+                    player.sendMessage(MM.deserialize(
+                            "<dark_purple>\uD83C\uDFF9 <b>BLOC BONUS!</b></dark_purple> <light_purple>" + shooter.getUsername() + " a reçu </light_purple><dark_purple>"
+                                    + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</dark_purple><light_purple> !</light_purple>"
+
+                    ));
+                    shooter.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1500),Duration.ofMillis(500)));
+                    shooter.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_purple><b>BLOC BONUS!</b></dark_purple>"));
+                    shooter.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<light_purple>Vous recevez </light_purple><dark_purple><b>" + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</b></dark_purple><light_purple> !</light_purple>"));
+                    if (gameInstance.getTeams().getTeam(shooter) == gameInstance.getTeams().getTeam(player)) { // An ally shot the bonus block
+                        player.playSound(Sound.sound().type(SoundEvent.BLOCK_END_PORTAL_FRAME_FILL).pitch(0.7F).volume(0.5F).build(), player.getPosition());
+                        player.playSound(Sound.sound().type(SoundEvent.BLOCK_BEACON_ACTIVATE).pitch(1.2F).volume(1F).build(), player.getPosition());
+                        player.playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_OPEN_SHUTTER).pitch(0.7F).volume(0.5F).build(), player.getPosition());
+                        player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_BELL).pitch(1F).volume(0.5F).build(), player.getPosition());
+                        player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_BELL).pitch(0F).volume(0.5F).build(), player.getPosition());
+                    } else { // An enemy shot the bonus block
+                        player.playSound(Sound.sound().type(SoundEvent.BLOCK_END_PORTAL_FRAME_FILL).pitch(0.7F).volume(0.5F).build(), player.getPosition());
+                        player.playSound(Sound.sound().type(SoundEvent.BLOCK_RESPAWN_ANCHOR_DEPLETE).pitch(1F).volume(0.5F).build(), player.getPosition());
+                        player.playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_BREAK).pitch(0F).volume(0.5F).build(), player.getPosition());
+                        player.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_AMBIENT_OMINOUS).pitch(1F).volume(0.5F).build(), player.getPosition());
+                    }
+                });
             }
         });
     }

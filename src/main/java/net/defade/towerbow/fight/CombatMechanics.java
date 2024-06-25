@@ -11,7 +11,13 @@ import io.github.togar2.pvp.projectile.AbstractArrow;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.game.state.GameState;
 import net.defade.towerbow.teams.TeamsManager;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.title.Title;
+import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
@@ -23,10 +29,14 @@ import net.minestom.server.event.entity.EntityShootEvent;
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
+import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
+
+import java.time.Duration;
 import java.util.UUID;
 
 public class CombatMechanics {
+    private static final MiniMessage MM = MiniMessage.miniMessage();
     public static final Tag<Integer> PLAYER_KILLS = Tag.Integer("kills");
     private static final Tag<UUID> LAST_DAMAGER_UUID = Tag.UUID("last_damager"); // Used to store the last player who damaged the player
 
@@ -126,11 +136,21 @@ public class CombatMechanics {
                     if (distance > 50) { // If the distance is > 50 blocks then it's a longshot
                         shooter.setHealth(Math.min(shooter.getHealth() + 2, (float) shooter.getAttributeValue(Attribute.GENERIC_MAX_HEALTH)));
 
-                        shooter.getInstance().sendMessage(
-                                shooter.getDisplayName()
-                                        .append(Component.text(" made a longshot of "))
-                                        .append(Component.text((int) distance + " blocks!"))
-                        );
+                        // Longshot sound & message
+                        shooter.getInstance().getPlayers().forEach(players -> {
+                            shooter.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDER_EYE_DEATH).pitch(1F).volume(2F).build(), shooter.getPosition());
+                            players.playSound(Sound.sound().type(SoundEvent.ENTITY_FIREWORK_ROCKET_LARGE_BLAST_FAR).pitch(1F).volume(1.5F).build(), players.getPosition());
+                            players.sendMessage(MM.deserialize(
+                                    "<gold>\uD83C\uDFF9 <b>LONGSHOT!</b></gold> <yellow>" + shooter.getUsername() + " a fait un longshot de <gold><b>"
+                                            + Math.floor(distance * 10) / 10 + "</b> blocks</gold>!</yellow>"
+                            ));
+                            shooter.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(500),Duration.ofMillis(500)));
+                            shooter.sendTitlePart(TitlePart.TITLE, MM.deserialize("<gold><b>LONGSHOT!</b></gold>"));
+                            shooter.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>+2❤</red>"));
+                        });
+
+
+
                     }
                 });
     }
