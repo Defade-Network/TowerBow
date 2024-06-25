@@ -141,6 +141,9 @@ public class CombatMechanics {
             Player player = playerDeathEvent.getPlayer();
 
             player.setGameMode(GameMode.SPECTATOR);
+            player.setCanPickupItem(false);
+            player.setInvisible(true); // Hide the player
+
             player.setRespawnPoint(player.getPosition());
 
             // Check if all the players of his team are dead
