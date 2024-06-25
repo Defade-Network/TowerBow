@@ -19,3 +19,7 @@ dependencies {
     implementation("io.github.togar2:MinestomPvP:1.0") /* TODO: change to official version once it's updated to 1.21 and arrows deflecting is fixed
     Meanwhile, the library must be compiled locally. */
 }
+
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+}
