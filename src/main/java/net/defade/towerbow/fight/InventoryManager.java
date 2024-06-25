@@ -2,6 +2,7 @@ package net.defade.towerbow.fight;
 
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.utils.Items;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.ItemEntity;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.inventory.InventoryPreClickEvent;
@@ -51,7 +52,7 @@ public class InventoryManager {
     private void registerGoldenAppleDrop() {
         // Only let the players drop the golden apple
         gameInstance.getEventNode().getPlayerNode().addListener(ItemDropEvent.class, itemDropEvent -> {
-            if (!itemDropEvent.getItemStack().isSimilar(Items.GOLDEN_APPLE)) {
+            if (itemDropEvent.getPlayer().getGameMode() == GameMode.SPECTATOR ||  !itemDropEvent.getItemStack().isSimilar(Items.GOLDEN_APPLE)) {
                 itemDropEvent.setCancelled(true);
             } else {
                 // Drop the item
