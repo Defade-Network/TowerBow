@@ -10,6 +10,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
@@ -31,9 +32,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GamePlayingHandler extends GameStateHandler {
+    private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final AttributeModifier FREEZE_PLAYER_MODIFIER = new AttributeModifier(NamespaceID.from("defade:freeze_player"), -10000, AttributeOperation.ADD_VALUE);
     private static final int TICKS_BEFORE_WORLD_BORDER_SHRINK = 10 * 60 * 20; // 10 minutes
-    private static final int IMMUNITY_TICKS = 30 * 20; // 30 seconds
+    private static final int IMMUNITY_TICKS = 20 * 20; // 20 seconds
 
     private final GameInstance gameInstance;
     private final BonusBlockManager bonusBlockManager;
@@ -48,7 +50,7 @@ public class GamePlayingHandler extends GameStateHandler {
 
     private PlayingState playingState = PlayingState.IMMOBILE;
     private int tickCounter = 0; // Used to schedule tasks and events like the world border shrinking
-    private int ticksBeforeNextBonusBlock = 4 * 60 * 20; // The first bonus block will spawn after 4 minutes
+    private int ticksBeforeNextBonusBlock = 3 * 60 * 20; // The first bonus block will spawn after 3 minutes
 
     public GamePlayingHandler(GameInstance gameInstance) {
         super(gameInstance);
@@ -60,7 +62,7 @@ public class GamePlayingHandler extends GameStateHandler {
             updateScoreboard();
 
             if (playingState == PlayingState.IMMOBILE && tickCounter == 5 * 20) {
-                Potion jumpBoost = new Potion(PotionEffect.JUMP_BOOST, (byte) 1, IMMUNITY_TICKS);
+                Potion jumpBoost = new Potion(PotionEffect.JUMP_BOOST, (byte) 2, IMMUNITY_TICKS);
                 gameInstance.getPlayers().forEach(player -> {
                     player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).removeModifier(FREEZE_PLAYER_MODIFIER);
                     player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).removeModifier(FREEZE_PLAYER_MODIFIER);
@@ -80,7 +82,7 @@ public class GamePlayingHandler extends GameStateHandler {
 
                     sidebar.createLine(new Sidebar.ScoreboardLine(
                             "bonus_block",
-                            getBonusBlockComponent("4:00"),
+                            getBonusBlockComponent("3:00"),
                             4,
                             Sidebar.NumberFormat.blank()
                     ));
@@ -103,7 +105,7 @@ public class GamePlayingHandler extends GameStateHandler {
                     getGameEventNode().getEntityInstanceNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
                         if (playerTickEvent.getPlayer().getPosition().y() < 15) { // TODO: determine right height and damage
                             playerTickEvent.getPlayer().damage(
-                                    new Damage(
+                                    new Damage( // TODO: Damage the player 2 hearts / 2s
                                             DamageType.FALL,
                                             null,
                                             null,
@@ -163,15 +165,16 @@ public class GamePlayingHandler extends GameStateHandler {
 
                 sidebar.createLine(new Sidebar.ScoreboardLine(
                         "bar_1",
-                        Component.text("┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈").decoration(TextDecoration.STRIKETHROUGH, true).color(NamedTextColor.DARK_GRAY),
+                        Component.text("                          ").decoration(TextDecoration.STRIKETHROUGH, true).color(NamedTextColor.DARK_GRAY),
                         7,
                         Sidebar.NumberFormat.blank()
                 ));
                 sidebar.createLine(new Sidebar.ScoreboardLine(
                         "team_name",
+
                         Component.text("» ").color(NamedTextColor.GRAY)
-                                .append(Component.text("Vous êtes "))
-                                .append(team.name()),
+                                .append(Component.text("Vous êtes ").color(NamedTextColor.WHITE))
+                                .append(team.name()).color(TextColor.color(team.color())),
                         6,
                         Sidebar.NumberFormat.blank()
                 ));
@@ -206,7 +209,7 @@ public class GamePlayingHandler extends GameStateHandler {
                 ));
                 sidebar.createLine(new Sidebar.ScoreboardLine(
                         "bar_2",
-                        Component.text("┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈").decoration(TextDecoration.STRIKETHROUGH, true).color(NamedTextColor.DARK_GRAY),
+                        Component.text("                          ").decoration(TextDecoration.STRIKETHROUGH, true).color(NamedTextColor.DARK_GRAY),
                         0,
                         Sidebar.NumberFormat.blank()
                 ));
@@ -236,9 +239,9 @@ public class GamePlayingHandler extends GameStateHandler {
 
         if (tickCounter <= IMMUNITY_TICKS) {
             bossBar.name(Component.text("Invincibilité").color(NamedTextColor.YELLOW).decoration(TextDecoration.BOLD, true)
-                    .append(Component.text(" (").color(NamedTextColor.GRAY))
-                    .append(Component.text((IMMUNITY_TICKS - tickCounter) / 20 + "s").color(NamedTextColor.WHITE))
-                    .append(Component.text(")").color(NamedTextColor.GRAY)));
+                    .append(Component.text(" (").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false))
+                    .append(Component.text((IMMUNITY_TICKS - tickCounter) / 20 + "s").color(NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
+                    .append(Component.text(")").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)));
 
             bossBar.color(BossBar.Color.YELLOW);
 
@@ -261,9 +264,9 @@ public class GamePlayingHandler extends GameStateHandler {
 
         bossBar.name(
                 Component.text("Bordure").color(NamedTextColor.RED).decoration(TextDecoration.BOLD, true)
-                        .append(Component.text(" (").color(NamedTextColor.GRAY))
-                        .append(Component.text(borderShrinkFormattedTime).color(NamedTextColor.WHITE))
-                        .append(Component.text(")").color(NamedTextColor.GRAY))
+                        .append(Component.text(" (").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)
+                        .append(Component.text(borderShrinkFormattedTime).color(NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
+                        .append(Component.text(")").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)))
         );
 
         bossBar.progress(1.0f - ((float) tickCounter / TICKS_BEFORE_WORLD_BORDER_SHRINK));
@@ -274,7 +277,7 @@ public class GamePlayingHandler extends GameStateHandler {
         Component component = Component.text("");
 
         for (Player playerInTeam : gameInstance.getTeams().getPlayers(gameTeams.firstTeam())) {
-            TextColor heartColor = playerInTeam.getGameMode() == GameMode.SPECTATOR ? NamedTextColor.BLACK : TextColor.color(gameTeams.firstTeam().color());
+            TextColor heartColor = playerInTeam.getGameMode() == GameMode.SPECTATOR ? TextColor.color(26,26,26) : TextColor.color(gameTeams.firstTeam().color());
             component = component.append(Component.text("❤ ").color(heartColor));
         }
 
@@ -284,7 +287,7 @@ public class GamePlayingHandler extends GameStateHandler {
                 .append(Component.text(" | ").color(NamedTextColor.GRAY));
 
         for (Player playerInTeam : gameInstance.getTeams().getPlayers(gameTeams.secondTeam())) {
-            TextColor heartColor = playerInTeam.getGameMode() == GameMode.SPECTATOR ? NamedTextColor.BLACK : TextColor.color(gameTeams.secondTeam().color());
+            TextColor heartColor = playerInTeam.getGameMode() == GameMode.SPECTATOR ? TextColor.color(26,26,26) : TextColor.color(gameTeams.secondTeam().color());
             component = component.append(Component.text("❤ ").color(heartColor));
         }
 
@@ -293,13 +296,13 @@ public class GamePlayingHandler extends GameStateHandler {
 
     private static Component getBonusBlockComponent(String time) {
         return Component.text("» ").color(NamedTextColor.GRAY)
-                .append(Component.text(" Bloc Bonus: ").color(NamedTextColor.WHITE))
+                .append(Component.text("Bloc Bonus: ").color(NamedTextColor.WHITE))
                 .append(Component.text(time).color(NamedTextColor.RED));
     }
 
     private static Component getBorderShrinkComponent(String time) {
         return Component.text("» ").color(NamedTextColor.GRAY)
-                .append(Component.text(" Bordure: ").color(NamedTextColor.WHITE))
+                .append(Component.text("Bordure: ").color(NamedTextColor.WHITE))
                 .append(Component.text(time).color(NamedTextColor.RED));
     }
 

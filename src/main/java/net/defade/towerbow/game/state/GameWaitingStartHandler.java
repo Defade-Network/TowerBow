@@ -7,6 +7,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
@@ -18,11 +19,12 @@ import net.minestom.server.instance.Instance;
 import java.util.Map;
 
 public class GameWaitingStartHandler extends GameStateHandler {
+    private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final Map<Integer, Integer> PLAYER_COUNTDOWN = Map.of( // Key: Player count, Value: Countdown
-            4, 60,
-            5, 50,
-            6, 40,
-            7, 30,
+            4, 20,
+            5, 20,
+            6, 20,
+            7, 20,
             8, 20,
             9, 20,
             10, 20,
@@ -55,13 +57,9 @@ public class GameWaitingStartHandler extends GameStateHandler {
             GameInstance gameInstance = (GameInstance) playerSpawnEvent.getInstance();
             Player player = playerSpawnEvent.getPlayer();
 
-            gameInstance.sendMessage(
-                    Component.text("✅").color(TextColor.color(0, 170, 0))
-                            .append(Component.text(" | ").color(TextColor.color(107, 107, 107)))
-                            .append(player.getName()
-                                    .append(Component.text(" a rejoint la partie. ")).color(TextColor.color(0, 255, 0)))
-                            .append(Component.text("(" + gameInstance.getPlayers().size() + "/12)").color(TextColor.color(157, 157, 157)))
-            );
+            gameInstance.sendMessage(MM.deserialize(
+                    "<gold>🏹 " + player.getUsername() + "</gold><color:#fffb2b> a rejoint la partie.</color> <gray>(" + gameInstance.getPlayers().size() + "/12)</gray>"
+            ));
 
             player.setGameMode(GameMode.SURVIVAL);
             player.teleport(new Pos(0, 1, 0));
@@ -81,13 +79,9 @@ public class GameWaitingStartHandler extends GameStateHandler {
         getGameEventNode().getPlayerNode().addListener(PlayerDisconnectEvent.class, playerDisconnectEvent -> {
             Instance instance = playerDisconnectEvent.getPlayer().getInstance();
 
-            instance.sendMessage(
-                    Component.text("❌").color(TextColor.color(170, 0, 0))
-                            .append(Component.text(" | ").color(TextColor.color(107, 107, 107)))
-                            .append(playerDisconnectEvent.getPlayer().getName()
-                                    .append(Component.text(" a quitté la partie. ")).color(TextColor.color(255, 0, 0)))
-                            .append(Component.text("(" + (instance.getPlayers().size() - 1) + "/12)").color(TextColor.color(157, 157, 157)))
-            );
+            instance.sendMessage(MM.deserialize(
+                    "<color:#aa0000>❌" + playerDisconnectEvent.getPlayer().getUsername() + "</color> <red>a quitté la partie.</red> <gray>(" + (gameInstance.getPlayers().size() - 1) + "/12)</gray>"
+            ));
 
             if (instance.getPlayers().size() - 1 < GameManager.MIN_PLAYERS) {
                 tickCountdown = Integer.MAX_VALUE;
@@ -133,9 +127,9 @@ public class GameWaitingStartHandler extends GameStateHandler {
                     Component.text("Démarrage... ")
                             .color(NamedTextColor.YELLOW)
                             .decoration(TextDecoration.BOLD, true)
-                            .append(Component.text("(").color(NamedTextColor.GRAY))
-                            .append(Component.text(tickCountdown / 20 + " secondes").color(NamedTextColor.WHITE))
-                            .append(Component.text(")").color(NamedTextColor.GRAY)
+                            .append(Component.text("(").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false))
+                            .append(Component.text(tickCountdown / 20 + "s").color(NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
+                            .append(Component.text(")").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)
                             ));
 
             bossBar.progress((float) tickCountdown / (countdownTime * 20));

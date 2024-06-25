@@ -21,27 +21,28 @@ public class Items {
                 .with(ItemComponent.DYED_COLOR, teamColor)
                 .with(ItemComponent.ENCHANTMENTS, new EnchantmentList(
                         Map.of(
-                                Enchantment.PROTECTION, 2,
-                                Enchantment.FEATHER_FALLING, 3
+                                Enchantment.PROTECTION, 2
                         )
-                ));
+                ))
+                .with(ItemComponent.HIDE_TOOLTIP);
     };
 
     public static final ItemStack LEGGINGS = ItemStack.of(Material.IRON_LEGGINGS)
             .with(ItemComponent.ENCHANTMENTS, new EnchantmentList(
                     Map.of(
-                            Enchantment.PROTECTION, 2,
-                            Enchantment.FEATHER_FALLING, 3
+                            Enchantment.PROTECTION, 2
                     )
-            ));
+            ))
+            .with(ItemComponent.HIDE_TOOLTIP);
 
     public static final ItemStack BOOTS = ItemStack.of(Material.IRON_BOOTS)
             .with(ItemComponent.ENCHANTMENTS, new EnchantmentList(
                     Map.of(
                             Enchantment.PROTECTION, 2,
-                            Enchantment.FEATHER_FALLING, 3
+                            Enchantment.FEATHER_FALLING, 4
                     )
-            ));
+            ))
+            .with(ItemComponent.HIDE_TOOLTIP);
 
     public static final ItemStack GOLDEN_APPLE = ItemStack.of(Material.GOLDEN_APPLE);
 
@@ -51,14 +52,16 @@ public class Items {
                             Enchantment.EFFICIENCY, 2,
                             Enchantment.SHARPNESS, 1
                     )
-            ));
+            ))
+            .with(ItemComponent.UNBREAKABLE, new Unbreakable(false))
+            .with(ItemComponent.HIDE_TOOLTIP);
 
     public static final ItemStack BOW = ItemStack.of(Material.BOW)
             .with(ItemComponent.ENCHANTMENTS, new EnchantmentList(
                     Map.of(
                             Enchantment.INFINITY, 1,
                             Enchantment.PUNCH, 1,
-                            Enchantment.POWER, 2
+                            Enchantment.POWER, 1
                     )
             ))
             .with(ItemComponent.UNBREAKABLE, new Unbreakable(false));

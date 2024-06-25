@@ -81,7 +81,7 @@ public class WorldHandler implements Generator {
                     event.consumeBlock(false);
 
                     // Register the block to be updated in the list.
-                    blockQueue.add(Pair.of(System.currentTimeMillis() + 90 * 1000, event.getBlockPosition()));
+                    blockQueue.add(Pair.of(System.currentTimeMillis() + 150 * 1000, event.getBlockPosition()));
                 })
                 .addListener(PlayerBlockBreakEvent.class, event -> {
                     // Remove the block from the list if it was placed
@@ -103,10 +103,10 @@ public class WorldHandler implements Generator {
                         if (blockType.registry().material() == Material.COBBLESTONE) {
                             gameInstance.setBlock(block.right(), Block.MOSSY_COBBLESTONE);
 
-                            // Add the block to the queue to be updated again in 90 seconds
-                            blockQueue.add(Pair.of(currentTime + 90 * 1000, block.right()));
+                            // Add the block to the queue to be updated again in 30 seconds
+                            blockQueue.add(Pair.of(currentTime + 30 * 1000, block.right()));
                         } else if (blockType.registry().material() == Material.MOSSY_COBBLESTONE) {
-                            gameInstance.setBlock(block.right(), Block.AIR);
+                            gameInstance.setBlock(block.right(), Block.AIR); //TODO: Add breaking animation
                         }
                     }
                 });

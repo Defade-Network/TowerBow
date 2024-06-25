@@ -2,6 +2,7 @@ package net.defade.towerbow.bonus;
 
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.teams.Team;
+import net.defade.towerbow.utils.Items;
 import net.minestom.server.entity.Player;
 
 public class HealBonusBlock implements BonusBlock {
@@ -11,6 +12,11 @@ public class HealBonusBlock implements BonusBlock {
         Team playerTeam = gameInstance.getTeams().getTeam(shooter);
 
         gameInstance.getTeams().getPlayers(playerTeam).forEach(player -> {
+
+            if (player.getHealth() >= 20) {
+                player.getInventory().addItemStack(Items.GOLDEN_APPLE);
+            }
+
             player.setHealth(20);
             player.setAdditionalHearts(player.getAdditionalHearts() + 8);
         });
