@@ -190,7 +190,8 @@ public class CombatMechanics {
 
             entityDamageEvent.getEntity().setTag(LAST_DAMAGER_UUID, damager.getUuid());
         }).addListener(PlayerDeathEvent.class, playerDeathEvent -> {
-            Player killer = gameInstance.getPlayerByUuid(playerDeathEvent.getPlayer().getTag(LAST_DAMAGER_UUID));
+            UUID killerUUID = playerDeathEvent.getPlayer().getTag(LAST_DAMAGER_UUID);
+            Player killer = killerUUID == null ? null : gameInstance.getPlayerByUuid(killerUUID);
             if (killer == null || killer == playerDeathEvent.getPlayer()) return; // Ignore self kills
 
             killer.setTag(PLAYER_KILLS, killer.getTag(PLAYER_KILLS) + 1);
