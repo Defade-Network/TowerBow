@@ -2,8 +2,9 @@ package net.defade.towerbow.bonus;
 
 import io.github.togar2.pvp.projectile.AbstractArrow;
 import net.defade.towerbow.game.GameInstance;
+import net.defade.towerbow.game.GamePlayHandler;
+import net.defade.towerbow.utils.GameEventNode;
 import net.kyori.adventure.sound.Sound;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -53,9 +54,11 @@ public class BonusBlockManager implements BlockHandler {
     );
 
     private final GameInstance gameInstance;
+    private final GameEventNode gameEventNode;
 
-    public BonusBlockManager(GameInstance gameInstance) {
+    public BonusBlockManager(GameInstance gameInstance, GamePlayHandler gamePlayHandler) {
         this.gameInstance = gameInstance;
+        this.gameEventNode = gamePlayHandler.getGameEventNode();
 
         bonusBlocks.values().forEach(bonusBlock -> bonusBlock.registerMechanics(gameInstance));
         registerBlockHitListener();
@@ -113,7 +116,7 @@ public class BonusBlockManager implements BlockHandler {
     }
 
     private void registerBlockHitListener() {
-        gameInstance.getEventNode().getEntityInstanceNode().addListener(ProjectileCollideWithBlockEvent.class, projectileCollideWithBlockEvent -> {
+        gameEventNode.getEntityInstanceNode().addListener(ProjectileCollideWithBlockEvent.class, projectileCollideWithBlockEvent -> {
             if(!(projectileCollideWithBlockEvent.getEntity() instanceof AbstractArrow arrow)) return;
             if (arrow.getShooter() == null) return;
             Player shooter = (Player) arrow.getShooter();

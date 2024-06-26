@@ -1,7 +1,5 @@
 package net.defade.towerbow.game;
 
-import net.defade.towerbow.game.state.GameState;
-import net.defade.towerbow.game.state.GameStateHandler;
 import net.defade.towerbow.fight.InventoryManager;
 import net.defade.towerbow.map.WorldHandler;
 import net.defade.towerbow.teams.TeamsManager;
@@ -36,7 +34,8 @@ public class GameInstance extends InstanceContainer {
     private final TeamsManager teamsManager = new TeamsManager(this);
     private final InventoryManager inventoryManager = new InventoryManager(this);
 
-    private GameStateHandler gameStateHandler; // The mechanics handler for the current state
+    private final GameStartHandler gameStartHandler = new GameStartHandler(this);
+    private final GamePlayHandler gamePlayHandler = new GamePlayHandler(this);
 
     public GameInstance(GameManager gameManager) {
         super(UUID.randomUUID(), TOWERBOW_DIMENSION);
@@ -44,8 +43,6 @@ public class GameInstance extends InstanceContainer {
 
         WorldHandler.register(this);
         setWorldBorder(INITIAL_WORLD_BORDER);
-
-        setGameState(GameState.WAITING_START);
     }
 
     public boolean acceptsPlayers() {
@@ -76,7 +73,12 @@ public class GameInstance extends InstanceContainer {
         teamsManager.giveAllPlayersTeams();
         inventoryManager.giveStartItems(); // TODO: manage inventory with a state handler
 
-        setGameState(GameState.PLAYING);
+        gameStartHandler.stop();
+        gamePlayHandler.start();
+    }
+
+    public void finishGame() {
+        gamePlayHandler.stop();
     }
 
     public void destroy() {
@@ -84,14 +86,5 @@ public class GameInstance extends InstanceContainer {
         getPlayers().forEach(player -> player.kick(Component.text("The instance is being destroyed.").color(NamedTextColor.RED)));
         MinecraftServer.getInstanceManager().unregisterInstance(this);
         gameEventNode.unregister();
-    }
-
-    public void setGameState(GameState gameState) {
-        if (gameStateHandler != null) {
-            gameStateHandler.unregister();
-        }
-
-        gameStateHandler = gameState.createStateHandler(this);
-        gameStateHandler.register();
     }
 }

@@ -9,7 +9,6 @@ import io.github.togar2.pvp.config.ProjectileConfig;
 import io.github.togar2.pvp.config.PvPConfig;
 import io.github.togar2.pvp.projectile.AbstractArrow;
 import net.defade.towerbow.game.GameInstance;
-import net.defade.towerbow.game.state.GameState;
 import net.defade.towerbow.teams.TeamsManager;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.format.TextColor;
@@ -173,7 +172,7 @@ public class CombatMechanics {
                     .noneMatch(teamPlayer -> teamPlayer.getGameMode() != GameMode.SPECTATOR);
 
             if (allPlayersInTeamDead) {
-                gameInstance.setGameState(GameState.FINISHED);
+                gameInstance.finishGame();
             }
         });
     }

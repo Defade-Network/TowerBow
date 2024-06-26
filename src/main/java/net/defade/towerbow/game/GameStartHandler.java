@@ -1,7 +1,6 @@
-package net.defade.towerbow.game.state;
+package net.defade.towerbow.game;
 
-import net.defade.towerbow.game.GameInstance;
-import net.defade.towerbow.game.GameManager;
+import net.defade.towerbow.utils.GameEventNode;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
@@ -24,7 +23,7 @@ import net.minestom.server.sound.SoundEvent;
 import java.time.Duration;
 import java.util.Map;
 
-public class GameWaitingStartHandler extends GameStateHandler {
+public class GameStartHandler {
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final Map<Integer, Integer> PLAYER_COUNTDOWN = Map.of( // Key: Player count, Value: Countdown
             4, 20,
@@ -39,6 +38,7 @@ public class GameWaitingStartHandler extends GameStateHandler {
     );
 
     private final GameInstance gameInstance;
+    private final GameEventNode startEventNode;
     private final BossBar bossBar = BossBar.bossBar(
             Component.text(""),
             1.0f,
@@ -48,9 +48,9 @@ public class GameWaitingStartHandler extends GameStateHandler {
 
     private int tickCountdown = Integer.MAX_VALUE;
 
-    public GameWaitingStartHandler(GameInstance gameInstance) {
-        super(gameInstance);
+    public GameStartHandler(GameInstance gameInstance) {
         this.gameInstance = gameInstance;
+        this.startEventNode = new GameEventNode(gameInstance.getEventNode());
 
         registerJoinMessages();
         registerLeaveMessages();
@@ -59,7 +59,7 @@ public class GameWaitingStartHandler extends GameStateHandler {
     }
 
     private void registerJoinMessages() {
-        getGameEventNode().getPlayerNode().addListener(PlayerSpawnEvent.class, playerSpawnEvent -> {
+        startEventNode.getPlayerNode().addListener(PlayerSpawnEvent.class, playerSpawnEvent -> {
             GameInstance gameInstance = (GameInstance) playerSpawnEvent.getInstance();
             Player player = playerSpawnEvent.getPlayer();
 
@@ -82,7 +82,7 @@ public class GameWaitingStartHandler extends GameStateHandler {
     }
 
     private void registerLeaveMessages() {
-        getGameEventNode().getPlayerNode().addListener(PlayerDisconnectEvent.class, playerDisconnectEvent -> {
+        startEventNode.getPlayerNode().addListener(PlayerDisconnectEvent.class, playerDisconnectEvent -> {
             Instance instance = playerDisconnectEvent.getPlayer().getInstance();
 
             instance.sendMessage(MM.deserialize(
@@ -96,7 +96,7 @@ public class GameWaitingStartHandler extends GameStateHandler {
     }
 
     private void registerGameStartCountdown() {
-        getGameEventNode().getInstanceNode().addListener(InstanceTickEvent.class, instanceTickEvent -> {
+        startEventNode.getInstanceNode().addListener(InstanceTickEvent.class, instanceTickEvent -> {
             GameInstance gameInstance = (GameInstance) instanceTickEvent.getInstance();
 
             updateBossBar(PLAYER_COUNTDOWN.getOrDefault(gameInstance.getPlayers().size(), 1));
@@ -150,11 +150,7 @@ public class GameWaitingStartHandler extends GameStateHandler {
             bossBar.progress((float) tickCountdown / (countdownTime * 20));
         }
     }
-
-    @Override
-    public void unregister() {
-        super.unregister();
-
+    public void stop() {
         MinecraftServer.getBossBarManager().destroyBossBar(bossBar);
     }
 }
