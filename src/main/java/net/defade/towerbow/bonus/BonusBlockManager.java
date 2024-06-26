@@ -4,7 +4,9 @@ import io.github.togar2.pvp.projectile.AbstractArrow;
 import net.defade.towerbow.game.GameInstance;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.coordinate.Vec;
@@ -141,8 +143,9 @@ public class BonusBlockManager implements BlockHandler {
 
                 gameInstance.getPlayers().forEach(player -> {
                     player.sendMessage(MM.deserialize(
-                            "<dark_purple>\uD83C\uDFF9 <b>BLOC BONUS!</b></dark_purple> <light_purple>" + shooter.getUsername() + " a reçu </light_purple><dark_purple>"
-                                    + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</dark_purple><light_purple> !</light_purple>"
+                            "<dark_purple>\uD83C\uDFF9 <b>BLOC BONUS!</b></dark_purple> <shooter> <light_purple>a reçu </light_purple><dark_purple>"
+                                    + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</dark_purple><light_purple> !</light_purple>",
+                            Placeholder.component("shooter", shooter.getName().color(TextColor.color(gameInstance.getTeams().getTeam(shooter).color())))
 
                     ));
                     if (gameInstance.getTeams().getTeam(shooter) == gameInstance.getTeams().getTeam(player)) { // An ally shot the bonus block
