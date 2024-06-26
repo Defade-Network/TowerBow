@@ -2,6 +2,7 @@ package net.defade.towerbow.game;
 
 import net.defade.towerbow.fight.InventoryManager;
 import net.defade.towerbow.map.WorldHandler;
+import net.defade.towerbow.teams.Team;
 import net.defade.towerbow.teams.TeamsManager;
 import net.defade.towerbow.utils.GameEventNode;
 import net.kyori.adventure.text.Component;
@@ -10,6 +11,7 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.registry.DynamicRegistry;
+import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.utils.NamespaceID;
 import net.minestom.server.world.DimensionType;
 import java.util.UUID;
@@ -77,8 +79,11 @@ public class GameInstance extends InstanceContainer {
         gamePlayHandler.start();
     }
 
-    public void finishGame() {
+    public void finishGame(Team winningTeam) {
+        sendMessage(Component.text("Partie finie! Victoire des " + winningTeam.name() + "!")); // TODO better message
         gamePlayHandler.stop();
+
+        scheduler().scheduleTask(this::destroy, TaskSchedule.seconds(20), TaskSchedule.stop());
     }
 
     public void destroy() {
