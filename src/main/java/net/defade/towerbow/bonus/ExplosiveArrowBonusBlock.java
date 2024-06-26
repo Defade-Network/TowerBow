@@ -3,9 +3,11 @@ package net.defade.towerbow.bonus;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.map.WorldHandler;
 import net.kyori.adventure.sound.Sound;
+import net.minestom.server.color.Color;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
+import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.entity.EntityShootEvent;
 import net.minestom.server.event.entity.EntityTickEvent;
@@ -72,21 +74,31 @@ public class ExplosiveArrowBonusBlock implements BonusBlock {
                             }
                         }
                     }
-                    entity.remove();
+                    entity.scheduleNextTick(Entity::remove);
                 })
                 .addListener(EntityTickEvent.class, entityTickEvent -> {
                     Entity entity = entityTickEvent.getEntity();
-                    boolean isExplosiveArrow = entity.hasTag(EXPLOSIVE_ARROW) && entity.getTag(EXPLOSIVE_ARROW);
-                    if (isExplosiveArrow) {
-                        System.out.println(entity);
-                        gameInstance.sendGroupedPacket(new ParticlePacket(
-                                Particle.FLAME,
-                                true,
-                                entity.getPosition(),
-                                new Vec(0, 0, 0),
-                                0F,
-                                1
-                        ));
+                    if (entity.hasTag(EXPLOSIVE_ARROW) && entity.getTag(EXPLOSIVE_ARROW)) {
+                        if (entity.getEntityType() == EntityType.ARROW) {
+                            gameInstance.sendGroupedPacket(new ParticlePacket(
+                                    Particle.DUST.withProperties(new Color(255,0,0),2.5F),
+                                    true,
+                                    entity.getPosition(),
+                                    new Vec(0, 0, 0),
+                                    0F,
+                                    1
+                            ));
+                        } else if (entity.getEntityType() == EntityType.PLAYER) {
+                            gameInstance.sendGroupedPacket(new ParticlePacket(
+                                    Particle.DUST.withProperties(new Color(255,0,0),1),
+                                    true,
+                                    entity.getPosition().add(0, 0.5, 0),
+                                    new Vec(0.2, 0.5, 0.2),
+                                    0.02F,
+                                    1
+                            ));
+                        }
+
                     }
 
                 });

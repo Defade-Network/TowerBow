@@ -57,7 +57,7 @@ public class SmokeArrowBonusBlock implements BonusBlock {
                     long impactTime = entity.getTag(IMPACT_TIME);
                     if (entity.getAliveTicks() - impactTime >= SMOKE_TICKS_TIME) {
                         entity.removeTag(SMOKE_ARROW);
-                        entity.remove();
+                        entity.scheduleNextTick(Entity::remove);
                         return;
                     }
 

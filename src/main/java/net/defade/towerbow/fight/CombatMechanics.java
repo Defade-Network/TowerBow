@@ -18,6 +18,8 @@ import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.Entity;
+import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
@@ -159,25 +161,46 @@ public class CombatMechanics {
     private void registerDeathHandler() {
         combatMechanicsNode.addListener(PlayerDeathEvent.class, playerDeathEvent -> {
             GameInstance gameInstance = (GameInstance) playerDeathEvent.getPlayer().getInstance();
-            Player player = playerDeathEvent.getPlayer();
+            Player deadPlayer = playerDeathEvent.getPlayer();
 
-            player.setGameMode(GameMode.SPECTATOR);
-            player.setCanPickupItem(false);
-            player.setInvisible(true); // Hide the player
+            deadPlayer.setGameMode(GameMode.SPECTATOR);
+            deadPlayer.setCanPickupItem(false);
+            deadPlayer.setInvisible(true); // Hide the deadPlayer
 
-            player.setRespawnPoint(player.getPosition());
+            deadPlayer.setRespawnPoint(deadPlayer.getPosition());
+
+            new Entity(EntityType.LIGHTNING_BOLT).setInstance(gameInstance, deadPlayer.getPosition());
+            gameInstance.sendMessage(MM.deserialize(
+                    "<red>\uD83C\uDFF9</red> <deadplayer> <yellow>a été tué par</yellow> <killer><yellow>!</yellow>", //TODO: define killer
+                    Placeholder.component("deadplayer", deadPlayer.getName().color(TextColor.color(gameInstance.getTeams().getTeam(deadPlayer).color())))
+            ));
+            gameInstance.getPlayers().forEach(player -> {
+                if (gameInstance.getTeams().getTeam(player) == gameInstance.getTeams().getTeam(deadPlayer)) { // An ally dies
+                    player.playSound(Sound.sound().type(SoundEvent.ENTITY_FIREWORK_ROCKET_LARGE_BLAST_FAR).pitch(0.7F).volume(1.3F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.ENTITY_BLAZE_DEATH).pitch(0.7F).volume(0.25F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.ENTITY_LIGHTNING_BOLT_THUNDER).pitch(1.4F).volume(0.5F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_RESPAWN_ANCHOR_DEPLETE).pitch(0F).volume(0.5F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.ITEM_GOAT_HORN_SOUND_1).pitch(0.3F).volume(1.2F).build(), player.getPosition());
+
+                } else { // An enemy dies
+                    player.playSound(Sound.sound().type(SoundEvent.ENTITY_FIREWORK_ROCKET_LARGE_BLAST_FAR).pitch(1.2F).volume(1.5F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.ENTITY_LIGHTNING_BOLT_THUNDER).pitch(1.4F).volume(0.5F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.ITEM_GOAT_HORN_SOUND_1).pitch(1F).volume(1F).build(), player.getPosition());
+                }
+            });
 
             // Check if all the players of his team are dead
-            boolean allPlayersInTeamDead = gameInstance.getTeams().getPlayers(gameInstance.getTeams().getTeam(player))
+            boolean allPlayersInTeamDead = gameInstance.getTeams().getPlayers(gameInstance.getTeams().getTeam(deadPlayer))
                     .stream()
                     .noneMatch(teamPlayer -> teamPlayer.getGameMode() != GameMode.SPECTATOR);
 
             if (allPlayersInTeamDead) {
-                Team opposingTeam = gameInstance.getTeams().getGameTeams().firstTeam() == gameInstance.getTeams().getTeam(player)
+                Team playerTeam = gameInstance.getTeams().getTeam(deadPlayer);
+                Team opposingTeam = gameInstance.getTeams().getGameTeams().firstTeam() == playerTeam
                         ? gameInstance.getTeams().getGameTeams().secondTeam()
                         : gameInstance.getTeams().getGameTeams().firstTeam();
 
-                gameInstance.finishGame(opposingTeam);
+                gameInstance.finishGame(opposingTeam, playerTeam);
             }
         });
     }

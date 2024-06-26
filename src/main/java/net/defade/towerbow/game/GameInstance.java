@@ -1,22 +1,34 @@
 package net.defade.towerbow.game;
 
+import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.fight.InventoryManager;
 import net.defade.towerbow.map.WorldHandler;
 import net.defade.towerbow.teams.Team;
 import net.defade.towerbow.teams.TeamsManager;
 import net.defade.towerbow.utils.GameEventNode;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.title.Title;
+import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.registry.DynamicRegistry;
+import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.utils.NamespaceID;
 import net.minestom.server.world.DimensionType;
+
+import java.time.Duration;
 import java.util.UUID;
 
 public class GameInstance extends InstanceContainer {
+    private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final DynamicRegistry.Key<DimensionType> TOWERBOW_DIMENSION = MinecraftServer.getDimensionTypeRegistry()
             .register(
                     NamespaceID.from("defade:towerbow"),
@@ -79,8 +91,43 @@ public class GameInstance extends InstanceContainer {
         gamePlayHandler.start();
     }
 
-    public void finishGame(Team winningTeam) {
-        sendMessage(Component.text("Partie finie! Victoire des " + winningTeam.name() + "!")); // TODO better message
+    public void finishGame(Team winningTeam, Team loosingTeam) {
+        getPlayers().forEach(player -> {
+            if (getTeams().getTeam(player) == winningTeam) { // Player won
+                player.sendMessage(MM.deserialize(
+                        "<st><dark_gray>                                   </dark_gray></st>" +
+                                "\n<gold>\uD83C\uDFF9 <b>VICTOIRE</b> <dark_gray>-</dark_gray> <winners> \uD83C\uDFF9</gold>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + player.getTag(CombatMechanics.PLAYER_KILLS) + "</b> Kills</yellow>" +
+                                "\n<gray>»</gray> <yellow>" + /* TODO: Block bonus count */ " Block Bonus</yellow>" +
+                                "\n<st><dark_gray>                                   </dark_gray></st>",
+                        Placeholder.component("winners", winningTeam.name().color(TextColor.color(winningTeam.color())))
+
+                ));
+
+                player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(7500),Duration.ofMillis(1000)));
+                player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<gold><b>VICTOIRE!</b></gold>"));
+                player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<gray>Pour rejouer, cliquez sur le papier</gray>"));
+
+                player.playSound(Sound.sound().type(SoundEvent.UI_TOAST_CHALLENGE_COMPLETE).pitch(1F).volume(0.5F).build(), player.getPosition());
+            } else { // Player lost
+                player.sendMessage(MM.deserialize(
+                        "<st><dark_gray>                                   </dark_gray></st>" +
+                                "\n<red>\uD83C\uDFF9 <b>DÉFAITE</b> <dark_gray>-</dark_gray> <loosers> \uD83C\uDFF9</red>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + player.getTag(CombatMechanics.PLAYER_KILLS) + "</b> Kills</yellow>" +
+                                "\n<gray>»</gray> <yellow>" + /* TODO: Block bonus count */ " Block Bonus</yellow>" +
+                                "\n<st><dark_gray>                                   </dark_gray></st>",
+                        Placeholder.component("loosers", loosingTeam.name().color(TextColor.color(loosingTeam.color())))
+
+                ));
+
+                player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(7500),Duration.ofMillis(1000)));
+                player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<red><b>DÉFAITE!</b></red>"));
+                player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<gray>Pour rejouer, cliquez sur le papier</gray>"));
+
+                player.playSound(Sound.sound().type(SoundEvent.BLOCK_BEACON_DEACTIVATE).pitch(1F).volume(0.5F).build(), player.getPosition());
+            }
+            player.setGameMode(GameMode.SPECTATOR);
+        });
         gamePlayHandler.stop();
 
         scheduler().scheduleTask(this::destroy, TaskSchedule.seconds(20), TaskSchedule.stop());
