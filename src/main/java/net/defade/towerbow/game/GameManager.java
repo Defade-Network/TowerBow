@@ -4,6 +4,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
+import net.minestom.server.timer.TaskSchedule;
+
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
@@ -16,8 +18,6 @@ public class GameManager {
     private final Set<GameInstance> gameInstances = new HashSet<>();
 
     public GameManager() {
-        checkGameInstances();
-
         MinecraftServer.getGlobalEventHandler().addListener(AsyncPlayerConfigurationEvent.class, event -> {
             GameInstance gameInstance = getAvailableGameInstance();
             if (gameInstance == null) {
@@ -26,6 +26,8 @@ public class GameManager {
                 event.setSpawningInstance(gameInstance);
             }
         });
+
+        MinecraftServer.getSchedulerManager().scheduleTask(this::checkGameInstances, TaskSchedule.tick(20), TaskSchedule.immediate());
     }
 
     public void checkGameInstances() {
@@ -33,7 +35,7 @@ public class GameManager {
                 .filter(GameInstance::acceptsPlayers)
                 .count();
 
-        while (gameInstancesAcceptingPlayers < 2) {
+        while (gameInstancesAcceptingPlayers < 2 && gameInstances.size() < MAX_GAME_INSTANCES) {
             createGameInstance();
             gameInstancesAcceptingPlayers++;
         }
