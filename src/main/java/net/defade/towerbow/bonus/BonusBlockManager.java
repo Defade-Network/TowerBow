@@ -128,6 +128,16 @@ public class BonusBlockManager implements BlockHandler {
             if (bonusBlock != null) {
                 bonusBlock.onHit(shooter);
                 gameInstance.setBlock(projectileCollideWithBlockEvent.getCollisionPosition(), Block.AIR);
+                gameInstance.sendGroupedPacket(new ParticlePacket(
+                        Particle.FIREWORK,
+                        true,
+                        projectileCollideWithBlockEvent.getCollisionPosition().add(0.5,0.5,0.5),
+                        new Vec(0, 0, 0),
+                        0.25F,
+                        75
+                ));
+
+                arrow.remove();
 
                 if (block.getTag(BONUS_BLOCK_TAG).equals("smoke_arrow") || block.getTag(BONUS_BLOCK_TAG).equals("explosive_arrow")) { // If the block is an arrow, show it to the shooter
                     shooter.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(3500),Duration.ofMillis(500)));

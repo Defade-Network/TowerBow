@@ -132,6 +132,7 @@ public class CombatMechanics {
                     Pos shootPos = arrow.getTag(PLAYER_SHOOT_POS);
 
                     double distance = shootPos.distance(target.getPosition());
+                    shooter.setLevel((int) distance); // Distance displayed in xp bar
                     if (distance > 50) { // If the distance is > 50 blocks then it's a longshot
                         shooter.setHealth(Math.min(shooter.getHealth() + 3, (float) shooter.getAttributeValue(Attribute.GENERIC_MAX_HEALTH)));
 
@@ -148,9 +149,9 @@ public class CombatMechanics {
                             shooter.sendTitlePart(TitlePart.TITLE, MM.deserialize("<gold><b>LONGSHOT!</b></gold>"));
                             shooter.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>+2❤</red>"));
                         });
-
-
-
+                        shooter.setExp(1); //Fill xp bar
+                    } else {
+                        shooter.setExp(0); // Empty xp bar
                     }
                 });
     }

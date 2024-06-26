@@ -3,11 +3,14 @@ package net.defade.towerbow.game.state;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.game.GameManager;
 import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.title.Title;
+import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
@@ -16,6 +19,9 @@ import net.minestom.server.event.instance.InstanceTickEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.sound.SoundEvent;
+
+import java.time.Duration;
 import java.util.Map;
 
 public class GameWaitingStartHandler extends GameStateHandler {
@@ -80,7 +86,7 @@ public class GameWaitingStartHandler extends GameStateHandler {
             Instance instance = playerDisconnectEvent.getPlayer().getInstance();
 
             instance.sendMessage(MM.deserialize(
-                    "<color:#aa0000>❌" + playerDisconnectEvent.getPlayer().getUsername() + "</color> <red>a quitté la partie.</red> <gray>(" + (gameInstance.getPlayers().size() - 1) + "/12)</gray>"
+                    "<color:#aa0000>❌ " + playerDisconnectEvent.getPlayer().getUsername() + "</color> <red>a quitté la partie.</red> <gray>(" + (gameInstance.getPlayers().size() - 1) + "/12)</gray>"
             ));
 
             if (instance.getPlayers().size() - 1 < GameManager.MIN_PLAYERS) {
@@ -102,13 +108,22 @@ public class GameWaitingStartHandler extends GameStateHandler {
 
             tickCountdown--;
 
-            switch (tickCountdown * 20) {
-                case 60, 40, 30, 20, 10, 5, 4, 3, 2, 1 -> gameInstance.sendMessage(
-                        Component.text("» ").color(TextColor.color(NamedTextColor.GRAY))
-                                .append(Component.text("La partie commence dans ").color(TextColor.color(255, 255, 75)))
-                                .append(Component.text(tickCountdown / 20).color(TextColor.color(250, 65, 65)))
-                                .append(Component.text(" secondes.").color(TextColor.color(255, 255, 75)).decoration(TextDecoration.BOLD, false))
-                );
+            switch (tickCountdown / 20) {
+                case 60, 40, 30, 20, 10, 5, 4, 3, 2, 1 -> {
+                    gameInstance.sendMessage(
+                            Component.text("» ").color(TextColor.color(NamedTextColor.GRAY))
+                                    .append(Component.text("La partie commence dans ").color(TextColor.color(255, 255, 75)))
+                                    .append(Component.text(tickCountdown / 20).color(TextColor.color(250, 65, 65)))
+                                    .append(Component.text(" secondes.").color(TextColor.color(255, 255, 75)).decoration(TextDecoration.BOLD, false))
+                    );
+
+                    gameInstance.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(500)));
+                    gameInstance.sendTitlePart(TitlePart.TITLE, MM.deserialize(" "));
+                    gameInstance.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<yellow>" + tickCountdown / 20 + "</yellow>"));
+
+                    gameInstance.getPlayers().forEach(players -> gameInstance.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_HAT).pitch(1F).volume(0.5F).build(), players.getPosition()));
+                }
+
                 case 0 -> gameInstance.startGame();
             }
         });

@@ -59,7 +59,7 @@ public class GamePlayingHandler extends GameStateHandler {
 
     private PlayingState playingState = PlayingState.IMMOBILE;
     private int tickCounter = 0; // Used to schedule tasks and events like the world border shrinking
-    private int ticksBeforeNextBonusBlock = 3 * 60 * 20; // The first bonus block will spawn after 3 minutes
+    private int ticksBeforeNextBonusBlock = 2 * 60 * 20; // The first bonus block will spawn after 2 minutes
 
     public GamePlayingHandler(GameInstance gameInstance) {
         super(gameInstance);
@@ -132,7 +132,7 @@ public class GamePlayingHandler extends GameStateHandler {
                     });
 
                     getGameEventNode().getEntityInstanceNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
-                        if (playerTickEvent.getPlayer().getPosition().y() < 15 && tickCounter % 20 == 1) { // TODO: determine right height and damage
+                        if (playerTickEvent.getPlayer().getPosition().y() < 20 && tickCounter % 20 == 1) { // TODO: determine right height and damage
                             playerTickEvent.getPlayer().damage(
                                     new Damage(
                                             DamageType.FALL,
@@ -183,11 +183,13 @@ public class GamePlayingHandler extends GameStateHandler {
                 gameInstance.sendMessage(MM.deserialize(
                         "<dark_purple>\uD83C\uDFF9 <b>BLOC BONUS!</b></dark_purple> <light_purple>Un bloc bonus est apparu!</light_purple>"
                 ));
+
                 gameInstance.getPlayers().forEach(player -> {
                     player.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_OMINOUS_ACTIVATE).pitch(1F).volume(0.5F).build(), player.getPosition());
                     player.playSound(Sound.sound().type(SoundEvent.ENTITY_EVOKER_PREPARE_SUMMON).pitch(2F).volume(0.5F).build(), player.getPosition());
                     player.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_OPEN_SHUTTER).pitch(1F).volume(0.5F).build(), player.getPosition());
                 });
+
             }
         });
     }
@@ -313,7 +315,26 @@ public class GamePlayingHandler extends GameStateHandler {
             if (playingState == PlayingState.IMMOBILE) {
                 gameInstance.getPlayers().forEach(player -> player.sendActionBar(MM.deserialize("<dark_gray>»</dark_gray> <gray>Préparez vous à monter...</gray> <dark_gray>«</dark_gray>")));
             } else {
-                gameInstance.getPlayers().forEach(player -> player.sendActionBar(MM.deserialize("<dark_gray>»</dark_gray> <gray>Montez! Vous êtes invincible.</gray> <dark_gray>«</dark_gray>")));
+                gameInstance.getPlayers().forEach(player -> {
+                    player.sendActionBar(MM.deserialize("<dark_gray>»</dark_gray> <gray>Montez! Vous êtes invincible.</gray> <dark_gray>«</dark_gray>"));
+                    gameInstance.sendGroupedPacket(new ParticlePacket(
+                            Particle.SOUL_FIRE_FLAME,
+                            true,
+                            player.getPosition(),
+                            new Vec(0, 0, 0),
+                            0.07F,
+                            1
+                    ));
+                    gameInstance.sendGroupedPacket(new ParticlePacket(
+                            Particle.ENCHANTED_HIT,
+                            true,
+                            player.getPosition().add(0,1,0),
+                            new Vec(0.3, 0.5, 0.3),
+                            0.02F,
+                            1
+                    ));
+                });
+
             }
             return;
         }

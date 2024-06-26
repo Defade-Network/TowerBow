@@ -57,6 +57,7 @@ public class SmokeArrowBonusBlock implements BonusBlock {
                     long impactTime = entity.getTag(IMPACT_TIME);
                     if (entity.getAliveTicks() - impactTime >= SMOKE_TICKS_TIME) {
                         entity.removeTag(SMOKE_ARROW);
+                        entity.remove();
                         return;
                     }
 
@@ -73,7 +74,7 @@ public class SmokeArrowBonusBlock implements BonusBlock {
                             entity.getPosition(),
                             new Vec(3, 3, 3),
                             0.02F,
-                            20
+                            10
                     ));
                     gameInstance.sendGroupedPacket(new ParticlePacket(
                             Particle.CAMPFIRE_COSY_SMOKE,
@@ -81,7 +82,7 @@ public class SmokeArrowBonusBlock implements BonusBlock {
                             entity.getPosition(),
                             new Vec(0.2, 0.2, 0.2),
                             0.1F,
-                            10
+                            6
                     ));
                     gameInstance.sendGroupedPacket(new ParticlePacket(
                             Particle.ASH,
@@ -91,13 +92,14 @@ public class SmokeArrowBonusBlock implements BonusBlock {
                             1F,
                             50
                     ));
+
+                    gameInstance.playSound(Sound.sound().type(SoundEvent.ENTITY_BREEZE_IDLE_GROUND).pitch(0F).volume(0.3F).build(), entity.getPosition());
                     for (Player player : gameInstance.getPlayers()) {
-                        if (player.getDistanceSquared(entity) <= 4 * 4) {
+                        if (player.getDistanceSquared(entity) <= 6 * 6) {
                             player.addEffect(blindness);
-                            player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1000),Duration.ofMillis(500)));
+                            player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(500),Duration.ofMillis(500)));
                             player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_gray><b>SMOKE ARROW!</b></dark_gray>"));
                             player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<gray>Une flèche adverse vous aveugle!</gray>"));
-                            player.playSound(Sound.sound().type(SoundEvent.ENTITY_BREEZE_IDLE_GROUND).pitch(0F).volume(0.5F).build(), player.getPosition());
                         }
                     }
                 });
