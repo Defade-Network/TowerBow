@@ -85,15 +85,23 @@ public class BonusBlockManager implements BlockHandler {
                     .withNbt(block.nbt())
             );
             gameInstance.playSound(Sound.sound().type(SoundEvent.BLOCK_BEACON_AMBIENT).pitch(1F).volume(2F).build(), tick.getBlockPosition()); //Bonus bloc ambient sound
-            ParticlePacket particlePacket = new ParticlePacket(
+
+            gameInstance.sendGroupedPacket(new ParticlePacket(
                     Particle.END_ROD,
                     true,
                     tick.getBlockPosition().add(0.5,0.5,0.5),
                     new Vec(0, 0, 0),
                     0.1F,
                     20
-            );
-            gameInstance.sendGroupedPacket(particlePacket);
+            ));
+            gameInstance.sendGroupedPacket(new ParticlePacket(
+                    Particle.SOUL_FIRE_FLAME,
+                    true,
+                    tick.getBlockPosition().add(0.5,0.5,0.5),
+                    new Vec(0.2, 0.2, 0.2),
+                    0.05F,
+                    20
+            ));
         }
     }
 
@@ -119,15 +127,24 @@ public class BonusBlockManager implements BlockHandler {
                 bonusBlock.onHit(shooter);
                 gameInstance.setBlock(projectileCollideWithBlockEvent.getCollisionPosition(), Block.AIR);
 
+                if (block.getTag(BONUS_BLOCK_TAG).equals("smoke_arrow") || block.getTag(BONUS_BLOCK_TAG).equals("explosive_arrow")) { // If the block is an arrow, show it to the shooter
+                    shooter.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(3500),Duration.ofMillis(500)));
+                    shooter.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+                    shooter.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<dark_gray>»</dark_gray> <b><red>"
+                            + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</red></b> <dark_gray>«</dark_gray>"));
+                } else if (!block.getTag(BONUS_BLOCK_TAG).equals("heal_bonus")) {
+                    shooter.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1500),Duration.ofMillis(500)));
+                    shooter.sendTitlePart(TitlePart.TITLE, MM.deserialize(" "));
+                    shooter.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<light_purple>Vous recevez </light_purple><dark_purple><b>"
+                            + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</b></dark_purple><light_purple> !</light_purple>"));
+                }
+
                 gameInstance.getPlayers().forEach(player -> {
                     player.sendMessage(MM.deserialize(
                             "<dark_purple>\uD83C\uDFF9 <b>BLOC BONUS!</b></dark_purple> <light_purple>" + shooter.getUsername() + " a reçu </light_purple><dark_purple>"
                                     + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</dark_purple><light_purple> !</light_purple>"
 
                     ));
-                    shooter.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1500),Duration.ofMillis(500)));
-                    shooter.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_purple><b>BLOC BONUS!</b></dark_purple>"));
-                    shooter.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<light_purple>Vous recevez </light_purple><dark_purple><b>" + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</b></dark_purple><light_purple> !</light_purple>"));
                     if (gameInstance.getTeams().getTeam(shooter) == gameInstance.getTeams().getTeam(player)) { // An ally shot the bonus block
                         player.playSound(Sound.sound().type(SoundEvent.BLOCK_END_PORTAL_FRAME_FILL).pitch(0.7F).volume(0.5F).build(), player.getPosition());
                         player.playSound(Sound.sound().type(SoundEvent.BLOCK_BEACON_ACTIVATE).pitch(1.2F).volume(1F).build(), player.getPosition());

@@ -15,6 +15,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
@@ -27,6 +28,8 @@ import net.minestom.server.event.instance.InstanceTickEvent;
 import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.instance.WorldBorder;
+import net.minestom.server.network.packet.server.play.ParticlePacket;
+import net.minestom.server.particle.Particle;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.scoreboard.Sidebar;
@@ -81,9 +84,9 @@ public class GamePlayingHandler extends GameStateHandler {
 
                     // Starting sound
                     player.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDER_DRAGON_GROWL).pitch(1.2F).volume(0.5F).build(), player.getPosition());
-                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_PLING).pitch(2.0F).volume(1F).build(), player.getPosition());
-                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_PLING).pitch(1.0F).volume(1F).build(), player.getPosition());
-                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_PLING).pitch(0.0F).volume(1F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_PLING).pitch(2.0F).volume(0.5F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_PLING).pitch(1.0F).volume(0.5F).build(), player.getPosition());
+                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_PLING).pitch(0.0F).volume(0.5F).build(), player.getPosition());
 
                     player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(250),Duration.ofMillis(1500),Duration.ofMillis(250)));
                     player.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
@@ -129,19 +132,31 @@ public class GamePlayingHandler extends GameStateHandler {
                     });
 
                     getGameEventNode().getEntityInstanceNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
-                        if (playerTickEvent.getPlayer().getPosition().y() < 15) { // TODO: determine right height and damage
+                        if (playerTickEvent.getPlayer().getPosition().y() < 15 && tickCounter % 20 == 1) { // TODO: determine right height and damage
                             playerTickEvent.getPlayer().damage(
-                                    new Damage( // TODO: Damage the player 2 hearts / 2s
+                                    new Damage(
                                             DamageType.FALL,
                                             null,
                                             null,
                                             null,
-                                            1
+                                            3
 
                                     )
                             );
 
-                            playerTickEvent.getPlayer().sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(750)));
+                            gameInstance.sendGroupedPacket(new ParticlePacket(
+                                    Particle.DAMAGE_INDICATOR,
+                                    true,
+                                    playerTickEvent.getPlayer().getPosition(),
+                                    new Vec(0.1, 0.2, 0.1),
+                                    0.5F,
+                                    30
+                            ));
+
+                            playerTickEvent.getPlayer().playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_ABOUT_TO_SPAWN_ITEM).pitch(0.7F).volume(0.4F).build(), playerTickEvent.getPlayer().getPosition());
+                            playerTickEvent.getPlayer().playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_BREAK).pitch(0F).volume(0.5F).build(), playerTickEvent.getPlayer().getPosition());
+
+                            playerTickEvent.getPlayer().sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2200),Duration.ofMillis(750)));
                             playerTickEvent.getPlayer().sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MONTEZ VITE!!</b></dark_red>"));
                             playerTickEvent.getPlayer().sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Vous êtes trop bas!</red>"));
                         }
@@ -295,7 +310,11 @@ public class GamePlayingHandler extends GameStateHandler {
 
             bossBar.progress(1.0f - ((float) tickCounter / IMMUNITY_TICKS));
 
-            gameInstance.getPlayers().forEach(player -> player.sendActionBar(MM.deserialize("<gray>Montez! Vous êtes invincible.</gray>")));
+            if (playingState == PlayingState.IMMOBILE) {
+                gameInstance.getPlayers().forEach(player -> player.sendActionBar(MM.deserialize("<dark_gray>»</dark_gray> <gray>Préparez vous à monter...</gray> <dark_gray>«</dark_gray>")));
+            } else {
+                gameInstance.getPlayers().forEach(player -> player.sendActionBar(MM.deserialize("<dark_gray>»</dark_gray> <gray>Montez! Vous êtes invincible.</gray> <dark_gray>«</dark_gray>")));
+            }
             return;
         }
 

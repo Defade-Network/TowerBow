@@ -5,6 +5,7 @@ import net.defade.towerbow.game.GameInstance;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.damage.Damage;
 import net.minestom.server.entity.damage.DamageType;
@@ -17,6 +18,8 @@ import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.generator.GenerationUnit;
 import net.minestom.server.instance.generator.Generator;
 import net.minestom.server.item.Material;
+import net.minestom.server.network.packet.server.play.ParticlePacket;
+import net.minestom.server.particle.Particle;
 import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.NotNull;
 import java.util.PriorityQueue;
@@ -105,6 +108,14 @@ public class WorldHandler implements Generator {
                         if (blockType.registry().material() == Material.COBBLESTONE) {
                             gameInstance.setBlock(block.right(), Block.MOSSY_COBBLESTONE);
                             gameInstance.playSound(Sound.sound().type(SoundEvent.BLOCK_MOSS_PLACE).pitch(1F).volume(1F).build(), block.right());
+                            gameInstance.sendGroupedPacket(new ParticlePacket(
+                                    Particle.SCRAPE,
+                                    true,
+                                    block.right().add(0.5,0.5,0.5),
+                                    new Vec(0.4, 0.4, 0.4),
+                                    0.5F,
+                                    7
+                            ));
 
                             // Add the block to the queue to be updated again in 30 seconds
                             blockQueue.add(Pair.of(currentTime + 30 * 1000, block.right()));

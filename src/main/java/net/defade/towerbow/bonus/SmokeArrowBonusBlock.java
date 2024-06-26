@@ -61,22 +61,36 @@ public class SmokeArrowBonusBlock implements BonusBlock {
                     }
 
                     // Spawn smoke particles and give everyone in a 4 block radius blindness
-                    ParticlePacket particlePacket = new ParticlePacket(
-                            Particle.LARGE_SMOKE,
-                            true,
-                            entity.getPosition(),
-                            new Vec(3, 3, 3),
-                            0.02F,
-                            20
-                    );
-
                     Potion blindness = new Potion(
                             PotionEffect.BLINDNESS,
                             (byte) 1,
                             40
                     );
 
-                    gameInstance.sendGroupedPacket(particlePacket);
+                    gameInstance.sendGroupedPacket(new ParticlePacket(
+                            Particle.LARGE_SMOKE,
+                            true,
+                            entity.getPosition(),
+                            new Vec(3, 3, 3),
+                            0.02F,
+                            20
+                    ));
+                    gameInstance.sendGroupedPacket(new ParticlePacket(
+                            Particle.CAMPFIRE_COSY_SMOKE,
+                            true,
+                            entity.getPosition(),
+                            new Vec(0.2, 0.2, 0.2),
+                            0.1F,
+                            10
+                    ));
+                    gameInstance.sendGroupedPacket(new ParticlePacket(
+                            Particle.ASH,
+                            true,
+                            entity.getPosition(),
+                            new Vec(3, 3, 3),
+                            1F,
+                            50
+                    ));
                     for (Player player : gameInstance.getPlayers()) {
                         if (player.getDistanceSquared(entity) <= 4 * 4) {
                             player.addEffect(blindness);
