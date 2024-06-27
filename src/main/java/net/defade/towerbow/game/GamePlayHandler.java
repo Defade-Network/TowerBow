@@ -128,16 +128,25 @@ public class GamePlayHandler {
 
                     gameEventNode.getEntityInstanceNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
                         int minimumY = 25 + (tickCounter / 160); // +1Y / 8s
+                        double yPlayer = playerTickEvent.getPlayer().getPosition().y();
 
-                        //Send warning message to the player
-                        if (playerTickEvent.getPlayer().getPosition().y() < (minimumY + 5) && playerTickEvent.getPlayer().getPosition().y() >= (minimumY)) {
+                        //Send warning message to the player & show the Y border
+                        if (yPlayer < (minimumY + 14) && yPlayer >= (minimumY + 5)) {
+                            gameInstance.sendGroupedPacket(new ParticlePacket(
+                                    Particle.DUST.withProperties(new Color(255,0,0),1F),
+                                    true,
+                                    playerTickEvent.getPlayer().getPosition().withY(minimumY),
+                                    new Vec(2, 0, 2),
+                                    0F,
+                                    20
+                            ));
+                        } else if (yPlayer < (minimumY + 5) && yPlayer >= (minimumY)) {
 
                             gameInstance.sendGroupedPacket(new ParticlePacket(
                                     Particle.DUST.withProperties(new Color(255,0,0),1F),
-                                    //Particle.FLAME,
                                     true,
                                     playerTickEvent.getPlayer().getPosition().withY(minimumY),
-                                    new Vec(4, 0, 4),
+                                    new Vec(3, 0, 3),
                                     0F,
                                     40
                             ));
@@ -148,9 +157,7 @@ public class GamePlayHandler {
                                 playerTickEvent.getPlayer().sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
                                 playerTickEvent.getPlayer().sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Montez! Vous allez suffoquer.</red>"));
                             }
-                        }
-
-                        if (playerTickEvent.getPlayer().getPosition().y() < minimumY && tickCounter % 20 == 1) { // TODO: determine right height and damage
+                        } else if (yPlayer < minimumY && tickCounter % 20 == 1) { // TODO: determine right height and damage
                             playerTickEvent.getPlayer().damage(
                                     new Damage(
                                             DamageType.FALL,

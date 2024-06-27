@@ -61,8 +61,8 @@ public class SmokeArrowBonusBlock implements BonusBlock {
                                     true,
                                     entity.getPosition(),
                                     new Vec(0, 0, 0),
-                                    1F,
-                                    15
+                                    0.7F,
+                                    20
                             ));
                         } else if (entity.getEntityType() == EntityType.PLAYER) {
                             gameInstance.sendGroupedPacket(new ParticlePacket(
