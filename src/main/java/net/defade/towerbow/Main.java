@@ -9,8 +9,8 @@ public class Main {
         MinecraftServer minecraftServer = MinecraftServer.init();
 
         PvpExtension.init();
-        new GameManager();
 
         minecraftServer.start();
+        new GameManager();
     }
 }

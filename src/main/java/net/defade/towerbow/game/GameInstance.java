@@ -137,7 +137,7 @@ public class GameInstance extends InstanceContainer {
                 ));
 
                 player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(7500),Duration.ofMillis(1000)));
-                player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<gold><b>VICTOIRE!</b></gold>"));
+                player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<b><gradient:#FFA751:#FFD959>VICTOIRE!</gradient></b>"));
                 player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<gray>Pour rejouer, cliquez sur le papier</gray>"));
 
                 player.playSound(Sound.sound().type(SoundEvent.UI_TOAST_CHALLENGE_COMPLETE).pitch(1F).volume(0.5F).build(), player.getPosition());
@@ -153,7 +153,7 @@ public class GameInstance extends InstanceContainer {
                 ));
 
                 player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(7500),Duration.ofMillis(1000)));
-                player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<red><b>DÉFAITE!</b></red>"));
+                player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<b><gradient:#E01E1E:#FF6464>DÉFAITE!</gradient></b>"));
                 player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<gray>Pour rejouer, cliquez sur le papier</gray>"));
 
                 player.playSound(Sound.sound().type(SoundEvent.BLOCK_BEACON_DEACTIVATE).pitch(1F).volume(0.5F).build(), player.getPosition());

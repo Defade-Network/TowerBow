@@ -133,9 +133,7 @@ public class GameStartHandler {
 
                 case 1 -> gameInstance.startGame();
             }
-            if (tickCountdown != 0) {
-                tickCountdown--;
-            }
+            tickCountdown--;
         });
     }
 
@@ -163,5 +161,6 @@ public class GameStartHandler {
 
     public void stop() {
         MinecraftServer.getBossBarManager().destroyBossBar(bossBar);
+        startEventNode.unregister();
     }
 }
