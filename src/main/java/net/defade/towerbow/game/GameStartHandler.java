@@ -106,10 +106,8 @@ public class GameStartHandler {
                 return;
             }
 
-            tickCountdown--;
-
-            switch (tickCountdown / 20) {
-                case 60, 40, 30, 20, 10, 5, 4, 3, 2, 1 -> {
+            switch (tickCountdown) {
+                case 60*20, 40*20, 30*20, 20*20, 10*20, 5*20, 4*20, 3*20, 2*20, 1*20 -> {
                     gameInstance.sendMessage(
                             Component.text("» ").color(TextColor.color(NamedTextColor.GRAY))
                                     .append(Component.text("La partie commence dans ").color(TextColor.color(255, 255, 75)))
@@ -121,10 +119,14 @@ public class GameStartHandler {
                     gameInstance.sendTitlePart(TitlePart.TITLE, MM.deserialize(" "));
                     gameInstance.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<yellow>" + tickCountdown / 20 + "</yellow>"));
 
+
                     gameInstance.getPlayers().forEach(players -> gameInstance.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_HAT).pitch(1F).volume(0.5F).build(), players.getPosition()));
                 }
 
-                case 0 -> gameInstance.startGame();
+                case 1 -> gameInstance.startGame();
+            }
+            if (tickCountdown != 0) {
+                tickCountdown--;
             }
         });
     }
@@ -143,7 +145,7 @@ public class GameStartHandler {
                             .color(NamedTextColor.YELLOW)
                             .decoration(TextDecoration.BOLD, true)
                             .append(Component.text("(").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false))
-                            .append(Component.text(tickCountdown / 20 + "s").color(NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
+                            .append(Component.text((tickCountdown + 20) / 20 + "s").color(NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
                             .append(Component.text(")").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)
                             ));
 

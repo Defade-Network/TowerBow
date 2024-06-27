@@ -10,6 +10,7 @@ import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.color.Color;
 import net.minestom.server.coordinate.Vec;
+import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
@@ -129,36 +130,37 @@ public class GamePlayHandler {
                     gameEventNode.getEntityInstanceNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
                         int minimumY = 25 + (tickCounter / 160); // +1Y / 8s
                         double yPlayer = playerTickEvent.getPlayer().getPosition().y();
+                        Player player = playerTickEvent.getPlayer();
 
                         //Send warning message to the player & show the Y border
                         if (yPlayer < (minimumY + 14) && yPlayer >= (minimumY + 5)) {
-                            gameInstance.sendGroupedPacket(new ParticlePacket(
+                            player.sendPacket(new ParticlePacket(
                                     Particle.DUST.withProperties(new Color(255,0,0),1F),
                                     true,
-                                    playerTickEvent.getPlayer().getPosition().withY(minimumY),
+                                    player.getPosition().withY(minimumY),
                                     new Vec(2, 0, 2),
                                     0F,
                                     20
                             ));
                         } else if (yPlayer < (minimumY + 5) && yPlayer >= (minimumY)) {
 
-                            gameInstance.sendGroupedPacket(new ParticlePacket(
+                            player.sendPacket(new ParticlePacket(
                                     Particle.DUST.withProperties(new Color(255,0,0),1F),
                                     true,
-                                    playerTickEvent.getPlayer().getPosition().withY(minimumY),
+                                    player.getPosition().withY(minimumY),
                                     new Vec(3, 0, 3),
                                     0F,
                                     40
                             ));
                             if (tickCounter % 40 == 1) {
-                                playerTickEvent.getPlayer().playSound(Sound.sound().type(SoundEvent.ENTITY_GUARDIAN_ATTACK).pitch(0.7F).volume(1F).build(), playerTickEvent.getPlayer().getPosition());
+                                player.playSound(Sound.sound().type(SoundEvent.ENTITY_GUARDIAN_ATTACK).pitch(0.7F).volume(1F).build(), playerTickEvent.getPlayer().getPosition());
 
-                                playerTickEvent.getPlayer().sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1000),Duration.ofMillis(750)));
-                                playerTickEvent.getPlayer().sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
-                                playerTickEvent.getPlayer().sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Montez! Vous allez suffoquer.</red>"));
+                                player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1000),Duration.ofMillis(750)));
+                                player.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+                                player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Montez! Vous allez suffoquer.</red>"));
                             }
                         } else if (yPlayer < minimumY && tickCounter % 20 == 1) { // TODO: determine right height and damage
-                            playerTickEvent.getPlayer().damage(
+                            player.damage(
                                     new Damage(
                                             DamageType.FALL,
                                             null,
@@ -172,7 +174,7 @@ public class GamePlayHandler {
                             gameInstance.sendGroupedPacket(new ParticlePacket(
                                     Particle.DAMAGE_INDICATOR,
                                     true,
-                                    playerTickEvent.getPlayer().getPosition(),
+                                    player.getPosition(),
                                     new Vec(0.1, 0.2, 0.1),
                                     0.5F,
                                     30
@@ -180,18 +182,18 @@ public class GamePlayHandler {
                             gameInstance.sendGroupedPacket(new ParticlePacket(
                                     Particle.DUST.withProperties(new Color(255,0,0),1.5F),
                                     true,
-                                    playerTickEvent.getPlayer().getPosition().withY(minimumY),
+                                    player.getPosition().withY(minimumY),
                                     new Vec(4, 0, 4),
                                     0F,
                                     200
                             ));
 
-                            playerTickEvent.getPlayer().playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_ABOUT_TO_SPAWN_ITEM).pitch(0.7F).volume(0.4F).build(), playerTickEvent.getPlayer().getPosition());
-                            playerTickEvent.getPlayer().playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_BREAK).pitch(0F).volume(0.5F).build(), playerTickEvent.getPlayer().getPosition());
+                            player.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_ABOUT_TO_SPAWN_ITEM).pitch(0.7F).volume(0.4F).build(), playerTickEvent.getPlayer().getPosition());
+                            player.playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_BREAK).pitch(0F).volume(0.5F).build(), playerTickEvent.getPlayer().getPosition());
 
-                            playerTickEvent.getPlayer().sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2200),Duration.ofMillis(750)));
-                            playerTickEvent.getPlayer().sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MONTEZ VITE!!</b></dark_red>"));
-                            playerTickEvent.getPlayer().sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Vous êtes trop bas!</red>"));
+                            player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2200),Duration.ofMillis(750)));
+                            player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MONTEZ VITE!!</b></dark_red>"));
+                            player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Vous êtes trop bas!</red>"));
                         }
                     });
 
