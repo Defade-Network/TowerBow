@@ -62,10 +62,10 @@ public class ExplosiveArrowBonusBlock implements BonusBlock {
                     int blockZ = projectileCollideWithBlockEvent.getCollisionPosition().blockZ();
 
                     for (int x = blockX - 2; x <= blockX + 2; x++) {
-                        for (int y = blockY - 2; y <= blockY + 2; y++) {
+                        for (int y = Math.max(1, blockY - 2); y <= blockY + 2; y++) { // Don't break the floor
                             for (int z = blockZ - 2; z <= blockZ + 2; z++) {
                                 Block blockType = gameInstance.getBlock(x, y, z);
-                                if (blockType == Block.AIR || blockType == Block.BLUE_STAINED_GLASS) continue;
+                                if (blockType == Block.AIR) continue;
 
                                 gameInstance.setBlock(x, y, z, Block.MOSSY_COBBLESTONE);
                                 WorldHandler worldHandler = (WorldHandler) gameInstance.generator();

@@ -1,21 +1,27 @@
 package net.defade.towerbow.game;
 
+import net.defade.towerbow.map.AmethystMapSource;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.timer.TaskSchedule;
-
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.Executors;
 
 public class GameManager {
     public static final int MIN_PLAYERS = 4;
     public static final int MAX_PLAYERS = 12;
     private static final int MAX_GAME_INSTANCES = 20;
 
-    private final Set<GameInstance> gameInstances = new HashSet<>();
+    private final Timer timer = new Timer();
+
+    private final AmethystMapSource mapSource = new AmethystMapSource();
+    private final Set<GameInstance> gameInstances = new CopyOnWriteArraySet<>();
 
     public GameManager() {
         MinecraftServer.getGlobalEventHandler().addListener(AsyncPlayerConfigurationEvent.class, event -> {
@@ -27,7 +33,12 @@ public class GameManager {
             }
         });
 
-        MinecraftServer.getSchedulerManager().scheduleTask(this::checkGameInstances, TaskSchedule.tick(20), TaskSchedule.immediate());
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                checkGameInstances();
+            }
+        }, 0, 2000);
     }
 
     public void checkGameInstances() {
@@ -42,7 +53,7 @@ public class GameManager {
     }
 
     public void createGameInstance() {
-        GameInstance gameInstance = new GameInstance(this);
+        GameInstance gameInstance = new GameInstance(this, mapSource.getRandomMap());
         MinecraftServer.getInstanceManager().registerInstance(gameInstance);
         gameInstances.add(gameInstance);
 
