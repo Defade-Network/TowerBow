@@ -41,7 +41,7 @@ public class WorldHandler implements Generator {
         registerBlockDecay();
         registerWorldBorderDamage();
 
-        gameInstance.setGenerator(this);
+        //gameInstance.setGenerator(this);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class WorldHandler implements Generator {
         Point absoluteEnd = generationUnit.absoluteEnd();
 
         // Check if the generation unit is inside the zone
-        if (absoluteStart.blockX() >= -50 && absoluteEnd.blockX() <= 50 && absoluteStart.blockZ() >= -50 && absoluteEnd.blockZ() <= 50) {
+        if (true) {
             generationUnit.modifier().fillHeight(0, 1, Block.BLUE_STAINED_GLASS);
         } else {
             int startX = Math.max(-50, absoluteStart.blockX());
@@ -74,7 +74,7 @@ public class WorldHandler implements Generator {
 
     private void disableFloorBreaking() {
         gameInstance.getEventNode().getInstanceNode().addListener(PlayerBlockBreakEvent.class, event -> {
-            if (event.getBlock().registry().material() == Material.BLUE_STAINED_GLASS) { // Don't allow players to break the floor
+            if (event.getBlockPosition().blockY() <= 0) { // Don't allow players to break the floor
                 event.setCancelled(true);
             }
         });

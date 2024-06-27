@@ -159,7 +159,7 @@ public class GamePlayHandler {
                     playingState = PlayingState.PLAYING;
                 }
                 case TICKS_BEFORE_WORLD_BORDER_SHRINK -> {
-                    gameInstance.setWorldBorder(new WorldBorder(50, 0, 0, 0, 0), 60); // Shrink to 50x50 over 60 seconds
+                    gameInstance.setWorldBorder(new WorldBorder(50, 50, 50, 0, 0), 60); // Shrink to 50x50 over 60 seconds
                     // Border shrinking sound & message
                     gameInstance.getPlayers().forEach(player -> {
                         player.playSound(Sound.sound().type(SoundEvent.ENTITY_ELDER_GUARDIAN_CURSE).pitch(0F).volume(0.5F).build(), player.getPosition());

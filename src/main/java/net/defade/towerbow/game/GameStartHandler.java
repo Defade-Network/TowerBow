@@ -11,10 +11,10 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.instance.InstanceTickEvent;
+import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.instance.Instance;
@@ -52,10 +52,18 @@ public class GameStartHandler {
         this.gameInstance = gameInstance;
         this.startEventNode = new GameEventNode(gameInstance.getEventNode());
 
+        disableBlockBreaking();
+
         registerJoinMessages();
         registerLeaveMessages();
 
         registerGameStartCountdown();
+    }
+
+    private void disableBlockBreaking() {
+        startEventNode.getPlayerNode().addListener(PlayerBlockBreakEvent.class, playerBlockBreakEvent -> {
+            playerBlockBreakEvent.setCancelled(true);
+        });
     }
 
     private void registerJoinMessages() {
@@ -68,7 +76,7 @@ public class GameStartHandler {
             ));
 
             player.setGameMode(GameMode.SURVIVAL);
-            player.teleport(new Pos(0, 1, 0));
+            player.teleport(gameInstance.getMapConfig().getSpawnPoint());
 
             int connectedPlayers = gameInstance.getPlayers().size();
             if (connectedPlayers >= GameManager.MIN_PLAYERS) {
@@ -147,9 +155,10 @@ public class GameStartHandler {
                             .append(Component.text(")").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)
                             ));
 
-            bossBar.progress((float) tickCountdown / (countdownTime * 20));
+            //bossBar.progress((float) tickCountdown / (countdownTime * 20));
         }
     }
+
     public void stop() {
         MinecraftServer.getBossBarManager().destroyBossBar(bossBar);
     }
