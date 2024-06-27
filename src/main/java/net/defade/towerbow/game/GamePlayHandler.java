@@ -8,6 +8,7 @@ import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
+import net.minestom.server.color.Color;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
@@ -126,7 +127,30 @@ public class GamePlayHandler {
                     });
 
                     gameEventNode.getEntityInstanceNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
-                        if (playerTickEvent.getPlayer().getPosition().y() < 20 && tickCounter % 20 == 1) { // TODO: determine right height and damage
+                        int minimumY = 25 + (tickCounter / 160); // +1Y / 8s
+
+                        //Send warning message to the player
+                        if (playerTickEvent.getPlayer().getPosition().y() < (minimumY + 5) && playerTickEvent.getPlayer().getPosition().y() >= (minimumY)) {
+
+                            gameInstance.sendGroupedPacket(new ParticlePacket(
+                                    Particle.DUST.withProperties(new Color(255,0,0),1F),
+                                    //Particle.FLAME,
+                                    true,
+                                    playerTickEvent.getPlayer().getPosition().withY(minimumY),
+                                    new Vec(4, 0, 4),
+                                    0F,
+                                    40
+                            ));
+                            if (tickCounter % 40 == 1) {
+                                playerTickEvent.getPlayer().playSound(Sound.sound().type(SoundEvent.ENTITY_GUARDIAN_ATTACK).pitch(0.7F).volume(1F).build(), playerTickEvent.getPlayer().getPosition());
+
+                                playerTickEvent.getPlayer().sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1000),Duration.ofMillis(750)));
+                                playerTickEvent.getPlayer().sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+                                playerTickEvent.getPlayer().sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Montez! Vous allez suffoquer.</red>"));
+                            }
+                        }
+
+                        if (playerTickEvent.getPlayer().getPosition().y() < minimumY && tickCounter % 20 == 1) { // TODO: determine right height and damage
                             playerTickEvent.getPlayer().damage(
                                     new Damage(
                                             DamageType.FALL,
@@ -145,6 +169,14 @@ public class GamePlayHandler {
                                     new Vec(0.1, 0.2, 0.1),
                                     0.5F,
                                     30
+                            ));
+                            gameInstance.sendGroupedPacket(new ParticlePacket(
+                                    Particle.DUST.withProperties(new Color(255,0,0),1.5F),
+                                    true,
+                                    playerTickEvent.getPlayer().getPosition().withY(minimumY),
+                                    new Vec(4, 0, 4),
+                                    0F,
+                                    200
                             ));
 
                             playerTickEvent.getPlayer().playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_ABOUT_TO_SPAWN_ITEM).pitch(0.7F).volume(0.4F).build(), playerTickEvent.getPlayer().getPosition());
@@ -171,7 +203,7 @@ public class GamePlayHandler {
             }
 
             if (tickCounter == ticksBeforeNextBonusBlock) {
-                ticksBeforeNextBonusBlock += 60 * 20; // Add 1 minute
+                ticksBeforeNextBonusBlock += (60 * 20) - (tickCounter / 15); // Add 1 minute minus ~5s per minute passed
 
                 bonusBlockManager.spawnBonusBlock();
 

@@ -7,6 +7,7 @@ import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
+import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.entity.EntityShootEvent;
 import net.minestom.server.event.entity.EntityTickEvent;
@@ -52,6 +53,29 @@ public class SmokeArrowBonusBlock implements BonusBlock {
                 })
                 .addListener(EntityTickEvent.class, entityTickEvent -> {
                     Entity entity = entityTickEvent.getEntity();
+
+                    if (entity.hasTag(SMOKE_ARROW) && entity.getTag(SMOKE_ARROW)) { //Arrow Smoke Trail
+                        if (entity.getEntityType() == EntityType.ARROW) {
+                            gameInstance.sendGroupedPacket(new ParticlePacket(
+                                    Particle.LARGE_SMOKE,
+                                    true,
+                                    entity.getPosition(),
+                                    new Vec(0, 0, 0),
+                                    1F,
+                                    15
+                            ));
+                        } else if (entity.getEntityType() == EntityType.PLAYER) {
+                            gameInstance.sendGroupedPacket(new ParticlePacket(
+                                    Particle.SMOKE,
+                                    true,
+                                    entity.getPosition(),
+                                    new Vec(0.2, 0, 0.2),
+                                    0.01F,
+                                    5
+                            ));
+                        }
+
+                    }
                     if (!entity.hasTag(IMPACT_TIME)) return;
 
                     long impactTime = entity.getTag(IMPACT_TIME);
