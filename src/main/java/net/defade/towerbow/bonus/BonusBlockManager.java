@@ -10,6 +10,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Player;
@@ -22,13 +23,15 @@ import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
 import net.minestom.server.utils.NamespaceID;
 import org.jetbrains.annotations.NotNull;
-
 import java.time.Duration;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 public class BonusBlockManager implements BlockHandler {
-    private static final MiniMessage MM = MiniMessage.miniMessage();
+    private static final int MIN_DISTANCE_BETWEEN_PLAYERS = 20;
     private static final Tag<String> BONUS_BLOCK_TAG = Tag.String("bonus_block");
+
     private static final Block[] WOOL_BLOCKS = new Block[] {
             Block.WHITE_WOOL,
             Block.ORANGE_WOOL,
@@ -47,12 +50,16 @@ public class BonusBlockManager implements BlockHandler {
             Block.RED_WOOL,
             Block.BLACK_WOOL
     };
+
     private static final Map<String, BonusBlock> bonusBlocks = Map.of(
             "explosive_arrow", new ExplosiveArrowBonusBlock(),
             "smoke_arrow", new SmokeArrowBonusBlock(),
             "heal_bonus", new HealBonusBlock(),
             "poison_bonus", new PoisonBonusBlock()
     );
+
+    private static final Random RANDOM = new Random();
+    private static final MiniMessage MM = MiniMessage.miniMessage();
 
     private final GameInstance gameInstance;
     private final GameEventNode gameEventNode;
@@ -66,12 +73,38 @@ public class BonusBlockManager implements BlockHandler {
     }
 
     public void spawnBonusBlock() {
+        Set<Player> firstTeamPlayers = gameInstance.getTeams().getPlayers(gameInstance.getTeams().getGameTeams().firstTeam());
+        Set<Player> secondTeamPlayers = gameInstance.getTeams().getPlayers(gameInstance.getTeams().getGameTeams().secondTeam());
+
+        Pos spawnPosition = null;
+        for (Player firstTeamPlayer : firstTeamPlayers) {
+            for (Player secondTeamPlayer : secondTeamPlayers) {
+                if (firstTeamPlayer.getPosition().distanceSquared(secondTeamPlayer.getPosition()) < MIN_DISTANCE_BETWEEN_PLAYERS * MIN_DISTANCE_BETWEEN_PLAYERS) {
+                    return;
+                }
+
+                // Get the middle point between the two players and randomize the position a bit
+                spawnPosition = firstTeamPlayer.getPosition().add(secondTeamPlayer.getPosition()).div(2)
+                        .add(RANDOM.nextInt(-7, 7), RANDOM.nextInt(-7, 7), RANDOM.nextInt(-7, 7));
+            }
+        }
+
+        if (spawnPosition == null) {
+            // Set the position 10 blocks under a random player
+            Player randomPlayer = gameInstance.getPlayers().stream()
+                    .skip(RANDOM.nextInt(gameInstance.getPlayers().size()))
+                    .findFirst()
+                    .orElseThrow();
+
+            spawnPosition = randomPlayer.getPosition().sub(0, 10, 0);
+        }
+
         String bonusBlockId = bonusBlocks.keySet().stream()
                 .skip((int) (bonusBlocks.size() * Math.random()))
                 .findFirst()
                 .orElseThrow();
 
-        gameInstance.setBlock(10, 10, 10, getRandomBlock(null)
+        gameInstance.setBlock(spawnPosition, getRandomBlock(null)
                 .withTag(BONUS_BLOCK_TAG, bonusBlockId)
                 .withHandler(this)
         );
