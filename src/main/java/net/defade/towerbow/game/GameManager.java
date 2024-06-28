@@ -4,14 +4,19 @@ import net.defade.towerbow.map.AmethystMapSource;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
-import net.minestom.server.timer.TaskSchedule;
+import net.minestom.server.event.player.PlayerChatEvent;
+import net.minestom.server.event.player.PlayerSpawnEvent;
+import net.minestom.server.network.packet.server.play.PlayerInfoRemovePacket;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.Executors;
 
 public class GameManager {
     public static final int MIN_PLAYERS = 4;
@@ -32,6 +37,8 @@ public class GameManager {
                 event.setSpawningInstance(gameInstance);
             }
         });
+
+        isolatePlayers();
 
         timer.schedule(new TimerTask() {
             @Override
@@ -69,5 +76,37 @@ public class GameManager {
                 .filter(GameInstance::acceptsPlayers)
                 .max(Comparator.comparingInt(gameInstance -> gameInstance.getPlayers().size()))
                 .orElse(null);
+    }
+
+    /**
+     * Hides all the players from players in different game instances
+     */
+    private void isolatePlayers() {
+        MinecraftServer.getGlobalEventHandler()
+                .addListener(PlayerSpawnEvent.class, event -> {
+                    Player player = event.getPlayer();
+                    GameInstance playerGameInstance = (GameInstance) player.getInstance();
+
+                    final PlayerInfoRemovePacket playerRemovePacket = new PlayerInfoRemovePacket(player.getUuid());
+                    List<UUID> hiddenPlayers = new ArrayList<>();
+                    for (GameInstance gameInstance : gameInstances) {
+                        if (gameInstance != playerGameInstance) {
+                            hiddenPlayers.addAll(gameInstance.getPlayers().stream().map(Player::getUuid).toList());
+
+                            gameInstance.sendGroupedPacket(playerRemovePacket); // Hide this player from others
+                        }
+                    }
+
+                    player.sendPacket(new PlayerInfoRemovePacket(hiddenPlayers)); // Hide other players from this player
+                })
+                .addListener(PlayerChatEvent.class, playerChatEvent -> {
+                    GameInstance gameInstance = (GameInstance) playerChatEvent.getPlayer().getInstance();
+
+                    for (GameInstance instance : gameInstances) {
+                        if (instance != gameInstance) {
+                            playerChatEvent.getRecipients().removeAll(instance.getPlayers());
+                        }
+                    }
+                });
     }
 }
