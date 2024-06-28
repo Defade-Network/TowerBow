@@ -1,7 +1,6 @@
 package net.defade.towerbow.bonus;
 
 import net.defade.towerbow.game.GameInstance;
-import net.defade.towerbow.map.WorldHandler;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.color.Color;
 import net.minestom.server.coordinate.Pos;
@@ -68,9 +67,7 @@ public class ExplosiveArrowBonusBlock implements BonusBlock {
                                 if (blockType == Block.AIR) continue;
 
                                 gameInstance.setBlock(x, y, z, Block.MOSSY_COBBLESTONE);
-                                WorldHandler worldHandler = (WorldHandler) gameInstance.generator();
-                                // Should never be null
-                                if (worldHandler != null) worldHandler.registerBlockDecay(new Pos(x, y, z), 2 * 1000); // 2 seconds
+                                gameInstance.getWorldHandler().registerBlockDecay(new Pos(x, y, z), 2 * 1000); // 2 seconds
                             }
                         }
                     }

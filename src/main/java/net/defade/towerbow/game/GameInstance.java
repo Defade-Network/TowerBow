@@ -54,6 +54,7 @@ public class GameInstance extends InstanceContainer {
 
     private boolean acceptsPlayers = true;
 
+    private final WorldHandler worldHandler = new WorldHandler(this);
     private final TeamsManager teamsManager = new TeamsManager(this);
     private final InventoryManager inventoryManager = new InventoryManager(this);
 
@@ -68,7 +69,6 @@ public class GameInstance extends InstanceContainer {
         this.mapConfig = new MapConfig(new String(amethystLoader.getWorldConfig()));
         setChunkLoader(amethystLoader);
 
-        WorldHandler.register(this);
         setWorldBorder(INITIAL_WORLD_BORDER);
     }
 
@@ -82,6 +82,10 @@ public class GameInstance extends InstanceContainer {
 
     public GameEventNode getEventNode() {
         return gameEventNode;
+    }
+
+    public WorldHandler getWorldHandler() {
+        return worldHandler;
     }
 
     public TeamsManager getTeams() {
