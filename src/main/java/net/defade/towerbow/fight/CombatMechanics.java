@@ -15,6 +15,7 @@ import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.coordinate.Pos;
@@ -170,10 +171,22 @@ public class CombatMechanics {
             deadPlayer.setRespawnPoint(deadPlayer.getPosition());
 
             new Entity(EntityType.LIGHTNING_BOLT).setInstance(gameInstance, deadPlayer.getPosition());
-            gameInstance.sendMessage(MM.deserialize(
-                    "<red>\uD83C\uDFF9</red> <deadplayer> <yellow>a été tué par</yellow> <killer><yellow>!</yellow>", //TODO: define killer
-                    Placeholder.component("deadplayer", deadPlayer.getName().color(TextColor.color(gameInstance.getTeams().getTeam(deadPlayer).color())))
-            ));
+
+            Player killer = getLatestDamager(deadPlayer);
+            if (killer == null) {
+                gameInstance.sendMessage(MM.deserialize(
+                        "<red>\uD83C\uDFF9</red> <deadplayer> <yellow>est mort!</yellow>",
+                        Placeholder.component("deadplayer", deadPlayer.getName().color(TextColor.color(gameInstance.getTeams().getTeam(deadPlayer).color())))
+                ));
+            } else {
+                gameInstance.sendMessage(MM.deserialize(
+                        "<red>\uD83C\uDFF9</red> <deadplayer> <yellow>a été tué par</yellow> <killer><yellow>!</yellow>",
+                        TagResolver.builder()
+                                .resolver(Placeholder.component("deadplayer", deadPlayer.getName().color(TextColor.color(gameInstance.getTeams().getTeam(deadPlayer).color()))))
+                                .resolver(Placeholder.component("killer", killer.getName().color(TextColor.color(gameInstance.getTeams().getTeam(killer).color()))))
+                                .build()
+                ));
+            }
             gameInstance.getPlayers().forEach(player -> {
                 if (gameInstance.getTeams().getTeam(player) == gameInstance.getTeams().getTeam(deadPlayer)) { // An ally dies
                     player.playSound(Sound.sound().type(SoundEvent.ENTITY_FIREWORK_ROCKET_LARGE_BLAST_FAR).pitch(0.7F).volume(1.3F).build(), player.getPosition());
@@ -225,5 +238,10 @@ public class CombatMechanics {
 
     public static int getKills(Player player) {
         return player.hasTag(PLAYER_KILLS) ? player.getTag(PLAYER_KILLS) : 0;
+    }
+
+    public static Player getLatestDamager(Player player) {
+        UUID lastDamagerUUID = player.getTag(LAST_DAMAGER_UUID);
+        return lastDamagerUUID == null ? null : player.getInstance().getPlayerByUuid(lastDamagerUUID);
     }
 }
