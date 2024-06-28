@@ -173,21 +173,24 @@ public class CombatMechanics {
 
             new Entity(EntityType.LIGHTNING_BOLT).setInstance(gameInstance, deadPlayer.getPosition());
 
+            Component killText;
             Player killer = getLatestDamager(deadPlayer);
             if (killer == null) {
-                gameInstance.sendMessage(MM.deserialize(
+                killText = MM.deserialize(
                         "<red>\uD83C\uDFF9</red> <deadplayer> <yellow>est mort!</yellow>",
                         Placeholder.component("deadplayer", deadPlayer.getName().color(TextColor.color(gameInstance.getTeams().getTeam(deadPlayer).color())))
-                ));
+                );
             } else {
-                gameInstance.sendMessage(MM.deserialize(
+                killText = MM.deserialize(
                         "<red>\uD83C\uDFF9</red> <deadplayer> <yellow>a été tué par</yellow> <killer><yellow>!</yellow>",
                         TagResolver.builder()
                                 .resolver(Placeholder.component("deadplayer", deadPlayer.getName().color(TextColor.color(gameInstance.getTeams().getTeam(deadPlayer).color()))))
                                 .resolver(Placeholder.component("killer", killer.getName().color(TextColor.color(gameInstance.getTeams().getTeam(killer).color()))))
                                 .build()
-                ));
+                );
             }
+            playerDeathEvent.setChatMessage(killText);
+
             gameInstance.getPlayers().forEach(player -> {
                 if (gameInstance.getTeams().getTeam(player) == gameInstance.getTeams().getTeam(deadPlayer)) { // An ally dies
                     player.playSound(Sound.sound().type(SoundEvent.ENTITY_FIREWORK_ROCKET_LARGE_BLAST_FAR).pitch(0.7F).volume(1.3F).build(), player.getPosition());
