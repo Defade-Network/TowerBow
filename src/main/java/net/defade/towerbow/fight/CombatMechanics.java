@@ -38,7 +38,7 @@ import java.util.UUID;
 
 public class CombatMechanics {
     private static final MiniMessage MM = MiniMessage.miniMessage();
-    public static final Tag<Integer> PLAYER_KILLS = Tag.Integer("kills");
+    private static final Tag<Integer> PLAYER_KILLS = Tag.Integer("kills");
     private static final Tag<UUID> LAST_DAMAGER_UUID = Tag.UUID("last_damager"); // Used to store the last player who damaged the player
 
     private static final Tag<Pos> PLAYER_SHOOT_POS = Tag.Structure("arrow_touched_ground", Pos.class); // Position at which the player shot the arrow
@@ -206,8 +206,6 @@ public class CombatMechanics {
     }
 
     private void registerKillCounter(GameInstance gameInstance) {
-        gameInstance.getPlayers().forEach(player -> player.setTag(PLAYER_KILLS, 0));
-
         combatMechanicsNode.addListener(EntityDamageEvent.class, entityDamageEvent -> {
             if (!(entityDamageEvent.getDamage().getSource() instanceof Player damager)) return;
 
@@ -223,5 +221,9 @@ public class CombatMechanics {
 
     public static EventNode<EntityInstanceEvent> create(GameInstance gameInstance) {
         return new CombatMechanics(gameInstance).combatMechanicsNode;
+    }
+
+    public static int getKills(Player player) {
+        return player.hasTag(PLAYER_KILLS) ? player.getTag(PLAYER_KILLS) : 0;
     }
 }

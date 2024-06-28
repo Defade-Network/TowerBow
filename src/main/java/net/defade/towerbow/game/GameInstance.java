@@ -133,7 +133,7 @@ public class GameInstance extends InstanceContainer {
                 player.sendMessage(MM.deserialize(
                         "<st><dark_gray>                                   </dark_gray></st>" +
                                 "\n<gold>\uD83C\uDFF9 <b>VICTOIRE</b> <dark_gray>-</dark_gray> <winners> \uD83C\uDFF9</gold>" +
-                                "\n\n<gray>»</gray> <yellow><b>" + player.getTag(CombatMechanics.PLAYER_KILLS) + "</b> Kills</yellow>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getKills(player) + "</b> Kills</yellow>" +
                                 "\n<gray>»</gray> <yellow>" + /* TODO: Block bonus count */ " Block Bonus</yellow>" +
                                 "\n<st><dark_gray>                                   </dark_gray></st>",
                         Placeholder.component("winners", winningTeam.name().color(TextColor.color(winningTeam.color())))
@@ -149,7 +149,7 @@ public class GameInstance extends InstanceContainer {
                 player.sendMessage(MM.deserialize(
                         "<st><dark_gray>                                   </dark_gray></st>" +
                                 "\n<red>\uD83C\uDFF9 <b>DÉFAITE</b> <dark_gray>-</dark_gray> <loosers> \uD83C\uDFF9</red>" +
-                                "\n\n<gray>»</gray> <yellow><b>" + player.getTag(CombatMechanics.PLAYER_KILLS) + "</b> Kills</yellow>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getKills(player) + "</b> Kills</yellow>" +
                                 "\n<gray>»</gray> <yellow>" + /* TODO: Block bonus count */ " Block Bonus</yellow>" +
                                 "\n<st><dark_gray>                                   </dark_gray></st>",
                         Placeholder.component("loosers", loosingTeam.name().color(TextColor.color(loosingTeam.color())))
