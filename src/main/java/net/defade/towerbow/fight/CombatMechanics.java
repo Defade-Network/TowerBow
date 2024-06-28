@@ -12,6 +12,7 @@ import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.teams.Team;
 import net.defade.towerbow.teams.TeamsManager;
 import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -56,7 +57,7 @@ public class CombatMechanics {
 
         registerDeathHandler();
 
-        registerKillCounter(gameInstance);
+        registerKillCounter();
     }
 
     private EventNode<EntityInstanceEvent> createPvPNode() {
@@ -218,17 +219,15 @@ public class CombatMechanics {
         });
     }
 
-    private void registerKillCounter(GameInstance gameInstance) {
+    private void registerKillCounter() {
         combatMechanicsNode.addListener(EntityDamageEvent.class, entityDamageEvent -> {
-            if (!(entityDamageEvent.getDamage().getSource() instanceof Player damager)) return;
-
-            entityDamageEvent.getEntity().setTag(LAST_DAMAGER_UUID, damager.getUuid());
+            if (entityDamageEvent.getDamage().getAttacker() == null) return;
+            entityDamageEvent.getEntity().setTag(LAST_DAMAGER_UUID, entityDamageEvent.getDamage().getAttacker().getUuid());
         }).addListener(PlayerDeathEvent.class, playerDeathEvent -> {
-            UUID killerUUID = playerDeathEvent.getPlayer().getTag(LAST_DAMAGER_UUID);
-            Player killer = killerUUID == null ? null : gameInstance.getPlayerByUuid(killerUUID);
+            Player killer = getLatestDamager(playerDeathEvent.getPlayer());
             if (killer == null || killer == playerDeathEvent.getPlayer()) return; // Ignore self kills
 
-            killer.setTag(PLAYER_KILLS, killer.getTag(PLAYER_KILLS) + 1);
+            killer.setTag(PLAYER_KILLS, getKills(killer) + 1);
         });
     }
 
