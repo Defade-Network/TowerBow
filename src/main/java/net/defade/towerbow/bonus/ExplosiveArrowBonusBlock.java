@@ -53,21 +53,22 @@ public class ExplosiveArrowBonusBlock implements BonusBlock {
                     gameInstance.playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_BREAK).pitch(0F).volume(1F).build(), entity.getPosition());
                     gameInstance.playSound(Sound.sound().type(SoundEvent.ENTITY_GENERIC_EXPLODE).pitch(1F).volume(1F).build(), entity.getPosition());
 
-
-
-                    // Get all blocks in a 5x5x5 cube around the hit block TODO: do a sphere check
+                    // Get all blocks in a 5x5x5 cube around the hit block
                     int blockX = projectileCollideWithBlockEvent.getCollisionPosition().blockX();
                     int blockY = projectileCollideWithBlockEvent.getCollisionPosition().blockY();
                     int blockZ = projectileCollideWithBlockEvent.getCollisionPosition().blockZ();
+                    Pos blockPos = new Pos(blockX, blockY, blockZ);
 
                     for (int x = blockX - 2; x <= blockX + 2; x++) {
                         for (int y = Math.max(1, blockY - 2); y <= blockY + 2; y++) { // Don't break the floor
                             for (int z = blockZ - 2; z <= blockZ + 2; z++) {
                                 Block blockType = gameInstance.getBlock(x, y, z);
                                 if (blockType == Block.AIR) continue;
+                                Pos pos = new Pos(x, y, z);
+                                if (pos.distanceSquared(blockPos) > 2 * 2) continue; // Only break blocks in a 5x5x5 cube (2 blocks away from the hit block
 
                                 gameInstance.setBlock(x, y, z, Block.MOSSY_COBBLESTONE);
-                                gameInstance.getWorldHandler().registerBlockDecay(new Pos(x, y, z), 2 * 1000); // 2 seconds
+                                gameInstance.getWorldHandler().registerBlockDecay(pos, 2 * 1000); // 2 seconds
                             }
                         }
                     }
