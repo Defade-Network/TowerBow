@@ -83,7 +83,7 @@ public class GameStartHandler {
                 tickCountdown = Math.min(tickCountdown, PLAYER_COUNTDOWN.get(connectedPlayers) * 20);
             }
 
-            gameInstance.setAcceptsPlayers(connectedPlayers < 12);
+            gameInstance.setAcceptsPlayers(connectedPlayers < GameManager.MAX_PLAYERS);
 
             player.showBossBar(bossBar);
         });
@@ -115,7 +115,7 @@ public class GameStartHandler {
             }
 
             switch (tickCountdown) {
-                case 60*20, 40*20, 30*20, 20*20, 10*20, 5*20, 4*20, 3*20, 2*20, 1*20 -> {
+                case 60 * 20, 40 * 20, 30 * 20, 20 * 20, 10 * 20, 5 * 20, 4 * 20, 3 * 20, 2 * 20, 1 * 20 -> {
                     gameInstance.sendMessage(
                             Component.text("» ").color(TextColor.color(NamedTextColor.GRAY))
                                     .append(Component.text("La partie commence dans ").color(TextColor.color(255, 255, 75)))
@@ -131,7 +131,7 @@ public class GameStartHandler {
                     gameInstance.getPlayers().forEach(players -> gameInstance.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_HAT).pitch(1F).volume(0.5F).build(), players.getPosition()));
                 }
 
-                case 1 -> gameInstance.startGame();
+                case 0 -> gameInstance.startGame();
             }
             tickCountdown--;
         });

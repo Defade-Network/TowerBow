@@ -15,6 +15,7 @@ import java.time.Duration;
 
 public class HealBonusBlock implements BonusBlock {
     private static final MiniMessage MM = MiniMessage.miniMessage();
+
     @Override
     public void onHit(Player shooter) {
         GameInstance gameInstance = (GameInstance) shooter.getInstance();
