@@ -50,7 +50,7 @@ public class Items {
             .with(ItemComponent.ENCHANTMENTS, new EnchantmentList(
                     Map.of(
                             Enchantment.EFFICIENCY, 2,
-                            Enchantment.SHARPNESS, 1
+                            Enchantment.SHARPNESS, 4
                     )
             ))
             .with(ItemComponent.UNBREAKABLE, new Unbreakable(false))

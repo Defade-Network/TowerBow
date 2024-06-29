@@ -10,6 +10,7 @@ import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.color.Color;
 import net.minestom.server.coordinate.Vec;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
@@ -33,6 +34,7 @@ import java.time.Duration;
 public class GamePlayHandler {
     public static final int TICKS_BEFORE_WORLD_BORDER_SHRINK = 10 * 60 * 20; // 10 minutes
     public static final int IMMUNITY_TICKS = 20 * 20; // 20 seconds
+    public static final int MIN_TICKS_BEFORE_BLOCK_BONUS_SPAWN = 20 * 20; // 20 seconds
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final AttributeModifier FREEZE_PLAYER_MODIFIER = new AttributeModifier(NamespaceID.from("defade:freeze_player"), -10000, AttributeOperation.ADD_VALUE);
 
@@ -152,48 +154,60 @@ public class GamePlayHandler {
                                     0F,
                                     40
                             ));
-                            if (tickCounter % 40 == 1) {
+                            if (tickCounter % 40 == 1 && player.getGameMode() == GameMode.SURVIVAL) {
                                 player.playSound(Sound.sound().type(SoundEvent.ENTITY_GUARDIAN_ATTACK).pitch(0.7F).volume(1F).build(), playerTickEvent.getPlayer().getPosition());
 
                                 player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1000),Duration.ofMillis(750)));
                                 player.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
                                 player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Montez! Vous allez suffoquer.</red>"));
                             }
-                        } else if (yPlayer < minimumY && tickCounter % 20 == 1) { // TODO: determine right height and damage
-                            player.damage(
-                                    new Damage(
-                                            DamageType.FALL,
-                                            null,
-                                            null,
-                                            null,
-                                            3
+                        } else if (yPlayer < minimumY && tickCounter % 20 == 1) {
+                            if (player.getGameMode() == GameMode.SURVIVAL) {
 
-                                    )
-                            );
+                                player.damage(
+                                        new Damage(
+                                                DamageType.FALL,
+                                                null,
+                                                null,
+                                                null,
+                                                3
 
-                            gameInstance.sendGroupedPacket(new ParticlePacket(
-                                    Particle.DAMAGE_INDICATOR,
-                                    true,
-                                    player.getPosition(),
-                                    new Vec(0.1, 0.2, 0.1),
-                                    0.5F,
-                                    30
-                            ));
-                            gameInstance.sendGroupedPacket(new ParticlePacket(
-                                    Particle.DUST.withProperties(new Color(255,0,0),1.5F),
-                                    true,
-                                    player.getPosition().withY(minimumY),
-                                    new Vec(4, 0, 4),
-                                    0F,
-                                    200
-                            ));
+                                        )
+                                );
 
-                            player.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_ABOUT_TO_SPAWN_ITEM).pitch(0.7F).volume(0.4F).build(), playerTickEvent.getPlayer().getPosition());
-                            player.playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_BREAK).pitch(0F).volume(0.5F).build(), playerTickEvent.getPlayer().getPosition());
+                                gameInstance.sendGroupedPacket(new ParticlePacket(
+                                        Particle.DAMAGE_INDICATOR,
+                                        true,
+                                        player.getPosition(),
+                                        new Vec(0.1, 0.2, 0.1),
+                                        0.5F,
+                                        30
+                                ));
+                                gameInstance.sendGroupedPacket(new ParticlePacket(
+                                        Particle.DUST.withProperties(new Color(255, 0, 0), 1.5F),
+                                        true,
+                                        player.getPosition().withY(minimumY),
+                                        new Vec(4, 0, 4),
+                                        0F,
+                                        200
+                                ));
 
-                            player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2200),Duration.ofMillis(750)));
-                            player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MONTEZ VITE!!</b></dark_red>"));
-                            player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Vous êtes trop bas!</red>"));
+                                player.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_ABOUT_TO_SPAWN_ITEM).pitch(0.7F).volume(0.4F).build(), playerTickEvent.getPlayer().getPosition());
+                                player.playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_BREAK).pitch(0F).volume(0.5F).build(), playerTickEvent.getPlayer().getPosition());
+
+                                player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0), Duration.ofMillis(2200), Duration.ofMillis(750)));
+                                player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MONTEZ VITE!!</b></dark_red>"));
+                                player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Vous êtes trop bas!</red>"));
+                            } else { // The player is in spectator (dead), show the Y border particles only to him
+                                player.sendPacket(new ParticlePacket(
+                                        Particle.DUST.withProperties(new Color(255, 0, 0), 1F),
+                                        true,
+                                        player.getPosition().withY(minimumY),
+                                        new Vec(4, 0, 4),
+                                        0F,
+                                        200
+                                        ));
+                            }
                         }
                     });
 
@@ -213,6 +227,7 @@ public class GamePlayHandler {
 
             if (tickCounter == ticksBeforeNextBonusBlock) {
                 ticksBeforeNextBonusBlock += (60 * 20) - (tickCounter / 15); // Add 1 minute minus ~5s per minute passed
+                if (ticksBeforeNextBonusBlock < MIN_TICKS_BEFORE_BLOCK_BONUS_SPAWN) ticksBeforeNextBonusBlock = MIN_TICKS_BEFORE_BLOCK_BONUS_SPAWN; // Sets the minimum block bonus timer, so it doesn't spawn too often
 
                 bonusBlockManager.spawnBonusBlock();
 

@@ -41,6 +41,8 @@ import java.util.UUID;
 public class CombatMechanics {
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final Tag<Integer> PLAYER_KILLS = Tag.Integer("kills");
+    private static final Tag<Integer> PLAYER_LONGSHOTS = Tag.Integer("longshots");
+    private static final Tag<Integer> PLAYER_DAMAGE_DEALT = Tag.Integer("damage_dealt");
     private static final Tag<UUID> LAST_DAMAGER_UUID = Tag.UUID("last_damager"); // Used to store the last player who damaged the player
 
     private static final Tag<Pos> PLAYER_SHOOT_POS = Tag.Structure("arrow_touched_ground", Pos.class); // Position at which the player shot the arrow
@@ -55,9 +57,8 @@ public class CombatMechanics {
 
         registerLongShots(gameInstance);
 
-        registerDeathHandler();
-
         registerKillCounter();
+        registerDeathHandler();
     }
 
     private EventNode<EntityInstanceEvent> createPvPNode() {
@@ -133,11 +134,15 @@ public class CombatMechanics {
                     if (shooter == null || !arrow.hasTag(PLAYER_SHOOT_POS))
                         return; // Should never happen but just in case
 
+                    shooter.setTag(PLAYER_DAMAGE_DEALT, getDamageDealt(shooter) + (int) entityDamageEvent.getDamage().getAmount());
+
                     Pos shootPos = arrow.getTag(PLAYER_SHOOT_POS);
 
                     double distance = shootPos.distance(target.getPosition());
                     shooter.setLevel((int) distance); // Distance displayed in xp bar
                     if (distance > 50) { // If the distance is > 50 blocks then it's a longshot
+                        shooter.setTag(PLAYER_LONGSHOTS, getLongshotCount(shooter) + 1);
+
                         shooter.setHealth(Math.min(shooter.getHealth() + 3, (float) shooter.getAttributeValue(Attribute.GENERIC_MAX_HEALTH)));
 
                         // Longshot sound & message
@@ -158,6 +163,18 @@ public class CombatMechanics {
                         shooter.setExp(0); // Empty xp bar
                     }
                 });
+    }
+
+    private void registerKillCounter() {
+        combatMechanicsNode.addListener(EntityDamageEvent.class, entityDamageEvent -> {
+            if (entityDamageEvent.getDamage().getAttacker() == null) return;
+            entityDamageEvent.getEntity().setTag(LAST_DAMAGER_UUID, entityDamageEvent.getDamage().getAttacker().getUuid());
+        }).addListener(PlayerDeathEvent.class, playerDeathEvent -> {
+            Player killer = getLatestDamager(playerDeathEvent.getPlayer());
+            if (killer == null || killer == playerDeathEvent.getPlayer()) return; // Ignore self kills
+
+            killer.setTag(PLAYER_KILLS, getKills(killer) + 1);
+        });
     }
 
     private void registerDeathHandler() {
@@ -189,7 +206,6 @@ public class CombatMechanics {
                                 .build()
                 );
             }
-            playerDeathEvent.setChatMessage(killText);
 
             gameInstance.getPlayers().forEach(player -> {
                 if (gameInstance.getTeams().getTeam(player) == gameInstance.getTeams().getTeam(deadPlayer)) { // An ally dies
@@ -222,24 +238,20 @@ public class CombatMechanics {
         });
     }
 
-    private void registerKillCounter() {
-        combatMechanicsNode.addListener(EntityDamageEvent.class, entityDamageEvent -> {
-            if (entityDamageEvent.getDamage().getAttacker() == null) return;
-            entityDamageEvent.getEntity().setTag(LAST_DAMAGER_UUID, entityDamageEvent.getDamage().getAttacker().getUuid());
-        }).addListener(PlayerDeathEvent.class, playerDeathEvent -> {
-            Player killer = getLatestDamager(playerDeathEvent.getPlayer());
-            if (killer == null || killer == playerDeathEvent.getPlayer()) return; // Ignore self kills
-
-            killer.setTag(PLAYER_KILLS, getKills(killer) + 1);
-        });
-    }
-
     public static EventNode<EntityInstanceEvent> create(GameInstance gameInstance) {
         return new CombatMechanics(gameInstance).combatMechanicsNode;
     }
 
     public static int getKills(Player player) {
         return player.hasTag(PLAYER_KILLS) ? player.getTag(PLAYER_KILLS) : 0;
+    }
+
+    public static int getLongshotCount(Player player) {
+        return player.hasTag(PLAYER_KILLS) ? player.getTag(PLAYER_KILLS) : 0;
+    }
+
+    public static int getDamageDealt(Player player) {
+        return player.hasTag(PLAYER_DAMAGE_DEALT) ? player.getTag(PLAYER_DAMAGE_DEALT) : 0;
     }
 
     public static Player getLatestDamager(Player player) {

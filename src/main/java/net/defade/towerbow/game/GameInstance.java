@@ -1,6 +1,7 @@
 package net.defade.towerbow.game;
 
 import net.defade.minestom.amethyst.AmethystLoader;
+import net.defade.towerbow.bonus.BonusBlockManager;
 import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.fight.InventoryManager;
 import net.defade.towerbow.map.MapConfig;
@@ -133,8 +134,10 @@ public class GameInstance extends InstanceContainer {
                 player.sendMessage(MM.deserialize(
                         "<st><dark_gray>                                   </dark_gray></st>" +
                                 "\n<gold>\uD83C\uDFF9 <b>VICTOIRE</b> <dark_gray>-</dark_gray> <winners> \uD83C\uDFF9</gold>" +
-                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getKills(player) + "</b> Kills</yellow>" +
-                                "\n<gray>»</gray> <yellow>" + /* TODO: Block bonus count */ " Block Bonus</yellow>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getDamageDealt(player) / 2 + "</b>❤ Infligés</yellow>" +
+                                "\n<gray>»</gray> <yellow><b>" + CombatMechanics.getKills(player) + "</b> Kills</yellow>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getLongshotCount(player) + "</b> Longshots</yellow> <gray>( >50 blocks)</gray>" +
+                                "\n<gray>»</gray> <yellow><b>" + BonusBlockManager.getBonusBlockCount(player) + "</b> Block Bonus</yellow>" +
                                 "\n<st><dark_gray>                                   </dark_gray></st>",
                         Placeholder.component("winners", winningTeam.name().color(TextColor.color(winningTeam.color())))
 
@@ -142,15 +145,16 @@ public class GameInstance extends InstanceContainer {
 
                 player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(7500),Duration.ofMillis(1000)));
                 player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<b><gradient:#FFA751:#FFD959>VICTOIRE!</gradient></b>"));
-                player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<gray>Pour rejouer, cliquez sur le papier</gray>"));
 
                 player.playSound(Sound.sound().type(SoundEvent.UI_TOAST_CHALLENGE_COMPLETE).pitch(1F).volume(0.5F).build(), player.getPosition());
             } else { // Player lost
                 player.sendMessage(MM.deserialize(
                         "<st><dark_gray>                                   </dark_gray></st>" +
                                 "\n<red>\uD83C\uDFF9 <b>DÉFAITE</b> <dark_gray>-</dark_gray> <loosers> \uD83C\uDFF9</red>" +
-                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getKills(player) + "</b> Kills</yellow>" +
-                                "\n<gray>»</gray> <yellow>" + /* TODO: Block bonus count */ " Block Bonus</yellow>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getDamageDealt(player) / 2 + "</b>❤ Infligés</yellow>" +
+                                "\n<gray>»</gray> <yellow><b>" + CombatMechanics.getKills(player) + "</b> Kills</yellow>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getLongshotCount(player) + "</b> Longshots</yellow> <gray>( >50 blocks)</gray>" +
+                                "\n<gray>»</gray> <yellow><b>" + BonusBlockManager.getBonusBlockCount(player) + "</b> Block Bonus</yellow>" +
                                 "\n<st><dark_gray>                                   </dark_gray></st>",
                         Placeholder.component("loosers", loosingTeam.name().color(TextColor.color(loosingTeam.color())))
 
@@ -158,11 +162,20 @@ public class GameInstance extends InstanceContainer {
 
                 player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(7500),Duration.ofMillis(1000)));
                 player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<b><gradient:#E01E1E:#FF6464>DÉFAITE!</gradient></b>"));
-                player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<gray>Pour rejouer, cliquez sur le papier</gray>"));
 
                 player.playSound(Sound.sound().type(SoundEvent.BLOCK_BEACON_DEACTIVATE).pitch(1F).volume(0.5F).build(), player.getPosition());
             }
-            player.setGameMode(GameMode.SPECTATOR);
+            player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<gray>Pour rejouer, cliquez sur le papier</gray>"));
+            player.sendActionBar(MM.deserialize(""));
+            //Set all players in "Spectator like" but not in spectator otherwise they won't have a hotbar
+            player.teleport(player.getPosition().add(0,0.1,0));
+
+            player.setGameMode(GameMode.ADVENTURE);
+            player.setAllowFlying(true);
+            player.setFlying(true);
+            player.setInvulnerable(true);
+
+            player.getInventory().clear(); //TODO: remember, don't give the replay paper before here
         });
         gamePlayHandler.stop();
 

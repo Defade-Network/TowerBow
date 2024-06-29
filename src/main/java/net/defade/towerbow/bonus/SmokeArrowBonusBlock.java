@@ -8,6 +8,7 @@ import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.entity.EntityShootEvent;
 import net.minestom.server.event.entity.EntityTickEvent;
@@ -119,7 +120,7 @@ public class SmokeArrowBonusBlock implements BonusBlock {
 
                     gameInstance.playSound(Sound.sound().type(SoundEvent.ENTITY_BREEZE_IDLE_GROUND).pitch(0F).volume(0.3F).build(), entity.getPosition());
                     for (Player player : gameInstance.getPlayers()) {
-                        if (player.getDistanceSquared(entity) <= 6 * 6) {
+                        if (player.getDistanceSquared(entity) <= 6 * 6 && player.getGameMode() == GameMode.SURVIVAL) {
                             player.addEffect(blindness);
                             player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(500),Duration.ofMillis(500)));
                             player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_gray><b>SMOKE ARROW!</b></dark_gray>"));
