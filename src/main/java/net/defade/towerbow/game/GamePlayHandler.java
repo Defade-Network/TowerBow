@@ -135,7 +135,7 @@ public class GamePlayHandler {
                         Player player = playerTickEvent.getPlayer();
 
                         //Send warning message to the player & show the Y border
-                        if (yPlayer < (minimumY + 14) && yPlayer >= (minimumY + 5)) {
+                        if (yPlayer < (minimumY + 14) && yPlayer >= (minimumY + 6)) {
                             player.sendPacket(new ParticlePacket(
                                     Particle.DUST.withProperties(new Color(255,0,0),1F),
                                     true,
@@ -144,7 +144,7 @@ public class GamePlayHandler {
                                     0F,
                                     20
                             ));
-                        } else if (yPlayer < (minimumY + 5) && yPlayer >= (minimumY)) {
+                        } else if (yPlayer < (minimumY + 6) && yPlayer >= (minimumY)) {
 
                             player.sendPacket(new ParticlePacket(
                                     Particle.DUST.withProperties(new Color(255,0,0),1F),
@@ -226,8 +226,8 @@ public class GamePlayHandler {
             }
 
             if (tickCounter == ticksBeforeNextBonusBlock) {
-                ticksBeforeNextBonusBlock += (60 * 20) - (tickCounter / 15); // Add 1 minute minus ~5s per minute passed
-                if (ticksBeforeNextBonusBlock < MIN_TICKS_BEFORE_BLOCK_BONUS_SPAWN) ticksBeforeNextBonusBlock = MIN_TICKS_BEFORE_BLOCK_BONUS_SPAWN; // Sets the minimum block bonus timer, so it doesn't spawn too often
+                // Add 1 minute minus ~5s per minute passed, capped at min_ticks
+                ticksBeforeNextBonusBlock += Math.max((60 * 20) - (tickCounter / 15), MIN_TICKS_BEFORE_BLOCK_BONUS_SPAWN);
 
                 bonusBlockManager.spawnBonusBlock();
 

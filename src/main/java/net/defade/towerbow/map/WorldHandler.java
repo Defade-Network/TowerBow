@@ -29,13 +29,19 @@ public class WorldHandler {
     private final Queue<Pair<Long, Point>> blockQueue = new PriorityQueue<>((a, b) -> (int) (a.left() - b.left()));
 
     private final GameInstance gameInstance;
+    private static final int MIN_TICKS_BEFORE_BLOCK_DECAY = 10 * 20; // 10 seconds
+    private int tickCounter;
 
     public WorldHandler(GameInstance gameInstance) {
         this.gameInstance = gameInstance;
 
         disableFloorBreaking();
+    }
+
+    public void start() {
         registerBlockDecay();
         registerWorldBorderDamage();
+        registerTickCounter();
     }
 
     /**
@@ -59,9 +65,10 @@ public class WorldHandler {
         gameInstance.getEventNode().getInstanceNode()
                 .addListener(PlayerBlockPlaceEvent.class, event -> {
                     event.consumeBlock(false);
+                    int millisBeforeBlockDecay = Math.max(160 - (tickCounter / 80), MIN_TICKS_BEFORE_BLOCK_DECAY / 20) * 1000; //2m40 minus 15s per minute, capped at 10sec
 
                     // Register the block to be updated in the list.
-                    blockQueue.add(Pair.of(System.currentTimeMillis() + 150 * 1000, event.getBlockPosition()));
+                    blockQueue.add(Pair.of(System.currentTimeMillis() + millisBeforeBlockDecay, event.getBlockPosition()));
                 })
                 .addListener(PlayerBlockBreakEvent.class, event -> {
                     // Remove the block from the list if it was placed
@@ -92,8 +99,8 @@ public class WorldHandler {
                                     7
                             ));
 
-                            // Add the block to the queue to be updated again in 30 seconds
-                            blockQueue.add(Pair.of(currentTime + 30 * 1000, block.right()));
+                            // Add the block to the queue to be updated again in 20 seconds
+                            blockQueue.add(Pair.of(currentTime + 20 * 1000, block.right()));
                         } else if (blockType.registry().material() == Material.MOSSY_COBBLESTONE) {
                             gameInstance.setBlock(block.right(), Block.AIR); //TODO: Add breaking animation
                         }
@@ -128,8 +135,8 @@ public class WorldHandler {
         });
     }
 
-    public static void register(GameInstance gameInstance) {
-        new WorldHandler(gameInstance);
+    private void registerTickCounter() {
+        gameInstance.getEventNode().getInstanceNode().addListener(InstanceTickEvent.class, instanceTickEvent -> tickCounter++);
     }
 
     private static double getClosestDistanceToBorder(Player player, WorldBorder worldBorder) {

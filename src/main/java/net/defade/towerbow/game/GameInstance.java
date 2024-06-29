@@ -121,6 +121,7 @@ public class GameInstance extends InstanceContainer {
         inventoryManager.giveStartItems(); // TODO: manage inventory with a state handler
 
         gameStartHandler.stop();
+        worldHandler.start();
         gamePlayHandler.start();
 
         // Teleport players to their spawn points
@@ -136,7 +137,7 @@ public class GameInstance extends InstanceContainer {
                                 "\n<gold>\uD83C\uDFF9 <b>VICTOIRE</b> <dark_gray>-</dark_gray> <winners> \uD83C\uDFF9</gold>" +
                                 "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getDamageDealt(player) / 2 + "</b>❤ Infligés</yellow>" +
                                 "\n<gray>»</gray> <yellow><b>" + CombatMechanics.getKills(player) + "</b> Kills</yellow>" +
-                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getLongshotCount(player) + "</b> Longshots</yellow> <gray>( >50 blocks)</gray>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getLongshotCount(player) + "</b> Longshots</yellow> <gray>(50+ blocks)</gray>" +
                                 "\n<gray>»</gray> <yellow><b>" + BonusBlockManager.getBonusBlockCount(player) + "</b> Block Bonus</yellow>" +
                                 "\n<st><dark_gray>                                   </dark_gray></st>",
                         Placeholder.component("winners", winningTeam.name().color(TextColor.color(winningTeam.color())))
@@ -153,7 +154,7 @@ public class GameInstance extends InstanceContainer {
                                 "\n<red>\uD83C\uDFF9 <b>DÉFAITE</b> <dark_gray>-</dark_gray> <loosers> \uD83C\uDFF9</red>" +
                                 "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getDamageDealt(player) / 2 + "</b>❤ Infligés</yellow>" +
                                 "\n<gray>»</gray> <yellow><b>" + CombatMechanics.getKills(player) + "</b> Kills</yellow>" +
-                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getLongshotCount(player) + "</b> Longshots</yellow> <gray>( >50 blocks)</gray>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getLongshotCount(player) + "</b> Longshots</yellow> <gray>(50+ blocks)</gray>" +
                                 "\n<gray>»</gray> <yellow><b>" + BonusBlockManager.getBonusBlockCount(player) + "</b> Block Bonus</yellow>" +
                                 "\n<st><dark_gray>                                   </dark_gray></st>",
                         Placeholder.component("loosers", loosingTeam.name().color(TextColor.color(loosingTeam.color())))
