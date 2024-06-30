@@ -244,7 +244,7 @@ public class CombatMechanics {
     }
 
     public static int getLongshotCount(Player player) {
-        return player.hasTag(PLAYER_KILLS) ? player.getTag(PLAYER_KILLS) : 0;
+        return player.hasTag(PLAYER_LONGSHOTS) ? player.getTag(PLAYER_LONGSHOTS) : 0;
     }
 
     public static int getDamageDealt(Player player) {
