@@ -11,6 +11,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.instance.InstanceTickEvent;
@@ -76,7 +77,7 @@ public class GameStartHandler {
             ));
 
             player.setGameMode(GameMode.SURVIVAL);
-            player.teleport(gameInstance.getMapConfig().getSpawnPoint());
+            player.teleport(new Pos(55.5, 101, 52.5));
 
             int connectedPlayers = gameInstance.getPlayers().size();
             if (connectedPlayers >= GameManager.MIN_PLAYERS) {

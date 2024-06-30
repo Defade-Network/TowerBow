@@ -4,7 +4,6 @@ import net.defade.minestom.amethyst.AmethystLoader;
 import net.defade.towerbow.bonus.BonusBlockManager;
 import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.fight.InventoryManager;
-import net.defade.towerbow.map.MapConfig;
 import net.defade.towerbow.map.WorldHandler;
 import net.defade.towerbow.teams.GameTeams;
 import net.defade.towerbow.teams.TeamUtils;
@@ -50,7 +49,6 @@ public class GameInstance extends InstanceContainer {
     private static final WorldBorder INITIAL_WORLD_BORDER = new WorldBorder(MAP_SIZE, 50, 50, 0, 0); // World border at the start of the game
 
     private final GameManager gameManager;
-    private final MapConfig mapConfig;
     private final GameEventNode gameEventNode = new GameEventNode(this, MinecraftServer.getGlobalEventHandler());
 
     private boolean acceptsPlayers = true;
@@ -67,7 +65,6 @@ public class GameInstance extends InstanceContainer {
         this.gameManager = gameManager;
 
         AmethystLoader amethystLoader = new AmethystLoader(this, mapPath);
-        this.mapConfig = new MapConfig(new String(amethystLoader.getWorldConfig()));
         setChunkLoader(amethystLoader);
 
         setWorldBorder(INITIAL_WORLD_BORDER);
@@ -93,10 +90,6 @@ public class GameInstance extends InstanceContainer {
         return gameTeams;
     }
 
-    public MapConfig getMapConfig() {
-        return mapConfig;
-    }
-
     /**
      * Starts the game.
      * This function will make sure that everything is ready to start the game.
@@ -106,17 +99,6 @@ public class GameInstance extends InstanceContainer {
 
         getPlayers().forEach(player -> player.setEnableRespawnScreen(false)); // Disable respawn screen
 
-        // Clear the spawn area
-        AbsoluteBlockBatch clearBatch = new AbsoluteBlockBatch();
-        for (int x = mapConfig.getSpawnStart().blockX(); x <= mapConfig.getSpawnEnd().blockX(); x++) {
-            for (int y = mapConfig.getSpawnStart().blockY(); y <= mapConfig.getSpawnEnd().blockY(); y++) {
-                for (int z = mapConfig.getSpawnStart().blockZ(); z <= mapConfig.getSpawnEnd().blockZ(); z++) {
-                    clearBatch.setBlock(x, y, z, Block.AIR);
-                }
-            }
-        }
-        clearBatch.apply(this, null);
-
         TeamUtils.giveAllPlayersTeams(gameTeams, getPlayers());
         inventoryManager.giveStartItems(); // TODO: manage inventory with a state handler
 
@@ -124,13 +106,11 @@ public class GameInstance extends InstanceContainer {
         worldHandler.start();
         gamePlayHandler.start();
 
+        createMap(); // Clear the lobby and create the floor and teleport players
+
         for (Player player : getPlayers()) {
            player.setDisplayName(player.getName().color(player.getTeam().getTeamDisplayName().color())); // Set player name color
         }
-
-        // Teleport players to their spawn points
-        spreadPlayersAcrossPos(gameTeams.firstTeam().getPlayers(), mapConfig.getFirstTeamSpawnStart(), mapConfig.getFirstTeamSpawnEnd());
-        spreadPlayersAcrossPos(gameTeams.secondTeam().getPlayers(), mapConfig.getSecondTeamSpawnStart(), mapConfig.getSecondTeamSpawnEnd());
     }
 
     public void finishGame(Team winningTeam, Team loosingTeam) {
@@ -192,6 +172,53 @@ public class GameInstance extends InstanceContainer {
         getPlayers().forEach(player -> player.kick(Component.text("The instance is being destroyed.").color(NamedTextColor.RED)));
         MinecraftServer.getInstanceManager().unregisterInstance(this);
         gameEventNode.unregister();
+    }
+
+    private void createMap() {
+        AbsoluteBlockBatch mapBatch = new AbsoluteBlockBatch();
+        for (int x = 22; x <= 86; x++) {
+            for (int y = 74; y <= 146; y++) {
+                for (int z = 15; z <= 69; z++) {
+                    mapBatch.setBlock(x, y, z, Block.AIR);
+                }
+            }
+        }
+
+        int mapSize = switch (getPlayers().size()) {
+            case 4, 5 -> 60;
+            case 6, 7 -> 70;
+            case 8, 9 -> 80;
+            case 10, 11 -> 90;
+            case 12 -> 100;
+            default -> 100;
+        };
+
+        setWorldBorder(INITIAL_WORLD_BORDER.withDiameter(mapSize));
+
+        for (int x = 50 - mapSize / 2; x <= 50 + mapSize / 2; x++) {
+            for (int z = 50 - mapSize / 2; z <= 50 + mapSize / 2; z++) {
+                mapBatch.setBlock(x, 0, z, Block.BLUE_STAINED_GLASS);
+            }
+        }
+
+        mapBatch.apply(this, null);
+
+        teleportPlayersToGame(mapSize);
+    }
+
+    private void teleportPlayersToGame(int mapSize) {
+        Pos firstTeamStartPos = new Pos(mapSize, 0, mapSize)
+                .sub(10)
+                .withY(1);
+        Pos firstTeamEndPos = firstTeamStartPos.sub(10).withY(1);
+
+        Pos secondTeamStartPos = new Pos(0, 0, 0)
+                .add(10)
+                .withY(1);
+        Pos secondTeamEndPos = secondTeamStartPos.add(10).withY(1);
+
+        spreadPlayersAcrossPos(gameTeams.firstTeam().getPlayers(), firstTeamStartPos, firstTeamEndPos);
+        spreadPlayersAcrossPos(gameTeams.secondTeam().getPlayers(), secondTeamStartPos, secondTeamEndPos);
     }
 
     private static void spreadPlayersAcrossPos(Collection<Player> players, Pos firstPos, Pos secondPos) {
