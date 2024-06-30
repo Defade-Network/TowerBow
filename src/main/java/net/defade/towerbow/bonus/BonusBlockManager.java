@@ -245,4 +245,12 @@ public class BonusBlockManager implements BlockHandler {
         return player.hasTag(PLAYER_BONUS_BLOCK_COUNT) ? player.getTag(PLAYER_BONUS_BLOCK_COUNT) : 0;
     }
 
+
+    public static Map<String, BonusBlock> getBonusBlocks() {
+        return bonusBlocks;
+    }
+
+    public static BonusBlock getBonusBlock(String id) {
+        return bonusBlocks.get(id);
+    }
 }
