@@ -19,9 +19,10 @@ import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.scoreboard.Sidebar;
 import net.minestom.server.scoreboard.Team;
-
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static net.defade.towerbow.game.GamePlayHandler.IMMUNITY_TICKS;
 import static net.defade.towerbow.game.GamePlayHandler.TICKS_BEFORE_WORLD_BORDER_SHRINK;
@@ -31,6 +32,8 @@ public class ScoreboardManager {
 
     private final GameInstance gameInstance;
     private final GamePlayHandler gamePlayHandler;
+
+    private final Map<Team, List<UUID>> playersTeam = new HashMap<>(); // Used for displaying the teams in the action bar.
 
     private final BossBar bossBar = BossBar.bossBar(
             Component.text(),
@@ -48,6 +51,11 @@ public class ScoreboardManager {
     public void init() {
         createSidebarScoreboards();
         gamePlayHandler.getGameEventNode().getInstanceNode().addListener(InstanceTickEvent.class, event -> updateScoreboard());
+
+        gameInstance.getPlayers().forEach(player -> {
+            Team team = player.getTeam();
+            playersTeam.putIfAbsent(team, team.getPlayers().stream().map(Player::getUuid).toList());
+        });
     }
 
     public void startGame() {
@@ -164,8 +172,10 @@ public class ScoreboardManager {
         GameTeams gameTeams = gameInstance.getTeams();
         Component component = Component.text("");
 
-        for (Player playerInTeam : gameTeams.firstTeam().getPlayers()) {
-            TextColor heartColor = playerInTeam.getGameMode() == GameMode.SPECTATOR ? TextColor.color(26, 26, 26) : gameTeams.firstTeam().getTeamDisplayName().color();
+        for (UUID playerUUIDInTeam : playersTeam.get(gameTeams.firstTeam())) {
+            Player playerInTeam = gameInstance.getPlayerByUuid(playerUUIDInTeam);
+            boolean isDead = playerInTeam == null || playerInTeam.getGameMode() == GameMode.SPECTATOR;
+            TextColor heartColor = isDead ? TextColor.color(26, 26, 26) : gameTeams.firstTeam().getTeamDisplayName().color();
             component = component.append(Component.text("❤ ").color(heartColor));
         }
 
@@ -174,8 +184,10 @@ public class ScoreboardManager {
                 .append(Component.text(CombatMechanics.getKills(player) + " kills").color(NamedTextColor.YELLOW))
                 .append(Component.text(" | ").color(NamedTextColor.GRAY));
 
-        for (Player playerInTeam : gameTeams.secondTeam().getPlayers()) {
-            TextColor heartColor = playerInTeam.getGameMode() == GameMode.SPECTATOR ? TextColor.color(26, 26, 26) : gameTeams.secondTeam().getTeamDisplayName().color();
+        for (UUID playerUUIDInTeam : playersTeam.get(gameTeams.secondTeam())) {
+            Player playerInTeam = gameInstance.getPlayerByUuid(playerUUIDInTeam);
+            boolean isDead = playerInTeam == null || playerInTeam.getGameMode() == GameMode.SPECTATOR;
+            TextColor heartColor = isDead ? TextColor.color(26, 26, 26) : gameTeams.secondTeam().getTeamDisplayName().color();
             component = component.append(Component.text("❤ ").color(heartColor));
         }
 

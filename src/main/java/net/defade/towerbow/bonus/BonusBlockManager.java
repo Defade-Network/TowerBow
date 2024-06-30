@@ -1,6 +1,7 @@
 package net.defade.towerbow.bonus;
 
 import io.github.togar2.pvp.projectile.AbstractArrow;
+import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.game.GamePlayHandler;
 import net.defade.towerbow.utils.GameEventNode;
@@ -12,7 +13,6 @@ import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
-import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent;
 import net.minestom.server.instance.block.Block;
@@ -80,13 +80,13 @@ public class BonusBlockManager implements BlockHandler {
         List<Player> firstTeamPlayers = new ArrayList<>(
                 gameInstance.getTeams().firstTeam().getPlayers()
                         .stream()
-                        .filter(player -> player.getGameMode() != GameMode.SPECTATOR)
+                        .filter(CombatMechanics::isAlive)
                         .toList()
         );
         List<Player> secondTeamPlayers = new ArrayList<>(
                 gameInstance.getTeams().secondTeam().getPlayers()
                         .stream()
-                        .filter(player -> player.getGameMode() != GameMode.SPECTATOR)
+                        .filter(CombatMechanics::isAlive)
                         .toList()
         );
         Collections.shuffle(firstTeamPlayers);
@@ -107,8 +107,8 @@ public class BonusBlockManager implements BlockHandler {
 
         if (spawnPosition == null) {
             // Set the position 10 blocks under a random player
-            Player randomPlayer = gameInstance.getPlayers().stream()
-                    .skip(RANDOM.nextInt(gameInstance.getPlayers().size()))
+            Player randomPlayer = gameInstance.getAlivePlayers().stream()
+                    .skip(RANDOM.nextInt(gameInstance.getAlivePlayers().size()))
                     .findFirst()
                     .orElseThrow();
 

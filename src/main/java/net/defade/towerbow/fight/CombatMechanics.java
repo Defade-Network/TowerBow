@@ -28,6 +28,7 @@ import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.entity.EntityShootEvent;
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent;
 import net.minestom.server.event.player.PlayerDeathEvent;
+import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.scoreboard.Team;
 import net.minestom.server.sound.SoundEvent;
@@ -222,7 +223,7 @@ public class CombatMechanics {
             // Check if all the players of his team are dead
             boolean allPlayersInTeamDead = deadPlayer.getTeam().getPlayers()
                     .stream()
-                    .noneMatch(teamPlayer -> teamPlayer.getGameMode() != GameMode.SPECTATOR);
+                    .noneMatch(CombatMechanics::isAlive);
 
             if (allPlayersInTeamDead) {
                 Team playerTeam = deadPlayer.getTeam();
@@ -232,6 +233,16 @@ public class CombatMechanics {
 
                 gameInstance.finishGame(opposingTeam, playerTeam);
             }
+
+            deadPlayer.setTeam(null); // Remove its team
+        }).addListener(PlayerDisconnectEvent.class, playerDisconnectEvent -> {
+            Player player = playerDisconnectEvent.getPlayer();
+            if (player.getGameMode() == GameMode.SPECTATOR) return;
+
+            PlayerDeathEvent playerDeathEvent = new PlayerDeathEvent(player, null, null);
+            combatMechanicsNode.call(playerDeathEvent);
+
+            player.setTeam(null); // Teams store the players object, so we remote it
         });
     }
 
@@ -254,5 +265,13 @@ public class CombatMechanics {
     public static Player getLatestDamager(Player player) {
         UUID lastDamagerUUID = player.getTag(LAST_DAMAGER_UUID);
         return lastDamagerUUID == null ? null : player.getInstance().getPlayerByUuid(lastDamagerUUID);
+    }
+
+    public static boolean isAlive(Player player) {
+        return player.getGameMode() != GameMode.SPECTATOR;
+    }
+
+    public static boolean isDead(Player player) {
+        return !isAlive(player);
     }
 }

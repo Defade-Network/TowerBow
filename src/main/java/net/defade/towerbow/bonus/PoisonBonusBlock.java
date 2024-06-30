@@ -1,12 +1,12 @@
 package net.defade.towerbow.bonus;
 
+import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.teams.GameTeams;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.coordinate.Vec;
-import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
@@ -38,7 +38,7 @@ public class PoisonBonusBlock implements BonusBlock {
         }
 
         oppositeTeam.getPlayers().forEach(player -> {
-            if (player.getGameMode() != GameMode.SURVIVAL) return;
+            if (CombatMechanics.isDead(player)) return;
             player.addEffect(POISON_POTION);
 
             gameInstance.sendGroupedPacket(new ParticlePacket(

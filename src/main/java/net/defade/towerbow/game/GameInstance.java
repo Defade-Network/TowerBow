@@ -33,7 +33,9 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class GameInstance extends InstanceContainer {
     private static final MiniMessage MM = MiniMessage.miniMessage();
@@ -86,6 +88,14 @@ public class GameInstance extends InstanceContainer {
 
     public GameTeams getTeams() {
         return gameTeams;
+    }
+
+    public Set<Player> getAlivePlayers() {
+        return getPlayers().stream().filter(CombatMechanics::isAlive).collect(Collectors.toSet());
+    }
+
+    public Set<Player> getDeadPlayers() {
+        return getPlayers().stream().filter(CombatMechanics::isDead).collect(Collectors.toSet());
     }
 
     /**

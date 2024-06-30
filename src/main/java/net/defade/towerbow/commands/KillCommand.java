@@ -1,12 +1,13 @@
 package net.defade.towerbow.commands;
 
 import net.defade.minestom.player.Rank;
+import net.defade.towerbow.fight.CombatMechanics;
+import net.defade.towerbow.game.GameInstance;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentEntity;
 import net.minestom.server.command.builder.suggestion.SuggestionEntry;
-import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 
 public class KillCommand extends Command {
@@ -26,8 +27,8 @@ public class KillCommand extends Command {
                 return;
             }
 
-            for (Player players : player.getInstance().getPlayers()) {
-                if (players.getGameMode() != GameMode.SPECTATOR) suggestion.addEntry(new SuggestionEntry(players.getUsername()));
+            for (Player players : ((GameInstance) player.getInstance()).getAlivePlayers()) {
+                suggestion.addEntry(new SuggestionEntry(players.getUsername()));
             }
         });
 
@@ -47,7 +48,7 @@ public class KillCommand extends Command {
             if (target == null) {
                 player.sendMessage(MM.deserialize("<red>Unknown player."));
                 return;
-            } else if (target.getGameMode() == GameMode.SPECTATOR) {
+            } else if (CombatMechanics.isDead(target)) {
                 player.sendMessage(MM.deserialize("<red>Cannot kill a dead player."));
                 return;
             }

@@ -110,10 +110,10 @@ public class WorldHandler {
 
     private void registerWorldBorderDamage() {
         gameInstance.getEventNode().getInstanceNode().addListener(InstanceTickEvent.class, instanceTickEvent -> {
-            Instance instance = instanceTickEvent.getInstance();
+            GameInstance instance = (GameInstance) instanceTickEvent.getInstance();
             WorldBorder worldBorder = instance.getWorldBorder();
 
-            for (Player player : instance.getPlayers()) {
+            for (Player player : instance.getAlivePlayers()) {
                 if (!worldBorder.inBounds(player)) {
 
                     double closestDistanceToBorder = getClosestDistanceToBorder(player, worldBorder);

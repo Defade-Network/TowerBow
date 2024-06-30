@@ -1,6 +1,8 @@
 package net.defade.towerbow.commands;
 
 import net.defade.minestom.player.Rank;
+import net.defade.towerbow.fight.CombatMechanics;
+import net.defade.towerbow.game.GameInstance;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.minestom.server.command.builder.Command;
@@ -27,7 +29,7 @@ public class ReviveCommand extends Command {
                 return;
             }
 
-            for (Player players : player.getInstance().getPlayers()) {
+            for (Player players : ((GameInstance) player.getInstance()).getDeadPlayers()) {
                 suggestion.addEntry(new SuggestionEntry(players.getUsername()));
             }
         });
@@ -47,6 +49,11 @@ public class ReviveCommand extends Command {
 
             if (target == null) {
                 player.sendMessage(MM.deserialize("<red>Unknown player."));
+                return;
+            }
+
+            if (CombatMechanics.isAlive(target)) {
+                player.sendMessage(MM.deserialize("<red>Cannot revive a living player."));
                 return;
             }
 
