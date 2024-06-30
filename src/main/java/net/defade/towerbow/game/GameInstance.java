@@ -44,9 +44,7 @@ public class GameInstance extends InstanceContainer {
                             .ambientLight(1.0F) // Fully lit
                             .build()
             );
-
-    public static final int MAP_SIZE = 100; // 100x100 blocks
-    private static final WorldBorder INITIAL_WORLD_BORDER = new WorldBorder(MAP_SIZE, 50, 50, 0, 0); // World border at the start of the game
+    private static final WorldBorder INITIAL_WORLD_BORDER = new WorldBorder(100, 50, 50, 0, 0); // World border at the start of the game
 
     private final GameManager gameManager;
     private final GameEventNode gameEventNode = new GameEventNode(this, MinecraftServer.getGlobalEventHandler());
@@ -190,13 +188,13 @@ public class GameInstance extends InstanceContainer {
             case 8, 9 -> 80;
             case 10, 11 -> 90;
             case 12 -> 100;
-            default -> 100;
+            default -> 40;
         };
 
-        setWorldBorder(INITIAL_WORLD_BORDER.withDiameter(mapSize));
+        setWorldBorder(INITIAL_WORLD_BORDER.withCenter(mapSize / 2D, mapSize / 2D).withDiameter(mapSize));
 
-        for (int x = 50 - mapSize / 2; x <= 50 + mapSize / 2; x++) {
-            for (int z = 50 - mapSize / 2; z <= 50 + mapSize / 2; z++) {
+        for (int x = 0; x < mapSize; x++) {
+            for (int z = 0; z < mapSize; z++) {
                 mapBatch.setBlock(x, 0, z, Block.BLUE_STAINED_GLASS);
             }
         }
@@ -207,15 +205,15 @@ public class GameInstance extends InstanceContainer {
     }
 
     private void teleportPlayersToGame(int mapSize) {
-        Pos firstTeamStartPos = new Pos(mapSize, 0, mapSize)
+        Pos firstTeamEndPos = new Pos(mapSize, 0, mapSize)
                 .sub(10)
                 .withY(1);
-        Pos firstTeamEndPos = firstTeamStartPos.sub(10).withY(1);
+        Pos firstTeamStartPos = firstTeamEndPos.sub(5).withY(1);
 
         Pos secondTeamStartPos = new Pos(0, 0, 0)
                 .add(10)
                 .withY(1);
-        Pos secondTeamEndPos = secondTeamStartPos.add(10).withY(1);
+        Pos secondTeamEndPos = secondTeamStartPos.add(5).withY(1);
 
         spreadPlayersAcrossPos(gameTeams.firstTeam().getPlayers(), firstTeamStartPos, firstTeamEndPos);
         spreadPlayersAcrossPos(gameTeams.secondTeam().getPlayers(), secondTeamStartPos, secondTeamEndPos);
