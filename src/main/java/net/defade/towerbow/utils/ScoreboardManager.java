@@ -4,7 +4,6 @@ import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.game.GamePlayHandler;
 import net.defade.towerbow.teams.GameTeams;
-import net.defade.towerbow.teams.Team;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -19,6 +18,7 @@ import net.minestom.server.event.instance.InstanceTickEvent;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.scoreboard.Sidebar;
+import net.minestom.server.scoreboard.Team;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -161,11 +161,11 @@ public class ScoreboardManager {
     }
 
     private Component generateActionBarForPlayer(Player player) {
-        GameTeams gameTeams = gameInstance.getTeams().getGameTeams();
+        GameTeams gameTeams = gameInstance.getTeams();
         Component component = Component.text("");
 
-        for (Player playerInTeam : gameInstance.getTeams().getPlayers(gameTeams.firstTeam())) {
-            TextColor heartColor = playerInTeam.getGameMode() == GameMode.SPECTATOR ? TextColor.color(26, 26, 26) : TextColor.color(gameTeams.firstTeam().color());
+        for (Player playerInTeam : gameTeams.firstTeam().getPlayers()) {
+            TextColor heartColor = playerInTeam.getGameMode() == GameMode.SPECTATOR ? TextColor.color(26, 26, 26) : gameTeams.firstTeam().getTeamDisplayName().color();
             component = component.append(Component.text("❤ ").color(heartColor));
         }
 
@@ -174,8 +174,8 @@ public class ScoreboardManager {
                 .append(Component.text(CombatMechanics.getKills(player) + " kills").color(NamedTextColor.YELLOW))
                 .append(Component.text(" | ").color(NamedTextColor.GRAY));
 
-        for (Player playerInTeam : gameInstance.getTeams().getPlayers(gameTeams.secondTeam())) {
-            TextColor heartColor = playerInTeam.getGameMode() == GameMode.SPECTATOR ? TextColor.color(26, 26, 26) : TextColor.color(gameTeams.secondTeam().color());
+        for (Player playerInTeam : gameTeams.secondTeam().getPlayers()) {
+            TextColor heartColor = playerInTeam.getGameMode() == GameMode.SPECTATOR ? TextColor.color(26, 26, 26) : gameTeams.secondTeam().getTeamDisplayName().color();
             component = component.append(Component.text("❤ ").color(heartColor));
         }
 
@@ -184,7 +184,7 @@ public class ScoreboardManager {
 
     private void createSidebarScoreboards() {
         gameInstance.getPlayers().forEach(player -> {
-            Team team = gameInstance.getTeams().getTeam(player);
+            Team team = player.getTeam();
             Sidebar sidebar = teamSidebar.get(team);
 
             if (sidebar == null) {
@@ -205,7 +205,7 @@ public class ScoreboardManager {
 
                         Component.text("» ").color(NamedTextColor.GRAY)
                                 .append(Component.text("Vous êtes ").color(NamedTextColor.WHITE))
-                                .append(team.name()).color(TextColor.color(team.color())),
+                                .append(team.getTeamDisplayName()),
                         6,
                         Sidebar.NumberFormat.blank()
                 ));

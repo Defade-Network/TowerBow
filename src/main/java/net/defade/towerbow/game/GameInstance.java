@@ -6,13 +6,12 @@ import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.fight.InventoryManager;
 import net.defade.towerbow.map.MapConfig;
 import net.defade.towerbow.map.WorldHandler;
-import net.defade.towerbow.teams.Team;
-import net.defade.towerbow.teams.TeamsManager;
+import net.defade.towerbow.teams.GameTeams;
+import net.defade.towerbow.teams.TeamUtils;
 import net.defade.towerbow.utils.GameEventNode;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.title.Title;
@@ -26,14 +25,15 @@ import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.instance.batch.AbsoluteBlockBatch;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.registry.DynamicRegistry;
+import net.minestom.server.scoreboard.Team;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.utils.NamespaceID;
 import net.minestom.server.world.DimensionType;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.UUID;
 
 public class GameInstance extends InstanceContainer {
@@ -56,7 +56,7 @@ public class GameInstance extends InstanceContainer {
     private boolean acceptsPlayers = true;
 
     private final WorldHandler worldHandler = new WorldHandler(this);
-    private final TeamsManager teamsManager = new TeamsManager(this);
+    private final GameTeams gameTeams = TeamUtils.getRandomTeams(this);
     private final InventoryManager inventoryManager = new InventoryManager(this);
 
     private final GameStartHandler gameStartHandler = new GameStartHandler(this);
@@ -89,8 +89,8 @@ public class GameInstance extends InstanceContainer {
         return worldHandler;
     }
 
-    public TeamsManager getTeams() {
-        return teamsManager;
+    public GameTeams getTeams() {
+        return gameTeams;
     }
 
     public MapConfig getMapConfig() {
@@ -117,21 +117,25 @@ public class GameInstance extends InstanceContainer {
         }
         clearBatch.apply(this, null);
 
-        teamsManager.giveAllPlayersTeams();
+        TeamUtils.giveAllPlayersTeams(gameTeams, getPlayers());
         inventoryManager.giveStartItems(); // TODO: manage inventory with a state handler
 
         gameStartHandler.stop();
         worldHandler.start();
         gamePlayHandler.start();
 
+        for (Player player : getPlayers()) {
+           player.setDisplayName(player.getName().color(player.getTeam().getTeamDisplayName().color())); // Set player name color
+        }
+
         // Teleport players to their spawn points
-        spreadPlayersAcrossPos(teamsManager.getPlayers(teamsManager.getGameTeams().firstTeam()), mapConfig.getFirstTeamSpawnStart(), mapConfig.getFirstTeamSpawnEnd());
-        spreadPlayersAcrossPos(teamsManager.getPlayers(teamsManager.getGameTeams().secondTeam()), mapConfig.getSecondTeamSpawnStart(), mapConfig.getSecondTeamSpawnEnd());
+        spreadPlayersAcrossPos(gameTeams.firstTeam().getPlayers(), mapConfig.getFirstTeamSpawnStart(), mapConfig.getFirstTeamSpawnEnd());
+        spreadPlayersAcrossPos(gameTeams.secondTeam().getPlayers(), mapConfig.getSecondTeamSpawnStart(), mapConfig.getSecondTeamSpawnEnd());
     }
 
     public void finishGame(Team winningTeam, Team loosingTeam) {
         getPlayers().forEach(player -> {
-            if (getTeams().getTeam(player) == winningTeam) { // Player won
+            if (player.getTeam() == winningTeam) { // Player won
                 player.sendMessage(MM.deserialize(
                         "<st><dark_gray>                                   </dark_gray></st>" +
                                 "\n<gold>\uD83C\uDFF9 <b>VICTOIRE</b> <dark_gray>-</dark_gray> <winners> \uD83C\uDFF9</gold>" +
@@ -140,7 +144,7 @@ public class GameInstance extends InstanceContainer {
                                 "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getLongshotCount(player) + "</b> Longshots</yellow> <gray>(50+ blocks)</gray>" +
                                 "\n<gray>»</gray> <yellow><b>" + BonusBlockManager.getBonusBlockCount(player) + "</b> Block Bonus</yellow>" +
                                 "\n<st><dark_gray>                                   </dark_gray></st>",
-                        Placeholder.component("winners", winningTeam.name().color(TextColor.color(winningTeam.color())))
+                        Placeholder.component("winners", winningTeam.getTeamDisplayName())
 
                 ));
 
@@ -157,7 +161,7 @@ public class GameInstance extends InstanceContainer {
                                 "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getLongshotCount(player) + "</b> Longshots</yellow> <gray>(50+ blocks)</gray>" +
                                 "\n<gray>»</gray> <yellow><b>" + BonusBlockManager.getBonusBlockCount(player) + "</b> Block Bonus</yellow>" +
                                 "\n<st><dark_gray>                                   </dark_gray></st>",
-                        Placeholder.component("loosers", loosingTeam.name().color(TextColor.color(loosingTeam.color())))
+                        Placeholder.component("loosers", loosingTeam.getTeamDisplayName())
 
                 ));
 
@@ -190,7 +194,7 @@ public class GameInstance extends InstanceContainer {
         gameEventNode.unregister();
     }
 
-    private static void spreadPlayersAcrossPos(Set<Player> players, Pos firstPos, Pos secondPos) {
+    private static void spreadPlayersAcrossPos(Collection<Player> players, Pos firstPos, Pos secondPos) {
         Iterator<Player> playerIterator = players.iterator();
 
         for (int x = firstPos.blockX(); x <= secondPos.blockX(); x += 2) {

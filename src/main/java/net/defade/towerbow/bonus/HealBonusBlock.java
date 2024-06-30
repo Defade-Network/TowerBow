@@ -1,7 +1,6 @@
 package net.defade.towerbow.bonus;
 
 import net.defade.towerbow.game.GameInstance;
-import net.defade.towerbow.teams.Team;
 import net.defade.towerbow.utils.Items;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
@@ -10,6 +9,7 @@ import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
+import net.minestom.server.scoreboard.Team;
 
 import java.time.Duration;
 
@@ -19,9 +19,9 @@ public class HealBonusBlock implements BonusBlock {
     @Override
     public void onHit(Player shooter) {
         GameInstance gameInstance = (GameInstance) shooter.getInstance();
-        Team playerTeam = gameInstance.getTeams().getTeam(shooter);
+        Team playerTeam = shooter.getTeam();
 
-        gameInstance.getTeams().getPlayers(playerTeam).forEach(player -> {
+        playerTeam.getPlayers().forEach(player -> {
 
             if (player.getHealth() >= 20) {
                 player.getInventory().addItemStack(Items.GOLDEN_APPLE);

@@ -27,8 +27,8 @@ public class InventoryManager {
     public void giveItemsToPlayer(Player player) {
         player.getInventory().clear();
 
-        player.getInventory().setHelmet(Items.HELMET.apply(gameInstance.getTeams().getTeam(player)));
-        player.getInventory().setChestplate(Items.CHESTPLATE.apply(gameInstance.getTeams().getTeam(player)));
+        player.getInventory().setHelmet(Items.HELMET.apply(player.getTeam()));
+        player.getInventory().setChestplate(Items.CHESTPLATE.apply(player.getTeam()));
         player.getInventory().setLeggings(Items.LEGGINGS);
         player.getInventory().setBoots(Items.BOOTS);
 

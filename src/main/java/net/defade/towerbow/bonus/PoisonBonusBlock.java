@@ -2,7 +2,6 @@ package net.defade.towerbow.bonus;
 
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.teams.GameTeams;
-import net.defade.towerbow.teams.Team;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
@@ -12,6 +11,7 @@ import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
+import net.minestom.server.scoreboard.Team;
 
 import java.time.Duration;
 
@@ -26,8 +26,8 @@ public class PoisonBonusBlock implements BonusBlock {
     @Override
     public void onHit(Player shooter) {
         GameInstance gameInstance = (GameInstance) shooter.getInstance();
-        Team playerTeam = gameInstance.getTeams().getTeam(shooter);
-        GameTeams gameTeams = gameInstance.getTeams().getGameTeams();
+        Team playerTeam = shooter.getTeam();
+        GameTeams gameTeams = gameInstance.getTeams();
 
         Team oppositeTeam;
         if (playerTeam == gameTeams.firstTeam()) {
@@ -36,7 +36,7 @@ public class PoisonBonusBlock implements BonusBlock {
             oppositeTeam = gameTeams.firstTeam();
         }
 
-        gameInstance.getTeams().getPlayers(oppositeTeam).forEach(player -> {
+        oppositeTeam.getPlayers().forEach(player -> {
             player.addEffect(POISON_POTION);
 
             gameInstance.sendGroupedPacket(new ParticlePacket(

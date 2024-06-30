@@ -24,9 +24,9 @@ import net.minestom.server.tag.Tag;
 import net.minestom.server.utils.NamespaceID;
 import org.jetbrains.annotations.NotNull;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 public class BonusBlockManager implements BlockHandler {
     private static final int MIN_DISTANCE_BETWEEN_PLAYERS = 20;
@@ -74,8 +74,8 @@ public class BonusBlockManager implements BlockHandler {
     }
 
     public void spawnBonusBlock() {
-        Set<Player> firstTeamPlayers = gameInstance.getTeams().getPlayers(gameInstance.getTeams().getGameTeams().firstTeam());
-        Set<Player> secondTeamPlayers = gameInstance.getTeams().getPlayers(gameInstance.getTeams().getGameTeams().secondTeam());
+        Collection<Player> firstTeamPlayers = gameInstance.getTeams().firstTeam().getPlayers();
+        Collection<Player> secondTeamPlayers = gameInstance.getTeams().secondTeam().getPlayers();
 
         Pos spawnPosition = null;
         for (Player firstTeamPlayer : firstTeamPlayers) {
@@ -196,10 +196,10 @@ public class BonusBlockManager implements BlockHandler {
                     player.sendMessage(MM.deserialize(
                             "<dark_purple>\uD83C\uDFF9 <b>BLOC BONUS!</b></dark_purple> <shooter> <light_purple>a reçu </light_purple><dark_purple>"
                                     + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</dark_purple><light_purple> !</light_purple>",
-                            Placeholder.component("shooter", shooter.getName().color(TextColor.color(gameInstance.getTeams().getTeam(shooter).color())))
+                            Placeholder.component("shooter", shooter.getName())
 
                     ));
-                    if (gameInstance.getTeams().getTeam(shooter) == gameInstance.getTeams().getTeam(player)) { // An ally shot the bonus block
+                    if (shooter.getTeam() == player.getTeam()) { // An ally shot the bonus block
                         player.playSound(Sound.sound().type(SoundEvent.BLOCK_END_PORTAL_FRAME_FILL).pitch(0.7F).volume(0.5F).build(), player.getPosition());
                         player.playSound(Sound.sound().type(SoundEvent.BLOCK_BEACON_ACTIVATE).pitch(1.2F).volume(1F).build(), player.getPosition());
                         player.playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_OPEN_SHUTTER).pitch(0.7F).volume(0.5F).build(), player.getPosition());

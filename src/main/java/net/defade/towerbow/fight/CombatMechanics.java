@@ -9,11 +9,8 @@ import io.github.togar2.pvp.config.ProjectileConfig;
 import io.github.togar2.pvp.config.PvPConfig;
 import io.github.togar2.pvp.projectile.AbstractArrow;
 import net.defade.towerbow.game.GameInstance;
-import net.defade.towerbow.teams.Team;
-import net.defade.towerbow.teams.TeamsManager;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -32,6 +29,7 @@ import net.minestom.server.event.entity.EntityShootEvent;
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
+import net.minestom.server.scoreboard.Team;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
 
@@ -105,9 +103,7 @@ public class CombatMechanics {
 
             if (player == damager) return; // Allow self damage
 
-            TeamsManager teamsManager = ((GameInstance) player.getInstance()).getTeams();
-
-            if (teamsManager.getTeam(player) == teamsManager.getTeam(damager)) {
+            if (player.getTeam() == damager.getTeam()) {
                 entityDamageEvent.setCancelled(true);
             }
         });
@@ -152,7 +148,7 @@ public class CombatMechanics {
                             players.sendMessage(MM.deserialize(
                                     "<gold>\uD83C\uDFF9 <b>LONGSHOT!</b></gold> <shooter> <yellow>a fait un longshot de <gold><b>"
                                             + Math.floor(distance * 10) / 10 + "</b> blocks</gold>!</yellow>",
-                                    Placeholder.component("shooter", shooter.getName().color(TextColor.color(gameInstance.getTeams().getTeam(shooter).color())))
+                                    Placeholder.component("shooter", shooter.getName())
                             ));
                             shooter.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(500),Duration.ofMillis(500)));
                             shooter.sendTitlePart(TitlePart.TITLE, MM.deserialize("<gold><b>LONGSHOT!</b></gold>"));
@@ -195,20 +191,20 @@ public class CombatMechanics {
             if (killer == null) {
                 killText = MM.deserialize(
                         "<red>\uD83C\uDFF9</red> <deadplayer> <yellow>est mort!</yellow>",
-                        Placeholder.component("deadplayer", deadPlayer.getName().color(TextColor.color(gameInstance.getTeams().getTeam(deadPlayer).color())))
+                        Placeholder.component("deadplayer", deadPlayer.getName())
                 );
             } else {
                 killText = MM.deserialize(
                         "<red>\uD83C\uDFF9</red> <deadplayer> <yellow>a été tué par</yellow> <killer><yellow>!</yellow>",
                         TagResolver.builder()
-                                .resolver(Placeholder.component("deadplayer", deadPlayer.getName().color(TextColor.color(gameInstance.getTeams().getTeam(deadPlayer).color()))))
-                                .resolver(Placeholder.component("killer", killer.getName().color(TextColor.color(gameInstance.getTeams().getTeam(killer).color()))))
+                                .resolver(Placeholder.component("deadplayer", deadPlayer.getName()))
+                                .resolver(Placeholder.component("killer", killer.getName()))
                                 .build()
                 );
             }
 
             gameInstance.getPlayers().forEach(player -> {
-                if (gameInstance.getTeams().getTeam(player) == gameInstance.getTeams().getTeam(deadPlayer)) { // An ally dies
+                if (player.getTeam() == deadPlayer.getTeam()) { // An ally dies
                     player.playSound(Sound.sound().type(SoundEvent.ENTITY_FIREWORK_ROCKET_LARGE_BLAST_FAR).pitch(0.7F).volume(1.3F).build(), player.getPosition());
                     player.playSound(Sound.sound().type(SoundEvent.ENTITY_BLAZE_DEATH).pitch(0.7F).volume(0.25F).build(), player.getPosition());
                     player.playSound(Sound.sound().type(SoundEvent.ENTITY_LIGHTNING_BOLT_THUNDER).pitch(1.4F).volume(0.5F).build(), player.getPosition());
@@ -223,15 +219,15 @@ public class CombatMechanics {
             });
 
             // Check if all the players of his team are dead
-            boolean allPlayersInTeamDead = gameInstance.getTeams().getPlayers(gameInstance.getTeams().getTeam(deadPlayer))
+            boolean allPlayersInTeamDead = deadPlayer.getTeam().getPlayers()
                     .stream()
                     .noneMatch(teamPlayer -> teamPlayer.getGameMode() != GameMode.SPECTATOR);
 
             if (allPlayersInTeamDead) {
-                Team playerTeam = gameInstance.getTeams().getTeam(deadPlayer);
-                Team opposingTeam = gameInstance.getTeams().getGameTeams().firstTeam() == playerTeam
-                        ? gameInstance.getTeams().getGameTeams().secondTeam()
-                        : gameInstance.getTeams().getGameTeams().firstTeam();
+                Team playerTeam = deadPlayer.getTeam();
+                Team opposingTeam = gameInstance.getTeams().firstTeam() == playerTeam
+                        ? gameInstance.getTeams().secondTeam()
+                        : gameInstance.getTeams().firstTeam();
 
                 gameInstance.finishGame(opposingTeam, playerTeam);
             }

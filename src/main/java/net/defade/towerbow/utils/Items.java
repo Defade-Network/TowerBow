@@ -1,6 +1,6 @@
 package net.defade.towerbow.utils;
 
-import net.defade.towerbow.teams.Team;
+import net.defade.towerbow.teams.TeamUtils;
 import net.minestom.server.item.ItemComponent;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
@@ -8,14 +8,15 @@ import net.minestom.server.item.component.DyedItemColor;
 import net.minestom.server.item.component.EnchantmentList;
 import net.minestom.server.item.component.Unbreakable;
 import net.minestom.server.item.enchant.Enchantment;
+import net.minestom.server.scoreboard.Team;
 import java.util.Map;
 import java.util.function.Function;
 
 public class Items {
-    public static final Function<Team, ItemStack> HELMET = team -> ItemStack.of(team.playerHelmet());
+    public static final Function<Team, ItemStack> HELMET = team -> ItemStack.of(TeamUtils.getPlayerHelmetForTeam(team));
 
     public static final Function<Team, ItemStack> CHESTPLATE = team -> {
-        DyedItemColor teamColor = new DyedItemColor(team.color());
+        DyedItemColor teamColor = new DyedItemColor(team.getTeamDisplayName().color());
 
         return ItemStack.of(Material.LEATHER_CHESTPLATE)
                 .with(ItemComponent.DYED_COLOR, teamColor)

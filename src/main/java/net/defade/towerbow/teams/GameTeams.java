@@ -1,5 +1,7 @@
 package net.defade.towerbow.teams;
 
+import net.minestom.server.scoreboard.Team;
+
 /**
  * Holds the two teams confronting each other in a game.
  * @param firstTeam The first team
