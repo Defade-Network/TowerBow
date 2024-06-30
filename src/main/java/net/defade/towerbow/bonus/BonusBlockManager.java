@@ -96,7 +96,7 @@ public class BonusBlockManager implements BlockHandler {
         for (Player firstTeamPlayer : firstTeamPlayers) {
             for (Player secondTeamPlayer : secondTeamPlayers) {
                 if (firstTeamPlayer.getPosition().distanceSquared(secondTeamPlayer.getPosition()) < MIN_DISTANCE_BETWEEN_PLAYERS * MIN_DISTANCE_BETWEEN_PLAYERS) {
-                    return;
+                    continue;
                 }
 
                 // Get the middle point between the two players and randomize the position a bit
