@@ -64,7 +64,7 @@ public class CombatMechanics {
                 // Enable all PvP features
                 .attack(AttackConfig.defaultBuilder().attackCooldown(false).build())
                 .armorTool(ArmorToolConfig.DEFAULT)
-                .damage(DamageConfig.DEFAULT)
+                .damage(DamageConfig.defaultBuilder().deathMessages(false)) // We have our own
                 .food(FoodConfig.emptyBuilder(false)
                         .eating(true)
                         .eatingSounds(true)
@@ -202,6 +202,7 @@ public class CombatMechanics {
                                 .build()
                 );
             }
+            playerDeathEvent.setChatMessage(killText);
 
             gameInstance.getPlayers().forEach(player -> {
                 if (player.getTeam() == deadPlayer.getTeam()) { // An ally dies
