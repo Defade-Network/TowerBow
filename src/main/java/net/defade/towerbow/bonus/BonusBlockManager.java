@@ -5,7 +5,6 @@ import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.game.GamePlayHandler;
 import net.defade.towerbow.utils.GameEventNode;
 import net.kyori.adventure.sound.Sound;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.title.Title;
@@ -13,6 +12,7 @@ import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent;
 import net.minestom.server.instance.block.Block;
@@ -24,7 +24,9 @@ import net.minestom.server.tag.Tag;
 import net.minestom.server.utils.NamespaceID;
 import org.jetbrains.annotations.NotNull;
 import java.time.Duration;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -74,8 +76,21 @@ public class BonusBlockManager implements BlockHandler {
     }
 
     public void spawnBonusBlock() {
-        Collection<Player> firstTeamPlayers = gameInstance.getTeams().firstTeam().getPlayers();
-        Collection<Player> secondTeamPlayers = gameInstance.getTeams().secondTeam().getPlayers();
+        // Wrapped with ArrayList because .toList returns an immutable list
+        List<Player> firstTeamPlayers = new ArrayList<>(
+                gameInstance.getTeams().firstTeam().getPlayers()
+                        .stream()
+                        .filter(player -> player.getGameMode() != GameMode.SPECTATOR)
+                        .toList()
+        );
+        List<Player> secondTeamPlayers = new ArrayList<>(
+                gameInstance.getTeams().secondTeam().getPlayers()
+                        .stream()
+                        .filter(player -> player.getGameMode() != GameMode.SPECTATOR)
+                        .toList()
+        );
+        Collections.shuffle(firstTeamPlayers);
+        Collections.shuffle(secondTeamPlayers);
 
         Pos spawnPosition = null;
         for (Player firstTeamPlayer : firstTeamPlayers) {
