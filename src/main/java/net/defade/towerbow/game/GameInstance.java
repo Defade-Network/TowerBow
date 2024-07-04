@@ -1,6 +1,7 @@
 package net.defade.towerbow.game;
 
 import net.defade.minestom.amethyst.AmethystLoader;
+import net.defade.minestom.amethyst.AmethystSource;
 import net.defade.towerbow.bonus.BonusBlockManager;
 import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.fight.InventoryManager;
@@ -29,7 +30,6 @@ import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.utils.NamespaceID;
 import net.minestom.server.world.DimensionType;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Iterator;
@@ -60,11 +60,11 @@ public class GameInstance extends InstanceContainer {
     private final GameStartHandler gameStartHandler = new GameStartHandler(this);
     private final GamePlayHandler gamePlayHandler = new GamePlayHandler(this);
 
-    public GameInstance(GameManager gameManager, Path mapPath) {
+    public GameInstance(GameManager gameManager, AmethystSource amethystSource) {
         super(UUID.randomUUID(), TOWERBOW_DIMENSION);
         this.gameManager = gameManager;
 
-        AmethystLoader amethystLoader = new AmethystLoader(this, mapPath);
+        AmethystLoader amethystLoader = new AmethystLoader(this, amethystSource);
         setChunkLoader(amethystLoader);
 
         setWorldBorder(INITIAL_WORLD_BORDER);

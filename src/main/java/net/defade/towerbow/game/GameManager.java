@@ -1,5 +1,7 @@
 package net.defade.towerbow.game;
 
+import net.defade.minestom.amethyst.AmethystSource;
+import net.defade.towerbow.map.LobbyAmethystSource;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
@@ -9,8 +11,6 @@ import net.minestom.server.event.player.PlayerChatEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.network.packet.server.play.PlayerInfoRemovePacket;
 import net.minestom.server.timer.TaskSchedule;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -19,24 +19,11 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 public class GameManager {
-    private static final Path LOBBY_PATH;
-
-    static {
-        Path path = null;
-        try {
-            // List all the files in the console
-            path = Paths.get(ClassLoader.getSystemResource("lobby.amethyst").toURI());
-        } catch (Exception exception) {
-            MinecraftServer.getExceptionManager().handleException(exception);
-            System.exit(1);
-        }
-
-        LOBBY_PATH = path;
-    }
-
     public static final int MIN_PLAYERS = 4;
     public static final int MAX_PLAYERS = 12;
     private static final int MAX_GAME_INSTANCES = 20;
+
+    private static final AmethystSource LOBBY_SOURCE = new LobbyAmethystSource();
 
     private final Set<GameInstance> gameInstances = new CopyOnWriteArraySet<>();
 
@@ -67,7 +54,7 @@ public class GameManager {
     }
 
     public void createGameInstance() {
-        GameInstance gameInstance = new GameInstance(this, LOBBY_PATH);
+        GameInstance gameInstance = new GameInstance(this, LOBBY_SOURCE);
         MinecraftServer.getInstanceManager().registerInstance(gameInstance);
         gameInstances.add(gameInstance);
 
