@@ -1,6 +1,8 @@
 package net.defade.towerbow.game;
 
+import net.defade.towerbow.teams.TeamSelectorGUI;
 import net.defade.towerbow.utils.GameEventNode;
+import net.defade.towerbow.utils.Items;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
@@ -18,6 +20,7 @@ import net.minestom.server.event.instance.InstanceTickEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
+import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.sound.SoundEvent;
 
@@ -40,6 +43,8 @@ public class GameStartHandler {
 
     private final GameInstance gameInstance;
     private final GameEventNode startEventNode;
+
+    private final TeamSelectorGUI teamSelectorGUI;
     private final BossBar bossBar = BossBar.bossBar(
             Component.text(""),
             1.0f,
@@ -52,6 +57,7 @@ public class GameStartHandler {
     public GameStartHandler(GameInstance gameInstance) {
         this.gameInstance = gameInstance;
         this.startEventNode = new GameEventNode(gameInstance.getEventNode());
+        this.teamSelectorGUI = new TeamSelectorGUI(gameInstance);
 
         disableBlockBreaking();
 
@@ -59,6 +65,8 @@ public class GameStartHandler {
         registerLeaveMessages();
 
         registerGameStartCountdown();
+
+        registerTeamSelector();
     }
 
     private void disableBlockBreaking() {
@@ -136,6 +144,20 @@ public class GameStartHandler {
             }
             tickCountdown--;
         });
+    }
+
+    private void registerTeamSelector() {
+        startEventNode.getPlayerNode()
+                .addListener(PlayerSpawnEvent.class, playerSpawnEvent -> {
+                    Player player = playerSpawnEvent.getPlayer();
+                    player.getInventory().addItemStack(Items.TEAM_SELECTOR);
+                })
+                .addListener(PlayerUseItemEvent.class, playerUseItemEvent -> {
+                    Player player = playerUseItemEvent.getPlayer();
+                    if (playerUseItemEvent.getItemStack().isSimilar(Items.TEAM_SELECTOR)) {
+                        player.openInventory(teamSelectorGUI);
+                    }
+                });
     }
 
     private void updateBossBar(int countdownTime) {

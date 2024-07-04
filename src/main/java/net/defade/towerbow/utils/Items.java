@@ -1,11 +1,14 @@
 package net.defade.towerbow.utils;
 
 import net.defade.towerbow.teams.TeamUtils;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.minestom.server.entity.PlayerSkin;
 import net.minestom.server.item.ItemComponent;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.item.component.DyedItemColor;
 import net.minestom.server.item.component.EnchantmentList;
+import net.minestom.server.item.component.HeadProfile;
 import net.minestom.server.item.component.Unbreakable;
 import net.minestom.server.item.enchant.Enchantment;
 import net.minestom.server.scoreboard.Team;
@@ -13,6 +16,22 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class Items {
+    private static final MiniMessage MM = MiniMessage.miniMessage();
+
+    public static final ItemStack TEAM_SELECTOR = ItemStack.of(Material.ENDER_EYE)
+            .with(ItemComponent.ITEM_NAME, MM.deserialize("<dark_gray>» </dark_gray><gradient:#3EB835:#B2EA80>Sélecteur d'équipe</gradient>"));
+
+    public static final ItemStack GUI_FILLER = ItemStack.of(Material.GRAY_STAINED_GLASS_PANE)
+            .with(ItemComponent.HIDE_TOOLTIP);
+
+    public static final ItemStack RANDOM_TEAM = ItemStack.of(Material.PLAYER_HEAD)
+            .with(ItemComponent.ITEM_NAME, MM.deserialize("<gray>»</gray><white> Aléatoire </white><gray>«</gray>"))
+            .with(ItemComponent.PROFILE,
+                    new HeadProfile(new PlayerSkin("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh" +
+                    "0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOGEwODRkMGExYzZmYzIxNjNkZTMwZDhiMTQ4YWI0ZDM2MzIyMGQ1" +
+                    "Yzk3MmQ1Zjg4ZWI4ZGM4NjE3NmNjZGIzZSJ9fX0=", ""))
+            );
+
     public static final Function<Team, ItemStack> HELMET = team -> ItemStack.of(TeamUtils.getPlayerHelmetForTeam(team));
 
     public static final Function<Team, ItemStack> CHESTPLATE = team -> {
