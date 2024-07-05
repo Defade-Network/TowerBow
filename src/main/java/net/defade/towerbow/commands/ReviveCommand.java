@@ -59,6 +59,8 @@ public class ReviveCommand extends Command {
 
             target.setHealth(20);
             target.setGameMode(GameMode.SURVIVAL);
+            target.setCanPickupItem(true);
+            target.setInvisible(false);
 
             player.sendMessage(MM.deserialize("<green>Revived <player>", Placeholder.component("player", target.getName())));
         }, playerArgument);
