@@ -201,17 +201,17 @@ public class GameInstance extends InstanceContainer {
             default -> 40;
         };
 
-        setWorldBorder(INITIAL_WORLD_BORDER.withCenter(mapSize / 2D, mapSize / 2D).withDiameter(mapSize));
-
         for (int x = 0; x < mapSize; x++) {
             for (int z = 0; z < mapSize; z++) {
                 mapBatch.setBlock(x, 0, z, Block.BLUE_STAINED_GLASS);
             }
         }
 
-        mapBatch.apply(this, null);
-
-        teleportPlayersToGame(mapSize);
+        mapBatch.apply(this, () -> {
+            teleportPlayersToGame(mapSize);
+            // We change the world border after teleporting the players, since they might get stuck inside
+            setWorldBorder(INITIAL_WORLD_BORDER.withCenter(mapSize / 2D, mapSize / 2D).withDiameter(mapSize));
+        });
     }
 
     private void teleportPlayersToGame(int mapSize) {

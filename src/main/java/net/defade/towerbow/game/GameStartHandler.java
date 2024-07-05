@@ -85,7 +85,6 @@ public class GameStartHandler {
             ));
 
             player.setGameMode(GameMode.SURVIVAL);
-            player.teleport(new Pos(55.5, 101, 52.5));
 
             int connectedPlayers = gameInstance.getPlayers().size();
             if (connectedPlayers >= GameManager.MIN_PLAYERS) {

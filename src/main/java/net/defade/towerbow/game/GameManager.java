@@ -5,6 +5,7 @@ import net.defade.towerbow.map.LobbyAmethystSource;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.PlayerChatEvent;
@@ -34,6 +35,7 @@ public class GameManager {
                 event.getPlayer().kick(Component.text("No game instances are available.").color(NamedTextColor.RED));
             } else {
                 event.setSpawningInstance(gameInstance);
+                event.getPlayer().setRespawnPoint(new Pos(55.5, 101, 52.5));
             }
         });
 
