@@ -58,7 +58,7 @@ public class ReviveCommand extends Command {
             }
 
             target.setHealth(20);
-            target.setGameMode(GameMode.ADVENTURE);
+            target.setGameMode(GameMode.SURVIVAL);
 
             player.sendMessage(MM.deserialize("<green>Revived <player>", Placeholder.component("player", target.getDisplayName())));
         }, playerArgument);

@@ -80,6 +80,20 @@ public class GameStartHandler {
             GameInstance gameInstance = (GameInstance) playerSpawnEvent.getInstance();
             Player player = playerSpawnEvent.getPlayer();
 
+            // Rules of towerbow message
+            player.sendMessage(MM.deserialize(
+                    "<st><dark_gray>                </dark_gray></st> <b><yellow>TOWERBOW</yellow></b> <st><dark_gray>                </dark_gray></st>\n" +
+                            "<gray>Inspiré du SkyHigh</gray>\n" +
+                            "<u><yellow>Règles:</yellow></u>\n" +
+                            "<gray>•</gray> Combats à l'arc!\n" +
+                            "<gray>•</gray> 1 seule vie!\n" +
+                            "<gray>•</gray> 2 équipes!\n" +
+                            "<gray>•</gray> Blocs infinis!\n" +
+                            "\n" +
+                            "<dark_gray>[</dark_gray><b><light_purple><hover:show_text:'<b><light_purple>BLOC BONUS</light_purple></b>\nTirez dessus, donne des bonus.\n\n<light_purple><u>Liste des bonus:</u></light_purple>\n - Heal complet \n - Poison pour les adversaires\n - Flèche explosive\n - Flèche fumigène'>BLOC BONUS</hover></light_purple></b><dark_gray>] [</dark_gray><b><red><hover:show_text:'<b><red>BORDURES</red></b>\nDerrière la bordure = dégâts\n\n<u><red>Bordure sur les côtés:</red></u>\n - Statique puis réduit en quelques minutes\n - Bordure bleue\n\n<u><red>Bordure en hauteur (couche Y):</red></u>\n - La bordure monte toutes les 8s\n - Bordure rouge'>BORDURES</hover></red></b><dark_gray>]</dark_gray>\n" +
+                            "<st><dark_gray>                                               </dark_gray></st>"
+            ));
+
             gameInstance.sendMessage(MM.deserialize(
                     "<gold>🏹 " + player.getUsername() + "</gold><color:#fffb2b> a rejoint la partie.</color> <gray>(" + gameInstance.getPlayers().size() + "/12)</gray>"
             ));
@@ -139,7 +153,25 @@ public class GameStartHandler {
                     gameInstance.getPlayers().forEach(players -> gameInstance.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_HAT).pitch(1F).volume(0.5F).build(), players.getPosition()));
                 }
 
-                case 0 -> gameInstance.startGame();
+                case 0 -> {
+                    // Check if all the players are in the same team
+                    if (gameInstance.getTeams().firstTeam().getPlayers().size() == connectedPlayers || gameInstance.getTeams().secondTeam().getPlayers().size() == connectedPlayers) {
+                        gameInstance.getPlayers().forEach(player -> {
+                            player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(7500),Duration.ofMillis(1000)));
+                            player.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+                            player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Une team est vide!</red>"));
+
+                            player.sendMessage(MM.deserialize(
+                                    "<dark_red><b>ERREUR!</b></dark_red> <red>Impossible de lancer, une team est vide!</red>"
+                            ));
+
+                            player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_PLING).pitch(0F).volume(1F).build(), player.getPosition());
+                        });
+                        tickCountdown = 15*20;
+                    } else {
+                        gameInstance.startGame();
+                    }
+                }
             }
             tickCountdown--;
         });

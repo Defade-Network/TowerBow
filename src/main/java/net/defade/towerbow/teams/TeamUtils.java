@@ -7,6 +7,7 @@ import net.kyori.adventure.text.format.TextColor;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.item.Material;
+import net.minestom.server.network.packet.server.play.TeamsPacket;
 import net.minestom.server.scoreboard.Team;
 import net.minestom.server.scoreboard.TeamBuilder;
 import net.minestom.server.scoreboard.TeamManager;
@@ -22,10 +23,12 @@ public class TeamUtils {
                 Team firstTeam = new TeamBuilder("Red", teamManager)
                         .teamDisplayName(Component.text("Red").color(TextColor.color(0xe74c3c)))
                         .teamColor(NamedTextColor.RED)
+                        .collisionRule(TeamsPacket.CollisionRule.NEVER)
                         .build();
                 Team secondTeam = new TeamBuilder("Blue", teamManager)
                         .teamDisplayName(Component.text("Blue").color(TextColor.color(0x3498db)))
                         .teamColor(NamedTextColor.BLUE)
+                        .collisionRule(TeamsPacket.CollisionRule.NEVER)
                         .build();
 
                 return new GameTeams(firstTeam, secondTeam);
@@ -34,10 +37,12 @@ public class TeamUtils {
                 Team firstTeam = new TeamBuilder("Cyan", teamManager)
                         .teamDisplayName(Component.text("Cyan").color(TextColor.color(0x1abc9c)))
                         .teamColor(NamedTextColor.AQUA)
+                        .collisionRule(TeamsPacket.CollisionRule.NEVER)
                         .build();
                 Team secondTeam = new TeamBuilder("Yellow", teamManager)
                         .teamDisplayName(Component.text("Yellow").color(TextColor.color(0xf1c40f)))
                         .teamColor(NamedTextColor.YELLOW)
+                        .collisionRule(TeamsPacket.CollisionRule.NEVER)
                         .build();
 
                 return new GameTeams(firstTeam, secondTeam);
@@ -46,10 +51,12 @@ public class TeamUtils {
                 Team firstTeam = new TeamBuilder("Orange", teamManager)
                         .teamDisplayName(Component.text("Orange").color(TextColor.color(0xfc7f11)))
                         .teamColor(NamedTextColor.GOLD)
+                        .collisionRule(TeamsPacket.CollisionRule.NEVER)
                         .build();
                 Team secondTeam = new TeamBuilder("Purple", teamManager)
                         .teamDisplayName(Component.text("Purple").color(TextColor.color(0x9b59b6)))
                         .teamColor(NamedTextColor.LIGHT_PURPLE)
+                        .collisionRule(TeamsPacket.CollisionRule.NEVER)
                         .build();
 
                 return new GameTeams(firstTeam, secondTeam);

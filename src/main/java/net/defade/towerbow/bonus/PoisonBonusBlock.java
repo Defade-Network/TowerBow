@@ -28,14 +28,10 @@ public class PoisonBonusBlock implements BonusBlock {
     public void onHit(Player shooter) {
         GameInstance gameInstance = (GameInstance) shooter.getInstance();
         Team playerTeam = shooter.getTeam();
-        GameTeams gameTeams = gameInstance.getTeams();
 
-        Team oppositeTeam;
-        if (playerTeam == gameTeams.firstTeam()) {
-            oppositeTeam = gameTeams.secondTeam();
-        } else {
-            oppositeTeam = gameTeams.firstTeam();
-        }
+        Team oppositeTeam = gameInstance.getTeams().firstTeam() == playerTeam
+                ? gameInstance.getTeams().secondTeam()
+                : gameInstance.getTeams().firstTeam();
 
         oppositeTeam.getPlayers().forEach(player -> {
             if (CombatMechanics.isDead(player)) return;

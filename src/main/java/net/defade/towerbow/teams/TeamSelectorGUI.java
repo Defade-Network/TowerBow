@@ -3,6 +3,7 @@ package net.defade.towerbow.teams;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.game.GameManager;
 import net.defade.towerbow.utils.Items;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -13,6 +14,8 @@ import net.minestom.server.inventory.InventoryType;
 import net.minestom.server.item.ItemComponent;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.scoreboard.Team;
+import net.minestom.server.sound.SoundEvent;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,6 +50,7 @@ public class TeamSelectorGUI extends Inventory {
             if (team != null) {
                 if (team.getMembers().size() >= GameManager.MAX_PLAYERS / 2) {
                     player.sendMessage(Component.text("Cette équipe est pleine"));
+                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_ANVIL_LAND).pitch(1.5F).volume(1F).build(), player.getPosition());
                     return;
                 }
             }
@@ -54,9 +58,16 @@ public class TeamSelectorGUI extends Inventory {
             player.setTeam(team);
 
             if (slot == 11 || slot == 15) {
-                player.sendMessage(Component.text("Vous avez rejoint l'équipe ").append(player.getTeam().getTeamDisplayName()));
+                player.sendMessage(MM.deserialize(
+                        "<gray>»</gray> <yellow>Vous avez rejoint l'équipe</yellow> <team> <yellow>!</yellow>",
+                        Placeholder.component("team", player.getTeam().getTeamDisplayName()))
+                );
+                player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_PLING).pitch(2F).volume(1F).build(), player.getPosition());
             } else if (slot == 13) {
-                player.sendMessage(Component.text("Vous avez rejoint une équipe aléatoire"));
+                player.sendMessage(MM.deserialize(
+                        "<gray>»</gray> <yellow>Vous avez rejoint une équipe <gradient:#DE3472:#F2C525>aléatoire</gradient>!</yellow>"
+                ));
+                player.playSound(Sound.sound().type(SoundEvent.BLOCK_NOTE_BLOCK_PLING).pitch(2F).volume(1F).build(), player.getPosition());
             }
 
             updateItems();

@@ -59,7 +59,10 @@ public class GamePlayHandler {
         gameEventNode.register();
         scoreboardManager.init();
 
-        gameInstance.getPlayers().forEach(player -> player.setFoodSaturation(0)); // Disable food saturation
+        gameInstance.getPlayers().forEach(player -> {
+            player.setFoodSaturation(0); // Disable food saturation
+            player.closeInventory();
+        });
 
         immobilizePlayers();
         registerTickEvents();
