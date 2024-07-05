@@ -1,6 +1,7 @@
 package net.defade.towerbow.teams;
 
 import net.defade.towerbow.game.GameInstance;
+import net.defade.towerbow.game.GameManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -9,55 +10,51 @@ import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.item.Material;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
 import net.minestom.server.scoreboard.Team;
-import net.minestom.server.scoreboard.TeamBuilder;
 import net.minestom.server.scoreboard.TeamManager;
 import java.util.Set;
 import java.util.function.Function;
 
 public class TeamUtils {
-    private static final int MAX_PLAYERS_PER_TEAM = 6;
+    public static final int MAX_PLAYERS_PER_TEAM = GameManager.MAX_PLAYERS / 2;
 
     private static final Function<TeamManager, GameTeams> RANDOM_TEAMS_SUPPLIER = teamManager -> {
         switch ((int) (Math.random() * 3)) {
             case 0 -> {
-                Team firstTeam = new TeamBuilder("Red", teamManager)
-                        .teamDisplayName(Component.text("Red").color(TextColor.color(0xe74c3c)))
-                        .teamColor(NamedTextColor.RED)
-                        .collisionRule(TeamsPacket.CollisionRule.NEVER)
-                        .build();
-                Team secondTeam = new TeamBuilder("Blue", teamManager)
-                        .teamDisplayName(Component.text("Blue").color(TextColor.color(0x3498db)))
-                        .teamColor(NamedTextColor.BLUE)
-                        .collisionRule(TeamsPacket.CollisionRule.NEVER)
-                        .build();
+                TowerbowTeam firstTeam = new TowerbowTeam("Red");
+                firstTeam.setTeamDisplayName(Component.text("Red").color(TextColor.color(0xe74c3c)));
+                firstTeam.setTeamColor(NamedTextColor.RED);
+                firstTeam.setCollisionRule(TeamsPacket.CollisionRule.NEVER);
+
+                TowerbowTeam secondTeam = new TowerbowTeam("Blue");
+                secondTeam.setTeamDisplayName(Component.text("Blue").color(TextColor.color(0x3498db)));
+                secondTeam.setTeamColor(NamedTextColor.BLUE);
+                secondTeam.setCollisionRule(TeamsPacket.CollisionRule.NEVER);
 
                 return new GameTeams(firstTeam, secondTeam);
             }
             case 1 -> {
-                Team firstTeam = new TeamBuilder("Cyan", teamManager)
-                        .teamDisplayName(Component.text("Cyan").color(TextColor.color(0x1abc9c)))
-                        .teamColor(NamedTextColor.AQUA)
-                        .collisionRule(TeamsPacket.CollisionRule.NEVER)
-                        .build();
-                Team secondTeam = new TeamBuilder("Yellow", teamManager)
-                        .teamDisplayName(Component.text("Yellow").color(TextColor.color(0xf1c40f)))
-                        .teamColor(NamedTextColor.YELLOW)
-                        .collisionRule(TeamsPacket.CollisionRule.NEVER)
-                        .build();
+                TowerbowTeam firstTeam = new TowerbowTeam("Cyan");
+                firstTeam.setTeamDisplayName(Component.text("Cyan").color(TextColor.color(0x1abc9c)));
+                firstTeam.setTeamColor(NamedTextColor.AQUA);
+                firstTeam.setCollisionRule(TeamsPacket.CollisionRule.NEVER);
+
+                TowerbowTeam secondTeam = new TowerbowTeam("Yellow");
+                secondTeam.setTeamDisplayName(Component.text("Yellow").color(TextColor.color(0xf1c40f)));
+                secondTeam.setTeamColor(NamedTextColor.YELLOW);
+                secondTeam.setCollisionRule(TeamsPacket.CollisionRule.NEVER);
 
                 return new GameTeams(firstTeam, secondTeam);
             }
             case 2 -> {
-                Team firstTeam = new TeamBuilder("Orange", teamManager)
-                        .teamDisplayName(Component.text("Orange").color(TextColor.color(0xfc7f11)))
-                        .teamColor(NamedTextColor.GOLD)
-                        .collisionRule(TeamsPacket.CollisionRule.NEVER)
-                        .build();
-                Team secondTeam = new TeamBuilder("Purple", teamManager)
-                        .teamDisplayName(Component.text("Purple").color(TextColor.color(0x9b59b6)))
-                        .teamColor(NamedTextColor.LIGHT_PURPLE)
-                        .collisionRule(TeamsPacket.CollisionRule.NEVER)
-                        .build();
+                TowerbowTeam firstTeam = new TowerbowTeam("Orange");
+                firstTeam.setTeamDisplayName(Component.text("Orange").color(TextColor.color(0xfc7f11)));
+                firstTeam.setTeamColor(NamedTextColor.GOLD);
+                firstTeam.setCollisionRule(TeamsPacket.CollisionRule.NEVER);
+
+                TowerbowTeam secondTeam = new TowerbowTeam("Purple");
+                secondTeam.setTeamDisplayName(Component.text("Purple").color(TextColor.color(0x9b59b6)));
+                secondTeam.setTeamColor(NamedTextColor.LIGHT_PURPLE);
+                secondTeam.setCollisionRule(TeamsPacket.CollisionRule.NEVER);
 
                 return new GameTeams(firstTeam, secondTeam);
             }

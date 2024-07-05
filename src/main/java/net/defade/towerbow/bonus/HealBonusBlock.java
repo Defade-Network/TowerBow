@@ -1,6 +1,5 @@
 package net.defade.towerbow.bonus;
 
-import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.utils.Items;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -23,8 +22,6 @@ public class HealBonusBlock implements BonusBlock {
         Team playerTeam = shooter.getTeam();
 
         playerTeam.getPlayers().forEach(player -> {
-            if (CombatMechanics.isDead(player)) return;
-
             if (player.getHealth() >= 20) {
                 player.getInventory().addItemStack(Items.GOLDEN_APPLE);
             }

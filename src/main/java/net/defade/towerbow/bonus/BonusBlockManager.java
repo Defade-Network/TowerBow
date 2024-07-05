@@ -1,7 +1,6 @@
 package net.defade.towerbow.bonus;
 
 import io.github.togar2.pvp.projectile.AbstractArrow;
-import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.game.GamePlayHandler;
 import net.defade.towerbow.utils.GameEventNode;
@@ -77,18 +76,8 @@ public class BonusBlockManager implements BlockHandler {
 
     public void spawnBonusBlock() {
         // Wrapped with ArrayList because .toList returns an immutable list
-        List<Player> firstTeamPlayers = new ArrayList<>(
-                gameInstance.getTeams().firstTeam().getPlayers()
-                        .stream()
-                        .filter(CombatMechanics::isAlive)
-                        .toList()
-        );
-        List<Player> secondTeamPlayers = new ArrayList<>(
-                gameInstance.getTeams().secondTeam().getPlayers()
-                        .stream()
-                        .filter(CombatMechanics::isAlive)
-                        .toList()
-        );
+        List<Player> firstTeamPlayers = new ArrayList<>(gameInstance.getTeams().firstTeam().getPlayers().stream().toList());
+        List<Player> secondTeamPlayers = new ArrayList<>(gameInstance.getTeams().secondTeam().getPlayers().stream().toList());
         Collections.shuffle(firstTeamPlayers);
         Collections.shuffle(secondTeamPlayers);
 

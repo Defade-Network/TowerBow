@@ -221,9 +221,7 @@ public class CombatMechanics {
             });
 
             // Check if all the players of his team are dead
-            boolean allPlayersInTeamDead = deadPlayer.getTeam().getPlayers()
-                    .stream()
-                    .noneMatch(CombatMechanics::isAlive);
+            boolean allPlayersInTeamDead = deadPlayer.getTeam().getMembers().isEmpty();
 
             if (allPlayersInTeamDead) {
                 Team playerTeam = deadPlayer.getTeam();
@@ -233,16 +231,12 @@ public class CombatMechanics {
 
                 gameInstance.finishGame(opposingTeam, playerTeam);
             }
-
-            deadPlayer.setTeam(null); // Remove its team
         }).addListener(PlayerDisconnectEvent.class, playerDisconnectEvent -> {
             Player player = playerDisconnectEvent.getPlayer();
             if (player.getGameMode() == GameMode.SPECTATOR) return;
 
             PlayerDeathEvent playerDeathEvent = new PlayerDeathEvent(player, null, null);
             combatMechanicsNode.call(playerDeathEvent);
-
-            player.setTeam(null); // Teams store the players object, so we remote it
         });
     }
 
@@ -268,7 +262,7 @@ public class CombatMechanics {
     }
 
     public static boolean isAlive(Player player) {
-        return player.getGameMode() != GameMode.SPECTATOR;
+        return player.getGameMode() != GameMode.SPECTATOR && player.isOnline();
     }
 
     public static boolean isDead(Player player) {

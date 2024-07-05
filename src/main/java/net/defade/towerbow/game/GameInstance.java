@@ -115,10 +115,6 @@ public class GameInstance extends InstanceContainer {
         gamePlayHandler.start();
 
         createMap(); // Clear the lobby and create the floor and teleport players
-
-        for (Player player : getPlayers()) {
-           player.setDisplayName(player.getName().color(player.getTeam().getTeamDisplayName().color())); // Set player name color
-        }
     }
 
     public void finishGame(Team winningTeam, Team loosingTeam) {

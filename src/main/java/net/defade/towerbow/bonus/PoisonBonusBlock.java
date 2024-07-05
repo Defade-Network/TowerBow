@@ -1,6 +1,5 @@
 package net.defade.towerbow.bonus;
 
-import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.teams.GameTeams;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -34,7 +33,6 @@ public class PoisonBonusBlock implements BonusBlock {
                 : gameInstance.getTeams().firstTeam();
 
         oppositeTeam.getPlayers().forEach(player -> {
-            if (CombatMechanics.isDead(player)) return;
             player.addEffect(POISON_POTION);
 
             gameInstance.sendGroupedPacket(new ParticlePacket(

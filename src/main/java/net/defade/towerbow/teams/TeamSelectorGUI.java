@@ -1,7 +1,6 @@
 package net.defade.towerbow.teams;
 
 import net.defade.towerbow.game.GameInstance;
-import net.defade.towerbow.game.GameManager;
 import net.defade.towerbow.utils.Items;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
@@ -48,7 +47,7 @@ public class TeamSelectorGUI extends Inventory {
             if (player.getTeam() == team) return;
 
             if (team != null) {
-                if (team.getMembers().size() >= GameManager.MAX_PLAYERS / 2) {
+                if (TeamUtils.isTeamFull(team)) {
                     player.sendMessage(Component.text("Cette équipe est pleine"));
                     player.playSound(Sound.sound().type(SoundEvent.BLOCK_ANVIL_LAND).pitch(1.5F).volume(1F).build(), player.getPosition());
                     return;
@@ -89,7 +88,7 @@ public class TeamSelectorGUI extends Inventory {
                                 .resolver(Placeholder.styling("team_color", team.getTeamDisplayName().color()))
                                 .resolver(Placeholder.component("team", team.getTeamDisplayName()))
                                 .resolver(Placeholder.component("team_count", Component.text(team.getMembers().size())))
-                                .resolver(Placeholder.component("team_total", Component.text(GameManager.MAX_PLAYERS / 2)))
+                                .resolver(Placeholder.component("team_total", Component.text(TeamUtils.MAX_PLAYERS_PER_TEAM)))
                                 .build()
                 )
         );
