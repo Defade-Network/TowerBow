@@ -20,6 +20,7 @@ import net.minestom.server.event.instance.InstanceTickEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
+import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.sound.SoundEvent;
@@ -67,6 +68,8 @@ public class GameStartHandler {
         registerGameStartCountdown();
 
         registerTeamSelector();
+
+        preventPlayersFalling();
     }
 
     private void disableBlockBreaking() {
@@ -189,6 +192,14 @@ public class GameStartHandler {
                         player.openInventory(teamSelectorGUI);
                     }
                 });
+    }
+
+    private void preventPlayersFalling() {
+        startEventNode.getPlayerNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
+            if (playerTickEvent.getPlayer().getPosition().y() < 50) {
+                playerTickEvent.getPlayer().teleport(new Pos(55.5, 101, 52.5));
+            }
+        });
     }
 
     private void updateBossBar(int countdownTime) {

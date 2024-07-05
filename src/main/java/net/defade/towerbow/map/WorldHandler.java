@@ -11,7 +11,7 @@ import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.instance.InstanceTickEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerBlockPlaceEvent;
-import net.minestom.server.instance.Instance;
+import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.Material;
@@ -42,6 +42,7 @@ public class WorldHandler {
         registerBlockDecay();
         registerWorldBorderDamage();
         registerTickCounter();
+        preventPlayersClippingThroughFloor();
     }
 
     /**
@@ -131,6 +132,15 @@ public class WorldHandler {
                         ));
                     }
                 }
+            }
+        });
+    }
+
+    private void preventPlayersClippingThroughFloor() {
+        gameInstance.getEventNode().getPlayerNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
+            Player player = playerTickEvent.getPlayer();
+            if (player.getPosition().y() < 1) {
+                player.teleport(player.getPosition().withY(1));
             }
         });
     }
