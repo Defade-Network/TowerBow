@@ -110,6 +110,8 @@ public class GamePlayHandler {
                     player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(250),Duration.ofMillis(1500),Duration.ofMillis(250)));
                     player.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
                     player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<yellow>Montez vite!</yellow>"));
+
+                    player.setTag(PLAYER_REMAINING_LIVES, 3); //TODO: config
                 });
 
                 playingState = PlayingState.INVINCIBLE;

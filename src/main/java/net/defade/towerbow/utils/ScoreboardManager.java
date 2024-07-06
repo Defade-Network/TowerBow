@@ -57,14 +57,23 @@ public class ScoreboardManager {
 
             sidebar.createLine(new Sidebar.ScoreboardLine(
                     "bonus_block",
-                    getBonusBlockComponent("3:00"),
-                    4,
+                    getBonusBlockComponent("2:00"),
+                    6,
                     Sidebar.NumberFormat.blank()
             ));
 
             sidebar.createLine(new Sidebar.ScoreboardLine(
                     "border",
-                    getBorderShrinkComponent("10:00"),
+                    getBorderShrinkComponent("8:00"),
+                    5,
+                    Sidebar.NumberFormat.blank()
+            ));
+            sidebar.createLine(new Sidebar.ScoreboardLine(
+                    "lives_remaining",
+
+                    Component.text("» ").color(NamedTextColor.GRAY)
+                            .append(Component.text("Vies: ").color(NamedTextColor.WHITE))
+                            .append(Component.text("0")), //TODO: récupérer le nombre de vies
                     3,
                     Sidebar.NumberFormat.blank()
             ));
@@ -195,7 +204,7 @@ public class ScoreboardManager {
                 sidebar.createLine(new Sidebar.ScoreboardLine(
                         "bar_1",
                         Component.text("                          ").decoration(TextDecoration.STRIKETHROUGH, true).color(NamedTextColor.DARK_GRAY),
-                        7,
+                        10,
                         Sidebar.NumberFormat.blank()
                 ));
                 sidebar.createLine(new Sidebar.ScoreboardLine(
@@ -204,31 +213,40 @@ public class ScoreboardManager {
                         Component.text("» ").color(NamedTextColor.GRAY)
                                 .append(Component.text("Vous êtes ").color(NamedTextColor.WHITE))
                                 .append(team.getTeamDisplayName()),
-                        6,
+                        9,
                         Sidebar.NumberFormat.blank()
                 ));
 
                 sidebar.createLine(new Sidebar.ScoreboardLine(
                         "empty_1",
                         Component.text(""),
-                        5,
+                        8,
                         Sidebar.NumberFormat.blank()
                 ));
 
                 sidebar.createLine(new Sidebar.ScoreboardLine(
                         "starting",
                         Component.text("  Démarrage...").color(NamedTextColor.WHITE),
-                        3,
+                        7,
                         Sidebar.NumberFormat.blank()
                 ));
+
+                //Line 6: Border timer
+                //Line 5 Bonus block timer
 
                 sidebar.createLine(new Sidebar.ScoreboardLine(
                         "empty_2",
                         Component.text(""),
+                        4,
+                        Sidebar.NumberFormat.blank()
+                ));
+                // Line 3: Live remaining
+                sidebar.createLine(new Sidebar.ScoreboardLine(
+                        "empty_3",
+                        Component.text(""),
                         2,
                         Sidebar.NumberFormat.blank()
                 ));
-
                 sidebar.createLine(new Sidebar.ScoreboardLine(
                         "server_ip",
                         Component.text("» ").color(NamedTextColor.GRAY)
