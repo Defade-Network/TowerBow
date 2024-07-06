@@ -3,13 +3,14 @@ package net.defade.towerbow.commands;
 import net.defade.minestom.player.Rank;
 import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.game.GameInstance;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentEntity;
 import net.minestom.server.command.builder.suggestion.SuggestionEntry;
-import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 
 public class ReviveCommand extends Command {
@@ -19,10 +20,18 @@ public class ReviveCommand extends Command {
         super("revive");
 
         setDefaultExecutor((sender, context) -> {
-            sender.sendMessage(MM.deserialize("<red>Usage: /revive <player>"));
+            sender.sendMessage(MM.deserialize("<red>Usage: /revive <player> <lives>"));
         });
 
         ArgumentEntity playerArgument = ArgumentType.Entity("player");
+        var livesArgument = ArgumentType.Integer("lives");
+
+        livesArgument.setCallback((sender, exception) -> {
+            if (!(sender instanceof Player player)) {
+                return;
+            }
+            sender.sendMessage(MM.deserialize("<red>Invalid synthax. Usage: /revive <player> <lives</red>"));
+        });
 
         playerArgument.setSuggestionCallback((sender, context, suggestion) -> {
             if (!(sender instanceof Player player)) {
@@ -46,6 +55,7 @@ public class ReviveCommand extends Command {
             }
 
             Player target = context.get(playerArgument).findFirstPlayer(player);
+            final int lives = context.get(livesArgument) != null ? context.get(livesArgument) : 1;
 
             if (target == null) {
                 player.sendMessage(MM.deserialize("<red>Unknown player."));
@@ -57,14 +67,14 @@ public class ReviveCommand extends Command {
                 return;
             }
 
-            target.setHealth(20);
-            target.setGameMode(GameMode.SURVIVAL);
-            target.setCanPickupItem(true);
-            target.setInvisible(false);
+            CombatMechanics.revivePlayer(target, lives);
 
-            target.teleport(target.getTeam().getPlayers().stream().findAny().get().getPosition());
-
-            player.sendMessage(MM.deserialize("<green>Revived <player>", Placeholder.component("player", target.getName())));
-        }, playerArgument);
+            player.sendMessage(MM.deserialize("<green>Revived <player> with <lives> lives !",
+                    TagResolver.builder()
+                    .resolver(Placeholder.component("player", target.getName()))
+                    .resolver(Placeholder.component("lives", Component.text(lives)))
+                    .build())
+            );
+        }, playerArgument, livesArgument);
     }
 }

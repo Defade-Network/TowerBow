@@ -188,8 +188,6 @@ public class CombatMechanics {
                 deadPlayer.setTag(PLAYER_REMAINING_LIVES, 0);
             }
 
-            deadPlayer.setRespawnPoint(deadPlayer.getTeam().getPlayers().stream().findAny().get().getPosition());
-
             new Entity(EntityType.LIGHTNING_BOLT).setInstance(gameInstance, deadPlayer.getPosition());
 
             Component killText;
@@ -237,6 +235,7 @@ public class CombatMechanics {
             });
 
             if (getRemainingLives(deadPlayer) <= 0) { // The player has no lives, he is a final kill
+                deadPlayer.setRespawnPoint(deadPlayer.getPosition());
                 deadPlayer.setGameMode(GameMode.SPECTATOR);
                 deadPlayer.setCanPickupItem(false);
                 deadPlayer.setInvisible(true); // Hide the deadPlayer
@@ -253,30 +252,12 @@ public class CombatMechanics {
 
                 gameInstance.getPlayers().forEach(players -> players.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDER_DRAGON_GROWL).pitch(1.6F).volume(0.5F).build(), players.getPosition()));
             } else { // Reviving the player if he isn't the last player on his team, otherwise he is automatically a final kill
-                deadPlayer.teleport(deadPlayer.getTeam().getPlayers().stream().findFirst().get().getPosition());
-                System.out.println(deadPlayer.getTeam().getPlayers().stream().findAny().get().getPosition());
-                deadPlayer.setHealth(20);
+                revivePlayer(deadPlayer, getRemainingLives(deadPlayer));
 
                 deadPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(500)));
                 deadPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MORT!</b></dark_red>"));
                 deadPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>-1 ❤</red>"));
 
-                gameInstance.sendGroupedPacket(new ParticlePacket(
-                        Particle.FLAME,
-                        true,
-                        deadPlayer.getPosition().add(0,0.5,0),
-                        new Vec(0.2, 0.6, 0.2),
-                        0.5F,
-                        50
-                ));
-                gameInstance.sendGroupedPacket(new ParticlePacket(
-                        Particle.FIREWORK,
-                        true,
-                        deadPlayer.getPosition().add(0,0.5,0),
-                        new Vec(0, 0, 0),
-                        0.3F,
-                        75
-                ));
                 return;
             }
 
@@ -298,6 +279,40 @@ public class CombatMechanics {
             PlayerDeathEvent playerDeathEvent = new PlayerDeathEvent(player, null, null);
             combatMechanicsNode.call(playerDeathEvent);
         });
+    }
+
+    public static void revivePlayer(Player player, int lives) {
+        player.setTag(PLAYER_REMAINING_LIVES, lives);
+
+        Pos respawnPosition = player.getTeam().getPlayers().stream()
+                .filter(playerPredicate -> playerPredicate != player)
+                .findFirst().get().getPosition();
+
+        // Teleports the player to an alive ally.
+        player.setRespawnPoint(respawnPosition);
+        player.teleport(respawnPosition);
+
+        player.setHealth(20);
+        player.setGameMode(GameMode.SURVIVAL);
+        player.setCanPickupItem(true);
+        player.setInvisible(false);
+
+        player.sendPacket(new ParticlePacket(
+                Particle.FLAME,
+                true,
+                player.getPosition().add(0,0.5,0),
+                new Vec(0.2, 0.6, 0.2),
+                0.5F,
+                50
+        ));
+        player.sendPacket(new ParticlePacket(
+                Particle.FIREWORK,
+                true,
+                player.getPosition().add(0,0.5,0),
+                new Vec(0, 0, 0),
+                0.3F,
+                75
+        ));
     }
 
     public static EventNode<EntityInstanceEvent> create(GameInstance gameInstance) {

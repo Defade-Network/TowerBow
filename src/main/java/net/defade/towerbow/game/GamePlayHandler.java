@@ -27,6 +27,7 @@ import net.minestom.server.particle.Particle;
 import net.minestom.server.potion.Potion;
 import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.sound.SoundEvent;
+import net.minestom.server.tag.Tag;
 import net.minestom.server.utils.NamespaceID;
 
 import java.time.Duration;
@@ -35,6 +36,7 @@ public class GamePlayHandler {
     public static final int TICKS_BEFORE_WORLD_BORDER_SHRINK = 10 * 60 * 20; // 10 minutes
     public static final int IMMUNITY_TICKS = 20 * 20; // 20 seconds
     public static final int MIN_TICKS_BEFORE_BLOCK_BONUS_SPAWN = 20 * 20; // 20 seconds
+    public static final Tag<Integer> PLAYER_REMAINING_LIVES = Tag.Integer("player_remaining_lives");
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final AttributeModifier FREEZE_PLAYER_MODIFIER = new AttributeModifier(NamespaceID.from("defade:freeze_player"), -10000, AttributeOperation.ADD_VALUE);
 
