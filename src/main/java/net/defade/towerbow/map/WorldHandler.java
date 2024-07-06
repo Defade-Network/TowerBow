@@ -15,6 +15,7 @@ import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.Material;
+import net.minestom.server.network.packet.server.play.EffectPacket;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.sound.SoundEvent;
@@ -103,7 +104,8 @@ public class WorldHandler {
                             // Add the block to the queue to be updated again in 20 seconds
                             blockQueue.add(Pair.of(currentTime + 20 * 1000, block.right()));
                         } else if (blockType.registry().material() == Material.MOSSY_COBBLESTONE) {
-                            gameInstance.setBlock(block.right(), Block.AIR); //TODO: Add breaking animation
+                            gameInstance.sendGroupedPacket(new EffectPacket(2001, block.right(), Block.MOSSY_COBBLESTONE.stateId(), false));
+                            gameInstance.setBlock(block.right(), Block.AIR);
                         }
                     }
                 });

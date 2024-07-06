@@ -85,15 +85,15 @@ public class GameStartHandler {
 
             // Rules of towerbow message
             player.sendMessage(MM.deserialize(
-                    "<st><dark_gray>                </dark_gray></st> <b><yellow>TOWERBOW</yellow></b> <st><dark_gray>                </dark_gray></st>\n" +
-                            "<gray>Inspiré du SkyHigh</gray>\n" +
+                    "<st><dark_gray>                </dark_gray></st> <b><gold>TOWERBOW</gold></b> <st><dark_gray>                </dark_gray></st>\n" +
+                            "<yellow>             Inspiré du SkyHigh</yellow>\n" +
                             "<u><yellow>Règles:</yellow></u>\n" +
                             "<gray>•</gray> Combats à l'arc!\n" +
                             "<gray>•</gray> 1 seule vie!\n" +
                             "<gray>•</gray> 2 équipes!\n" +
                             "<gray>•</gray> Blocs infinis!\n" +
                             "\n" +
-                            "<dark_gray>[</dark_gray><b><light_purple><hover:show_text:'<b><light_purple>BLOC BONUS</light_purple></b>\nTirez dessus, donne des bonus.\n\n<light_purple><u>Liste des bonus:</u></light_purple>\n - Heal complet \n - Poison pour les adversaires\n - Flèche explosive\n - Flèche fumigène'>BLOC BONUS</hover></light_purple></b><dark_gray>] [</dark_gray><b><red><hover:show_text:'<b><red>BORDURES</red></b>\nDerrière la bordure = dégâts\n\n<u><red>Bordure sur les côtés:</red></u>\n - Statique puis réduit en quelques minutes\n - Bordure bleue\n\n<u><red>Bordure en hauteur (couche Y):</red></u>\n - La bordure monte toutes les 8s\n - Bordure rouge'>BORDURES</hover></red></b><dark_gray>]</dark_gray>\n" +
+                            "<gray>[</gray><b><light_purple><hover:show_text:'<b><light_purple>BLOC BONUS</light_purple></b>\nTirez dessus, donne des bonus.\n\n<light_purple><u>Liste des bonus:</u></light_purple>\n - Heal complet \n - Poison pour les adversaires\n - Flèche explosive\n - Flèche fumigène'>BLOC BONUS</hover></light_purple></b><gray>] [</gray><b><red><hover:show_text:'<b><red>BORDURES</red></b>\nDerrière la bordure = dégâts\n\n<u><red>Bordure sur les côtés:</red></u>\n - Statique puis réduit en quelques minutes\n - Bordure bleue\n\n<u><red>Bordure en hauteur (couche Y):</red></u>\n - La bordure monte toutes les 8s\n - Bordure rouge'>BORDURES</hover></red></b><gray>] (hover)</gray>\n" +
                             "<st><dark_gray>                                               </dark_gray></st>"
             ));
 
@@ -222,6 +222,10 @@ public class GameStartHandler {
 
             bossBar.progress((float) tickCountdown / (countdownTime * 20));
         }
+    }
+
+    public void stopTimer() {
+        tickCountdown = Integer.MAX_VALUE;
     }
 
     public void stop() {

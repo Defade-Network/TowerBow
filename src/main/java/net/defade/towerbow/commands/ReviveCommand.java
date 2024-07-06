@@ -62,6 +62,8 @@ public class ReviveCommand extends Command {
             target.setCanPickupItem(true);
             target.setInvisible(false);
 
+            target.teleport(target.getTeam().getPlayers().stream().findAny().get().getPosition());
+
             player.sendMessage(MM.deserialize("<green>Revived <player>", Placeholder.component("player", target.getName())));
         }, playerArgument);
     }
