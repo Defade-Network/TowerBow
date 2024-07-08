@@ -59,7 +59,7 @@ public class Items {
             .with(ItemComponent.ENCHANTMENTS, new EnchantmentList(
                     Map.of(
                             Enchantment.PROTECTION, 2,
-                            Enchantment.FEATHER_FALLING, 5
+                            Enchantment.FEATHER_FALLING, 6
                     )
             ))
             .with(ItemComponent.HIDE_TOOLTIP);
@@ -79,8 +79,7 @@ public class Items {
     public static final ItemStack BOW = ItemStack.of(Material.BOW)
             .with(ItemComponent.ENCHANTMENTS, new EnchantmentList(
                     Map.of(
-                            Enchantment.INFINITY, 1,
-                            Enchantment.PUNCH, 1
+                            Enchantment.INFINITY, 1
                     )
             ))
             .with(ItemComponent.UNBREAKABLE, new Unbreakable(false));

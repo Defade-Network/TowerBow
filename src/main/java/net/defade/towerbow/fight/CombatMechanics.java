@@ -9,6 +9,7 @@ import io.github.togar2.pvp.config.ProjectileConfig;
 import io.github.togar2.pvp.config.PvPConfig;
 import io.github.togar2.pvp.projectile.AbstractArrow;
 import net.defade.towerbow.game.GameInstance;
+import net.defade.towerbow.utils.Items;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -31,6 +32,7 @@ import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEve
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
+import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.scoreboard.Team;
@@ -120,7 +122,20 @@ public class CombatMechanics {
                     entityShootEvent.getProjectile().setTag(PLAYER_SHOOT_POS, entityShootEvent.getEntity().getPosition());
                 })
                 .addListener(ProjectileCollideWithBlockEvent.class, projectileCollideWithBlockEvent -> {
-                    projectileCollideWithBlockEvent.getEntity().setTag(ARROW_TOUCHED_GROUND, true);
+                    Entity arrow = projectileCollideWithBlockEvent.getEntity();
+                    Pos blockPos = projectileCollideWithBlockEvent.getCollisionPosition();
+
+                    if (arrow.hasTag(ARROW_TOUCHED_GROUND)) return;
+
+                    if (projectileCollideWithBlockEvent.getBlock() == Block.COBBLESTONE && (int) (Math.random() * 100) >= 50) { //50% chance [CONFIG: Arrow cobblestone breaking chance (%)]
+                        gameInstance.setBlock(blockPos, Block.MOSSY_COBBLESTONE);
+                        gameInstance.getWorldHandler().registerBlockDecay(blockPos, 15 * 1000); // 15 seconds
+                    } else if (projectileCollideWithBlockEvent.getBlock() == Block.MOSSY_COBBLESTONE) {
+                        gameInstance.setBlock(blockPos, Block.MOSSY_COBBLESTONE);
+                        gameInstance.getWorldHandler().registerBlockDecay(blockPos, 10); // 15 seconds
+                    }
+
+                    arrow.setTag(ARROW_TOUCHED_GROUND, true);
                 })
                 .addListener(EntityDamageEvent.class, entityDamageEvent -> {
                     if (!(entityDamageEvent.getDamage().getSource() instanceof AbstractArrow arrow)) return;
@@ -161,6 +176,7 @@ public class CombatMechanics {
                         });
                         shooter.setExp(1); //Fill xp bar
                     } else {
+                        shooter.setHealth(shooter.getHealth() + 1); // heal the shooter a bit
                         shooter.setExp(0); // Empty xp bar
                     }
                 });
@@ -175,6 +191,11 @@ public class CombatMechanics {
             if (killer == null || killer == playerDeathEvent.getPlayer()) return; // Ignore self kills
 
             killer.setTag(PLAYER_KILLS, getKills(killer) + 1);
+            killer.getInventory().addItemStack(Items.GOLDEN_APPLE);
+
+            killer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1500),Duration.ofMillis(500)));
+            killer.sendTitlePart(TitlePart.TITLE, MM.deserialize(" "));
+            killer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<green><b>KILL!</b></green>"));
         });
     }
 
@@ -256,7 +277,34 @@ public class CombatMechanics {
 
                 deadPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(500)));
                 deadPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MORT!</b></dark_red>"));
-                deadPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>-1 ❤</red>"));
+                deadPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red><lives> VIES</red>", Placeholder.component("lives", Component.text(getRemainingLives(deadPlayer)))));
+
+                return;
+            }
+
+            if (getRemainingLives(deadPlayer) <= 0) { // The player has no lives, he is a final kill
+                deadPlayer.setRespawnPoint(deadPlayer.getPosition());
+                deadPlayer.setGameMode(GameMode.SPECTATOR);
+                deadPlayer.setCanPickupItem(false);
+                deadPlayer.setInvisible(true); // Hide the deadPlayer
+
+                deadPlayer.getTeam().getPlayers().forEach(players -> {
+                    players.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(500)));
+                    players.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+                    players.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Plus qu'une vie!</red>"));
+
+                    players.sendMessage(MM.deserialize(
+                            "<dark_red><b>ATTENTION!</b><dark_red> <red>Votre dernier allié est mort, il ne vous reste plus qu'une vie!</red>"
+                    ));
+                });
+
+                gameInstance.getPlayers().forEach(players -> players.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDER_DRAGON_GROWL).pitch(1.6F).volume(0.5F).build(), players.getPosition()));
+            } else { // Reviving the player if he isn't the last player on his team, otherwise he is automatically a final kill
+                revivePlayer(deadPlayer, getRemainingLives(deadPlayer));
+
+                deadPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(500)));
+                deadPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MORT!</b></dark_red>"));
+                deadPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red><lives> VIES</red>", Placeholder.component("lives", Component.text(getRemainingLives(deadPlayer)))));
 
                 return;
             }

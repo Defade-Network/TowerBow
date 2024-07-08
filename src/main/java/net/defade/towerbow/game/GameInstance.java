@@ -194,7 +194,7 @@ public class GameInstance extends InstanceContainer {
             case 8, 9 -> 80;
             case 10, 11 -> 90;
             case 12 -> 100;
-            default -> 40;
+            default -> 50;
         };
 
         for (int x = 0; x < mapSize; x++) {
