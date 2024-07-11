@@ -15,7 +15,9 @@ import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.instance.InstanceTickEvent;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
+import net.minestom.server.network.packet.server.play.UpdateScorePacket;
 import net.minestom.server.particle.Particle;
+import net.minestom.server.scoreboard.BelowNameTag;
 import net.minestom.server.scoreboard.Sidebar;
 import net.minestom.server.scoreboard.Team;
 import java.util.HashMap;
@@ -37,7 +39,8 @@ public class ScoreboardManager {
             BossBar.Color.BLUE,
             BossBar.Overlay.PROGRESS
     );
-    private final Map<UUID, Sidebar> teamSidebar = new HashMap<>();
+    private final Map<UUID, Sidebar> playerSidebar = new HashMap<>();
+    private final BelowNameTag belowNameTag = new BelowNameTag("lives-remaining", Component.text("❤").color(NamedTextColor.RED));
 
     public ScoreboardManager(GameInstance gameInstance, GamePlayHandler gamePlayHandler) {
         this.gameInstance = gameInstance;
@@ -45,6 +48,8 @@ public class ScoreboardManager {
     }
 
     public void init() {
+        gameInstance.getPlayers().forEach(belowNameTag::addViewer);
+
         createSidebarScoreboards();
         updateScoreboard(); // Immediately update the values
 
@@ -55,7 +60,7 @@ public class ScoreboardManager {
         gameInstance.getPlayers().forEach(player -> player.showBossBar(bossBar));
 
         // Remove "starting" text and replace it with immunity timer
-        teamSidebar.values().forEach(sidebar -> {
+        playerSidebar.values().forEach(sidebar -> {
             sidebar.removeLine("starting");
 
             sidebar.createLine(new Sidebar.ScoreboardLine(
@@ -94,6 +99,10 @@ public class ScoreboardManager {
     }
 
     private void updateScoreboardValues() {
+        gameInstance.getPlayers().forEach(player -> {
+            gameInstance.sendGroupedPacket(new UpdateScorePacket(player.getUsername(), "bnt-lives-remaining", CombatMechanics.getRemainingLives(player), null, null));
+        });
+
         final int tickCounter = gamePlayHandler.getTickCounter();
 
         int ticksLeftBeforeBorderShrink = TICKS_BEFORE_WORLD_BORDER_SHRINK - tickCounter;
@@ -104,7 +113,7 @@ public class ScoreboardManager {
         int bonusBlockSecondsLeft = Math.max(ticksLeftBeforeBonusBlock, 0) / 20;
         String bonusBlockFormattedTime = String.format("%02d:%02d", bonusBlockSecondsLeft / 60, bonusBlockSecondsLeft % 60);
 
-        teamSidebar.forEach((playerUuid, sidebar) -> {
+        playerSidebar.forEach((playerUuid, sidebar) -> {
             Player player = gameInstance.getPlayerByUuid(playerUuid);
             if (player == null) return; // Player disconnected
 
@@ -198,7 +207,7 @@ public class ScoreboardManager {
     private void createSidebarScoreboards() {
         gameInstance.getPlayers().forEach(player -> {
             Team team = player.getTeam();
-            Sidebar sidebar = teamSidebar.get(player.getUuid());
+            Sidebar sidebar = playerSidebar.get(player.getUuid());
 
             if (sidebar == null) {
                 sidebar = new Sidebar(
@@ -267,7 +276,7 @@ public class ScoreboardManager {
                         Sidebar.NumberFormat.blank()
                 ));
 
-                teamSidebar.put(player.getUuid(), sidebar);
+                playerSidebar.put(player.getUuid(), sidebar);
             }
 
             sidebar.addViewer(player);
