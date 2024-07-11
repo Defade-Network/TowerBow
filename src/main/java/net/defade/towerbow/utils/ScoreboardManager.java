@@ -20,6 +20,7 @@ import net.minestom.server.scoreboard.Sidebar;
 import net.minestom.server.scoreboard.Team;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static net.defade.towerbow.game.GamePlayHandler.IMMUNITY_TICKS;
 import static net.defade.towerbow.game.GamePlayHandler.TICKS_BEFORE_WORLD_BORDER_SHRINK;
@@ -36,7 +37,7 @@ public class ScoreboardManager {
             BossBar.Color.BLUE,
             BossBar.Overlay.PROGRESS
     );
-    private final Map<Team, Sidebar> teamSidebar = new HashMap<>();
+    private final Map<UUID, Sidebar> teamSidebar = new HashMap<>();
 
     public ScoreboardManager(GameInstance gameInstance, GamePlayHandler gamePlayHandler) {
         this.gameInstance = gameInstance;
@@ -73,9 +74,7 @@ public class ScoreboardManager {
             sidebar.createLine(new Sidebar.ScoreboardLine(
                     "lives_remaining",
 
-                    Component.text("» ").color(NamedTextColor.GRAY)
-                            .append(Component.text("Vies: ").color(NamedTextColor.WHITE))
-                            .append(Component.text("0")), //TODO: récupérer le nombre de vies
+                    Component.text(""),
                     3,
                     Sidebar.NumberFormat.blank()
             ));
@@ -85,7 +84,7 @@ public class ScoreboardManager {
     }
 
     public void updateScoreboard() {
-        updateScoreboardTimers();
+        updateScoreboardValues();
 
         if (gamePlayHandler.getPlayingState() != GamePlayHandler.PlayingState.PLAYING) {
             updatePrePlayingScoreboard();
@@ -94,7 +93,7 @@ public class ScoreboardManager {
         }
     }
 
-    private void updateScoreboardTimers() {
+    private void updateScoreboardValues() {
         final int tickCounter = gamePlayHandler.getTickCounter();
 
         int ticksLeftBeforeBorderShrink = TICKS_BEFORE_WORLD_BORDER_SHRINK - tickCounter;
@@ -105,9 +104,13 @@ public class ScoreboardManager {
         int bonusBlockSecondsLeft = Math.max(ticksLeftBeforeBonusBlock, 0) / 20;
         String bonusBlockFormattedTime = String.format("%02d:%02d", bonusBlockSecondsLeft / 60, bonusBlockSecondsLeft % 60);
 
-        teamSidebar.values().forEach(sidebar -> {
+        teamSidebar.forEach((playerUuid, sidebar) -> {
+            Player player = gameInstance.getPlayerByUuid(playerUuid);
+            if (player == null) return; // Player disconnected
+
             sidebar.updateLineContent("bonus_block", getBonusBlockComponent(bonusBlockFormattedTime));
             sidebar.updateLineContent("border", getBorderShrinkComponent(borderShrinkFormattedTime));
+            sidebar.updateLineContent("lives_remaining", getLivesRemainingComponent(player));
         });
 
         if (ticksLeftBeforeBorderShrink < 0) {
@@ -195,7 +198,7 @@ public class ScoreboardManager {
     private void createSidebarScoreboards() {
         gameInstance.getPlayers().forEach(player -> {
             Team team = player.getTeam();
-            Sidebar sidebar = teamSidebar.get(team);
+            Sidebar sidebar = teamSidebar.get(player.getUuid());
 
             if (sidebar == null) {
                 sidebar = new Sidebar(
@@ -264,7 +267,7 @@ public class ScoreboardManager {
                         Sidebar.NumberFormat.blank()
                 ));
 
-                teamSidebar.put(team, sidebar);
+                teamSidebar.put(player.getUuid(), sidebar);
             }
 
             sidebar.addViewer(player);
@@ -281,5 +284,11 @@ public class ScoreboardManager {
         return Component.text("» ").color(NamedTextColor.GRAY)
                 .append(Component.text("Bordure: ").color(NamedTextColor.WHITE))
                 .append(Component.text(time).color(NamedTextColor.RED));
+    }
+
+    private static Component getLivesRemainingComponent(Player player) {
+        return Component.text("» ").color(NamedTextColor.GRAY)
+                .append(Component.text("Vies: ").color(NamedTextColor.WHITE))
+                .append(Component.text(CombatMechanics.getRemainingLives(player)).color(NamedTextColor.RED));
     }
 }
