@@ -45,6 +45,8 @@ public class ScoreboardManager {
 
     public void init() {
         createSidebarScoreboards();
+        updateScoreboard(); // Immediately update the values
+
         gamePlayHandler.getGameEventNode().getInstanceNode().addListener(InstanceTickEvent.class, event -> updateScoreboard());
     }
 
@@ -78,6 +80,8 @@ public class ScoreboardManager {
                     Sidebar.NumberFormat.blank()
             ));
         });
+
+        updateScoreboard(); // Immediately update the scoreboard so that the players see the right values
     }
 
     public void updateScoreboard() {
@@ -117,7 +121,6 @@ public class ScoreboardManager {
         } else {
             bossBar.color(BossBar.Color.GREEN);
         }
-
 
         bossBar.name(
                 Component.text("Bordure").color(NamedTextColor.RED).decoration(TextDecoration.BOLD, true)

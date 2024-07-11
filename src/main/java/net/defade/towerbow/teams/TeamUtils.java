@@ -10,14 +10,13 @@ import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.item.Material;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
 import net.minestom.server.scoreboard.Team;
-import net.minestom.server.scoreboard.TeamManager;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class TeamUtils {
     public static final int MAX_PLAYERS_PER_TEAM = GameManager.MAX_PLAYERS / 2;
 
-    private static final Function<TeamManager, GameTeams> RANDOM_TEAMS_SUPPLIER = teamManager -> {
+    private static final Supplier<GameTeams> RANDOM_TEAMS_SUPPLIER = () -> {
         switch ((int) (Math.random() * 3)) {
             case 0 -> {
                 TowerbowTeam firstTeam = new TowerbowTeam("Red");
@@ -76,10 +75,10 @@ public class TeamUtils {
     }
 
     public static GameTeams getRandomTeams(GameInstance gameInstance) {
-        TeamManager teamManager = new TeamManager();
-        registerTeamSending(gameInstance, teamManager);
+        GameTeams gameTeams = RANDOM_TEAMS_SUPPLIER.get();
+        registerTeamSending(gameInstance, gameTeams);
 
-        return RANDOM_TEAMS_SUPPLIER.apply(teamManager);
+        return gameTeams;
     }
 
     public static boolean isTeamFull(Team team) {
@@ -100,12 +99,11 @@ public class TeamUtils {
                 .forEach(player -> givePlayerAvailableTeam(gameTeams, player));
     }
 
-    private static void registerTeamSending(GameInstance gameInstance, TeamManager teamManager) {
+    private static void registerTeamSending(GameInstance gameInstance, GameTeams gameTeams) {
         gameInstance.getEventNode().getPlayerNode()
                 .addListener(PlayerSpawnEvent.class, playerSpawnEvent -> {
-                    for (Team team : teamManager.getTeams()) {
-                        playerSpawnEvent.getPlayer().sendPacket(team.createTeamsCreationPacket());
-                    }
+                    playerSpawnEvent.getPlayer().sendPacket(gameTeams.firstTeam().createTeamsCreationPacket());
+                    playerSpawnEvent.getPlayer().sendPacket(gameTeams.secondTeam().createTeamsCreationPacket());
                 });
     }
 }

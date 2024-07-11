@@ -47,7 +47,7 @@ public class CombatMechanics {
     private static final Tag<Integer> PLAYER_KILLS = Tag.Integer("kills");
     private static final Tag<Integer> PLAYER_LONGSHOTS = Tag.Integer("longshots");
     private static final Tag<Integer> PLAYER_DAMAGE_DEALT = Tag.Integer("damage_dealt");
-    public static final Tag<Integer> PLAYER_REMAINING_LIVES = Tag.Integer("player_remaining_lives");
+    private static final Tag<Integer> PLAYER_REMAINING_LIVES = Tag.Integer("player_remaining_lives");
     private static final Tag<UUID> LAST_DAMAGER_UUID = Tag.UUID("last_damager"); // Used to store the last player who damaged the player
 
     private static final Tag<Pos> PLAYER_SHOOT_POS = Tag.Structure("arrow_touched_ground", Pos.class); // Position at which the player shot the arrow
@@ -282,33 +282,6 @@ public class CombatMechanics {
                 return;
             }
 
-            if (getRemainingLives(deadPlayer) <= 0) { // The player has no lives, he is a final kill
-                deadPlayer.setRespawnPoint(deadPlayer.getPosition());
-                deadPlayer.setGameMode(GameMode.SPECTATOR);
-                deadPlayer.setCanPickupItem(false);
-                deadPlayer.setInvisible(true); // Hide the deadPlayer
-
-                deadPlayer.getTeam().getPlayers().forEach(players -> {
-                    players.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(500)));
-                    players.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
-                    players.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Plus qu'une vie!</red>"));
-
-                    players.sendMessage(MM.deserialize(
-                            "<dark_red><b>ATTENTION!</b><dark_red> <red>Votre dernier allié est mort, il ne vous reste plus qu'une vie!</red>"
-                    ));
-                });
-
-                gameInstance.getPlayers().forEach(players -> players.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDER_DRAGON_GROWL).pitch(1.6F).volume(0.5F).build(), players.getPosition()));
-            } else { // Reviving the player if he isn't the last player on his team, otherwise he is automatically a final kill
-                revivePlayer(deadPlayer, getRemainingLives(deadPlayer));
-
-                deadPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(500)));
-                deadPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MORT!</b></dark_red>"));
-                deadPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red><lives> VIES</red>", Placeholder.component("lives", Component.text(getRemainingLives(deadPlayer)))));
-
-                return;
-            }
-
             // Check if all the players of his team are dead
             boolean allPlayersInTeamDead = deadPlayer.getTeam().getMembers().isEmpty();
 
@@ -381,6 +354,10 @@ public class CombatMechanics {
 
     public static int getRemainingLives(Player player) {
         return player.hasTag(PLAYER_REMAINING_LIVES) ? player.getTag(PLAYER_REMAINING_LIVES) : 0;
+    }
+
+    public static void setRemainingLives(Player player, int lives) {
+        player.setTag(PLAYER_REMAINING_LIVES, lives);
     }
 
     public static Player getLatestDamager(Player player) {

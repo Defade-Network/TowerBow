@@ -14,7 +14,6 @@ import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.instance.InstanceTickEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
@@ -85,23 +84,38 @@ public class GameStartHandler {
 
             // Rules of towerbow message
             player.sendMessage(MM.deserialize(
-                    "<st><dark_gray>                </dark_gray></st> <b><gold>TOWERBOW</gold></b> <st><dark_gray>                </dark_gray></st>\n" +
-                            "<yellow>             Inspiré du SkyHigh</yellow>\n" +
-                            "<u><yellow>Règles:</yellow></u>\n" +
-                            "<gray>•</gray> Combats à l'arc!\n" +
-                            "<gray>•</gray> 1 seule vie!\n" +
-                            "<gray>•</gray> 2 équipes!\n" +
-                            "<gray>•</gray> Blocs infinis!\n" +
-                            "\n" +
-                            "<gray>[</gray><b><light_purple><hover:show_text:'<b><light_purple>BLOC BONUS</light_purple></b>\nTirez dessus, donne des bonus.\n\n<light_purple><u>Liste des bonus:</u></light_purple>\n - Heal complet \n - Poison pour les adversaires\n - Flèche explosive\n - Flèche fumigène'>BLOC BONUS</hover></light_purple></b><gray>] [</gray><b><red><hover:show_text:'<b><red>BORDURES</red></b>\nDerrière la bordure = dégâts\n\n<u><red>Bordure sur les côtés:</red></u>\n - Statique puis réduit en quelques minutes\n - Bordure bleue\n\n<u><red>Bordure en hauteur (couche Y):</red></u>\n - La bordure monte toutes les 8s\n - Bordure rouge'>BORDURES</hover></red></b><gray>] (hover)</gray>\n" +
-                            "<st><dark_gray>                                               </dark_gray></st>"
+                    """
+                            <st><dark_gray>                </dark_gray></st> <b><gold>TOWERBOW</gold></b> <st><dark_gray>                </dark_gray></st>
+                            <yellow>             Inspiré du SkyHigh</yellow>
+                            <u><yellow>Règles:</yellow></u>
+                            <gray>•</gray> Combats à l'arc!
+                            <gray>•</gray> 1 seule vie!
+                            <gray>•</gray> 2 équipes!
+                            <gray>•</gray> Blocs infinis!
+
+                            <gray>[</gray><b><light_purple><hover:show_text:'<b><light_purple>BLOC BONUS</light_purple></b>
+                            Tirez dessus, donne des bonus.
+
+                            <light_purple><u>Liste des bonus:</u></light_purple>
+                             - Heal complet\s
+                             - Poison pour les adversaires
+                             - Flèche explosive
+                             - Flèche fumigène'>BLOC BONUS</hover></light_purple></b><gray>] [</gray><b><red><hover:show_text:'<b><red>BORDURES</red></b>
+                            Derrière la bordure = dégâts
+
+                            <u><red>Bordure sur les côtés:</red></u>
+                             - Statique puis réduit en quelques minutes
+                             - Bordure bleue
+
+                            <u><red>Bordure en hauteur (couche Y):</red></u>
+                             - La bordure monte toutes les 8s
+                             - Bordure rouge'>BORDURES</hover></red></b><gray>] (hover)</gray>
+                            <st><dark_gray>                                               </dark_gray></st>"""
             ));
 
             gameInstance.sendMessage(MM.deserialize(
                     "<gold>🏹 " + player.getUsername() + "</gold><color:#fffb2b> a rejoint la partie.</color> <gray>(" + gameInstance.getPlayers().size() + "/12)</gray>"
             ));
-
-            player.setGameMode(GameMode.SURVIVAL);
 
             int connectedPlayers = gameInstance.getPlayers().size();
             if (connectedPlayers >= GameManager.MIN_PLAYERS) {
