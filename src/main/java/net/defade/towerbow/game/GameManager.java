@@ -59,8 +59,6 @@ public class GameManager {
         GameInstance gameInstance = new GameInstance(this, LOBBY_SOURCE);
         MinecraftServer.getInstanceManager().registerInstance(gameInstance);
         gameInstances.add(gameInstance);
-
-        MinecraftServer.getServerApi().setAllowPlayers(gameInstances.size() < MAX_GAME_INSTANCES);
     }
 
     public void unregisterGame(GameInstance gameInstance) {

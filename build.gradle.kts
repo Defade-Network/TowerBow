@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    implementation("net.defade:minestom:1.21-6558d491b5")
+    implementation("net.defade:minestom:1.21-5ae59134ac")
     implementation("io.github.togar2:MinestomPvP:1.0") /* TODO: change to official version once it's updated to 1.21 and arrows deflecting is fixed
     Meanwhile, the library must be compiled locally. */
     implementation("net.kyori:adventure-text-minimessage:4.17.0")
