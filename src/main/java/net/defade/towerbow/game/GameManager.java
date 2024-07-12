@@ -1,6 +1,7 @@
 package net.defade.towerbow.game;
 
 import net.defade.minestom.amethyst.AmethystSource;
+import net.defade.minestom.event.server.ServerMarkedForStopEvent;
 import net.defade.towerbow.map.LobbyAmethystSource;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -42,6 +43,7 @@ public class GameManager {
         MinecraftServer.getSchedulerManager().scheduleTask(this::checkGameInstances, TaskSchedule.immediate(), TaskSchedule.seconds(2));
 
         isolatePlayers();
+        disconnectPlayersWhenMarkedForStop();
     }
 
     public void checkGameInstances() {
@@ -99,6 +101,19 @@ public class GameManager {
                     for (GameInstance instance : gameInstances) {
                         if (instance != gameInstance) {
                             playerChatEvent.getRecipients().removeAll(instance.getPlayers());
+                        }
+                    }
+                });
+    }
+
+    private void disconnectPlayersWhenMarkedForStop() {
+        MinecraftServer.getGlobalEventHandler()
+                .addListener(ServerMarkedForStopEvent.class, serverMarkedForStopEvent -> {
+                    for (GameInstance gameInstance : gameInstances) {
+                        if (gameInstance.acceptsPlayers()) { // Only disconnect players from game instances that are accepting players (where the game hasn't started yet)
+                            for (Player player : gameInstance.getPlayers()) {
+                                player.sendToServer("towerbow"); // Send them to a new server
+                            }
                         }
                     }
                 });
