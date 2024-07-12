@@ -238,7 +238,8 @@ public class CombatMechanics {
                         Placeholder.component("liveremaining", Component.text(getRemainingLives(deadPlayer)))
                 ));
             }
-            playerDeathEvent.setChatMessage(killText);
+            playerDeathEvent.setChatMessage(null); // Player death event sends the message to the WHOLE server
+            gameInstance.sendMessage(killText);
 
             gameInstance.getPlayers().forEach(player -> {
                 if (player.getTeam() == deadPlayer.getTeam()) { // An ally dies
