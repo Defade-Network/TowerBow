@@ -2,6 +2,7 @@ package net.defade.towerbow.game;
 
 import net.defade.minestom.amethyst.AmethystLoader;
 import net.defade.minestom.amethyst.AmethystSource;
+import net.defade.minestom.servers.minigame.MiniGameInstance;
 import net.defade.towerbow.bonus.BonusBlockManager;
 import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.fight.InventoryManager;
@@ -37,7 +38,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class GameInstance extends InstanceContainer {
+public class GameInstance extends InstanceContainer implements MiniGameInstance {
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final DynamicRegistry.Key<DimensionType> TOWERBOW_DIMENSION = MinecraftServer.getDimensionTypeRegistry()
             .register(
@@ -70,7 +71,23 @@ public class GameInstance extends InstanceContainer {
         setWorldBorder(INITIAL_WORLD_BORDER);
     }
 
-    public boolean acceptsPlayers() {
+    @Override
+    public UUID getUuid() {
+        return getUniqueId();
+    }
+
+    @Override
+    public int getPlayerCount() {
+        return getPlayers().size();
+    }
+
+    @Override
+    public int getMaxPlayers() {
+        return GameManager.MAX_PLAYERS;
+    }
+
+    @Override
+    public boolean acceptPlayers() {
         return acceptsPlayers;
     }
 

@@ -1,6 +1,7 @@
 package net.defade.towerbow.game;
 
 import net.defade.minestom.amethyst.AmethystSource;
+import net.defade.minestom.event.player.PlayerMoveToMiniGameRequestEvent;
 import net.defade.minestom.event.server.ServerMarkedForStopEvent;
 import net.defade.towerbow.map.LobbyAmethystSource;
 import net.kyori.adventure.text.Component;
@@ -30,25 +31,16 @@ public class GameManager {
     private final Set<GameInstance> gameInstances = new CopyOnWriteArraySet<>();
 
     public GameManager() {
-        MinecraftServer.getGlobalEventHandler().addListener(AsyncPlayerConfigurationEvent.class, event -> {
-            GameInstance gameInstance = getAvailableGameInstance();
-            if (gameInstance == null) {
-                event.getPlayer().kick(Component.text("No game instances are available.").color(NamedTextColor.RED));
-            } else {
-                event.setSpawningInstance(gameInstance);
-                event.getPlayer().setRespawnPoint(new Pos(55.5, 101, 52.5));
-            }
-        });
-
         MinecraftServer.getSchedulerManager().scheduleTask(this::checkGameInstances, TaskSchedule.immediate(), TaskSchedule.seconds(2));
 
+        registerPlayerMiniGameMoveRequest();
         isolatePlayers();
         disconnectPlayersWhenMarkedForStop();
     }
 
     public void checkGameInstances() {
         int gameInstancesAcceptingPlayers = (int) gameInstances.stream()
-                .filter(GameInstance::acceptsPlayers)
+                .filter(GameInstance::acceptPlayers)
                 .count();
 
         while (gameInstancesAcceptingPlayers < 2 && gameInstances.size() < MAX_GAME_INSTANCES) {
@@ -60,18 +52,42 @@ public class GameManager {
     public void createGameInstance() {
         GameInstance gameInstance = new GameInstance(this, LOBBY_SOURCE);
         MinecraftServer.getInstanceManager().registerInstance(gameInstance);
+        MinecraftServer.getServerApi().registerMiniGameInstance(gameInstance);
+
         gameInstances.add(gameInstance);
     }
 
     public void unregisterGame(GameInstance gameInstance) {
+        MinecraftServer.getServerApi().unregisterMiniGameInstance(gameInstance);
         gameInstances.remove(gameInstance);
     }
 
     public GameInstance getAvailableGameInstance() {
         return gameInstances.stream()
-                .filter(GameInstance::acceptsPlayers)
+                .filter(GameInstance::acceptPlayers)
                 .max(Comparator.comparingInt(gameInstance -> gameInstance.getPlayers().size()))
                 .orElse(null);
+    }
+
+    private void registerPlayerMiniGameMoveRequest() {
+        MinecraftServer.getGlobalEventHandler()
+                .addListener(AsyncPlayerConfigurationEvent.class, event -> {
+                    if (event.getRequestedMiniGameInstance() != null) {
+                        event.setSpawningInstance(((GameInstance) event.getRequestedMiniGameInstance()));
+                    } else {
+                        GameInstance gameInstance = getAvailableGameInstance();
+                        if (gameInstance != null) {
+                            event.setSpawningInstance(gameInstance);
+                        } else {
+                            event.getPlayer().kick(Component.text("No game instances are available.").color(NamedTextColor.RED));
+                        }
+                    }
+
+                    event.getPlayer().setRespawnPoint(new Pos(55.5, 101, 52.5));
+                })
+                .addListener(PlayerMoveToMiniGameRequestEvent.class, event -> {
+                    event.getPlayer().setInstance(((GameInstance) event.getMiniGameInstance()));
+                });
     }
 
     /**
@@ -110,7 +126,7 @@ public class GameManager {
         MinecraftServer.getGlobalEventHandler()
                 .addListener(ServerMarkedForStopEvent.class, serverMarkedForStopEvent -> {
                     for (GameInstance gameInstance : gameInstances) {
-                        if (gameInstance.acceptsPlayers()) { // Only disconnect players from game instances that are accepting players (where the game hasn't started yet)
+                        if (gameInstance.acceptPlayers()) { // Only disconnect players from game instances that are accepting players (where the game hasn't started yet)
                             for (Player player : gameInstance.getPlayers()) {
                                 player.sendToServer("towerbow"); // Send them to a new server
                             }
