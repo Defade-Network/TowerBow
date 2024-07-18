@@ -32,6 +32,9 @@ public class Items {
                     "Yzk3MmQ1Zjg4ZWI4ZGM4NjE3NmNjZGIzZSJ9fX0=", ""))
             );
 
+    public static final ItemStack JOIN_NEW_GAME = ItemStack.of(Material.PAPER)
+            .with(ItemComponent.ITEM_NAME, MM.deserialize("<bold><yellow>» <aqua>Rejoindre une nouvelle partie</aqua> <yellow>«</yellow></bold>"));
+
     public static final Function<Team, ItemStack> HELMET = team -> ItemStack.of(TeamUtils.getPlayerHelmetForTeam(team));
 
     public static final Function<Team, ItemStack> CHESTPLATE = team -> {

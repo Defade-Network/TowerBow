@@ -1,7 +1,6 @@
 package net.defade.towerbow.game;
 
 import net.defade.minestom.amethyst.AmethystSource;
-import net.defade.minestom.event.player.PlayerMoveToMiniGameRequestEvent;
 import net.defade.minestom.event.server.ServerMarkedForStopEvent;
 import net.defade.towerbow.map.LobbyAmethystSource;
 import net.kyori.adventure.text.Component;
@@ -84,9 +83,6 @@ public class GameManager {
                     }
 
                     event.getPlayer().setRespawnPoint(new Pos(55.5, 101, 52.5));
-                })
-                .addListener(PlayerMoveToMiniGameRequestEvent.class, event -> {
-                    event.getPlayer().setInstance(((GameInstance) event.getMiniGameInstance()));
                 });
     }
 

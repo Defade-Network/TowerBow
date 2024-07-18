@@ -10,6 +10,7 @@ import net.defade.towerbow.map.WorldHandler;
 import net.defade.towerbow.teams.GameTeams;
 import net.defade.towerbow.teams.TeamUtils;
 import net.defade.towerbow.utils.GameEventNode;
+import net.defade.towerbow.utils.Items;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -21,6 +22,7 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
+import net.minestom.server.event.player.PlayerUseItemEvent;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.WorldBorder;
 import net.minestom.server.instance.batch.AbsoluteBlockBatch;
@@ -179,10 +181,18 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
             player.setFlying(true);
             player.setInvulnerable(true);
 
-            player.getInventory().clear(); //TODO: remember, don't give the replay paper before here
-        });
-        gamePlayHandler.stop();
+            player.getInventory().clear();
+            player.getInventory().setItemStack(8, Items.JOIN_NEW_GAME);
 
+            gameEventNode.getPlayerNode().addListener(PlayerUseItemEvent.class, event -> {
+                if (event.getItemStack().isSimilar(Items.JOIN_NEW_GAME)) {
+                    player.sendMessage(MM.deserialize("<gray>Recherche d'une partie...</gray>"));
+                    player.sendToServer("towerbow");
+                }
+            });
+        });
+
+        gamePlayHandler.stop();
         scheduler().scheduleTask(this::destroy, TaskSchedule.seconds(20), TaskSchedule.stop());
     }
 
