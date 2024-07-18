@@ -16,8 +16,8 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.instance.InstanceTickEvent;
+import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
-import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
@@ -129,11 +129,12 @@ public class GameStartHandler {
     }
 
     private void registerLeaveMessages() {
-        startEventNode.getPlayerNode().addListener(PlayerDisconnectEvent.class, playerDisconnectEvent -> {
-            Instance instance = playerDisconnectEvent.getPlayer().getInstance();
+        startEventNode.getEntityInstanceNode().addListener(RemoveEntityFromInstanceEvent.class, event -> {
+            if (!(event.getEntity() instanceof Player player)) return;
+            Instance instance = player.getInstance();
 
             instance.sendMessage(MM.deserialize(
-                    "<color:#aa0000>❌ " + playerDisconnectEvent.getPlayer().getUsername() + "</color> <red>a quitté la partie.</red> <gray>(" + (gameInstance.getPlayers().size() - 1) + "/12)</gray>"
+                    "<color:#aa0000>❌ " + player.getUsername() + "</color> <red>a quitté la partie.</red> <gray>(" + (gameInstance.getPlayers().size() - 1) + "/12)</gray>"
             ));
 
             if (instance.getPlayers().size() - 1 < GameManager.MIN_PLAYERS) {

@@ -29,8 +29,8 @@ import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.entity.EntityShootEvent;
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent;
+import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent;
 import net.minestom.server.event.player.PlayerDeathEvent;
-import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
@@ -294,8 +294,8 @@ public class CombatMechanics {
 
                 gameInstance.finishGame(opposingTeam, playerTeam);
             }
-        }).addListener(PlayerDisconnectEvent.class, playerDisconnectEvent -> {
-            Player player = playerDisconnectEvent.getPlayer();
+        }).addListener(RemoveEntityFromInstanceEvent.class, event -> {
+            if (!(event.getEntity() instanceof Player player)) return;
             if (player.getGameMode() == GameMode.SPECTATOR) return;
 
             PlayerDeathEvent playerDeathEvent = new PlayerDeathEvent(player, null, null);
