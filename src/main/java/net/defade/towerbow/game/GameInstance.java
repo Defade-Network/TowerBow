@@ -193,6 +193,10 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
         });
 
         gamePlayHandler.stop();
+
+        scheduler().scheduleTask(() -> {
+            getPlayers().forEach(player -> player.sendToServer("hub"));
+        }, TaskSchedule.seconds(15), TaskSchedule.stop());
         scheduler().scheduleTask(this::destroy, TaskSchedule.seconds(20), TaskSchedule.stop());
     }
 
