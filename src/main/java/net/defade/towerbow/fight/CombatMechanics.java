@@ -120,6 +120,11 @@ public class CombatMechanics {
         combatMechanicsNode
                 .addListener(EntityShootEvent.class, entityShootEvent -> {
                     entityShootEvent.getProjectile().setTag(PLAYER_SHOOT_POS, entityShootEvent.getEntity().getPosition());
+                    gameInstance.getEntities().stream().filter(arrow -> arrow.getEntityType().equals(EntityType.ARROW)).forEach(arrow -> {
+                        if(arrow.getAliveTicks() > 6*20 && arrow.hasTag(ARROW_TOUCHED_GROUND)) { // Delete any old arrows on blocks
+                            arrow.scheduleNextTick(Entity::remove);
+                        }
+                    });
                 })
                 .addListener(ProjectileCollideWithBlockEvent.class, projectileCollideWithBlockEvent -> {
                     Entity arrow = projectileCollideWithBlockEvent.getEntity();
@@ -276,7 +281,7 @@ public class CombatMechanics {
             } else { // Reviving the player if he isn't the last player on his team, otherwise he is automatically a final kill
                 revivePlayer(deadPlayer, getRemainingLives(deadPlayer));
 
-                deadPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(500)));
+                deadPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(4000),Duration.ofMillis(500)));
                 deadPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MORT!</b></dark_red>"));
                 deadPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red><lives> VIES</red>", Placeholder.component("lives", Component.text(getRemainingLives(deadPlayer)))));
 

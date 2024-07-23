@@ -30,15 +30,15 @@ import java.util.Map;
 public class GameStartHandler {
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final Map<Integer, Integer> PLAYER_COUNTDOWN = Map.of( // Key: Player count, Value: Countdown
-            4, 20,
-            5, 20,
+            4, 30,
+            5, 30,
             6, 20,
-            7, 20,
+            7, 30,
             8, 20,
-            9, 20,
+            9, 30,
             10, 20,
-            11, 10,
-            12, 5
+            11, 20,
+            12, 10
     );
 
     private final GameInstance gameInstance;
@@ -89,7 +89,7 @@ public class GameStartHandler {
                             <yellow>             Inspiré du SkyHigh</yellow>
                             <u><yellow>Règles:</yellow></u>
                             <gray>•</gray> Combats à l'arc!
-                            <gray>•</gray> 1 seule vie!
+                            <gray>•</gray> 3 vies!
                             <gray>•</gray> 2 équipes!
                             <gray>•</gray> Blocs infinis!
 
@@ -98,7 +98,7 @@ public class GameStartHandler {
 
                             <light_purple><u>Liste des bonus:</u></light_purple>
                              - Heal complet\s
-                             - Poison pour les adversaires
+                             - Foudre contre les adversaires
                              - Flèche explosive
                              - Flèche fumigène'>BLOC BONUS</hover></light_purple></b><gray>] [</gray><b><red><hover:show_text:'<b><red>BORDURES</red></b>
                             Derrière la bordure = dégâts

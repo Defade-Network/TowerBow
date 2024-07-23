@@ -57,7 +57,7 @@ public class BonusBlockManager implements BlockHandler {
             "explosive_arrow", new ExplosiveArrowBonusBlock(),
             "smoke_arrow", new SmokeArrowBonusBlock(),
             "heal_bonus", new HealBonusBlock(),
-            "poison_bonus", new PoisonBonusBlock()
+            "strike_bonus", new StrikeBonusBlock()
     );
 
     private static final Random RANDOM = new Random();
