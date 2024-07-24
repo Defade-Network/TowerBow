@@ -57,7 +57,8 @@ public class BonusBlockManager implements BlockHandler {
             "explosive_arrow", new ExplosiveArrowBonusBlock(),
             "smoke_arrow", new SmokeArrowBonusBlock(),
             "heal_bonus", new HealBonusBlock(),
-            "strike_bonus", new StrikeBonusBlock()
+            "strike_bonus", new StrikeBonusBlock(),
+            "wall_arrow", new WallArrowBonusBlock()
     );
 
     private static final Random RANDOM = new Random();
@@ -101,7 +102,7 @@ public class BonusBlockManager implements BlockHandler {
                     .findFirst()
                     .orElseThrow();
 
-            spawnPosition = randomPlayer.getPosition().sub(0, 10, 0);
+            spawnPosition = randomPlayer.getPosition().add(0, 10, 0);
         }
 
         String bonusBlockId = bonusBlocks.keySet().stream()
@@ -184,7 +185,7 @@ public class BonusBlockManager implements BlockHandler {
 
                 arrow.scheduleNextTick(Entity::remove);
 
-                if (block.getTag(BONUS_BLOCK_TAG).equals("smoke_arrow") || block.getTag(BONUS_BLOCK_TAG).equals("explosive_arrow")) { // If the block is an arrow, show it to the shooter
+                if (block.getTag(BONUS_BLOCK_TAG).equals("smoke_arrow") || block.getTag(BONUS_BLOCK_TAG).equals("explosive_arrow") || block.getTag(BONUS_BLOCK_TAG).equals("wall_arrow")) { // If the block is an arrow, show it to the shooter
                     shooter.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(3500),Duration.ofMillis(500)));
                     shooter.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
                     shooter.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<dark_gray>»</dark_gray> <b><red>"

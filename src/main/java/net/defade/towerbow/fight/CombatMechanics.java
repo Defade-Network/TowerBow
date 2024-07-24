@@ -128,10 +128,6 @@ public class CombatMechanics {
         combatMechanicsNode
                 .addListener(EntityShootEvent.class, entityShootEvent -> {
                     entityShootEvent.getProjectile().setTag(PLAYER_SHOOT_POS, entityShootEvent.getEntity().getPosition());
-                    gameInstance.getPlayers().forEach(players -> {
-                        System.out.println(players.getUsername() + " Satu: " + players.getFoodSaturation());
-                        System.out.println(players.getUsername() + " Food: " + players.getFood());
-                    });
                     gameInstance.getEntities().stream().filter(arrow -> arrow.getEntityType().equals(EntityType.ARROW)).forEach(arrow -> {
                         if(arrow.getAliveTicks() > 15*20 && arrow.hasTag(ARROW_TOUCHED_GROUND)) { // Delete any old arrows on blocks
                             arrow.scheduleNextTick(Entity::remove);
@@ -207,6 +203,7 @@ public class CombatMechanics {
             entityDamageEvent.getEntity().setTag(LAST_DAMAGER_UUID, entityDamageEvent.getDamage().getAttacker().getUuid());
         }).addListener(PlayerDeathEvent.class, playerDeathEvent -> {
             Player killer = getLatestDamager(playerDeathEvent.getPlayer());
+            Player killed = playerDeathEvent.getPlayer();
             if (killer == null || killer == playerDeathEvent.getPlayer()) return; // Ignore self kills
 
             killer.setTag(PLAYER_KILLS, getKills(killer) + 1);
@@ -214,7 +211,15 @@ public class CombatMechanics {
 
             killer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1500),Duration.ofMillis(500)));
             killer.sendTitlePart(TitlePart.TITLE, MM.deserialize(" "));
-            killer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<green><b>KILL!</b></green>"));
+
+            if (getRemainingLives(killed) > 1) {
+                killer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<green><b>KILL!</b></green>"));
+            } else {
+                killer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<aqua><b>FINAL KILL!</b></aqua>"));
+                killer.playSound(Sound.sound().type(SoundEvent.ENTITY_WITHER_SPAWN).pitch(1.4F).volume(0.5F).build(), killer.getPosition());
+            }
+
+
         });
     }
 

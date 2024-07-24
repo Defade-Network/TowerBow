@@ -1,6 +1,7 @@
 package net.defade.towerbow.utils;
 
 import net.defade.towerbow.teams.TeamUtils;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.entity.EquipmentSlotGroup;
 import net.minestom.server.entity.PlayerSkin;
@@ -78,7 +79,7 @@ public class Items {
                             Enchantment.EFFICIENCY, 2,
                             Enchantment.SHARPNESS, 4,
                             Enchantment.KNOCKBACK, 1
-                    )
+                    ), false
             ))
             .with(ItemComponent.UNBREAKABLE, new Unbreakable(false))
             .with(ItemComponent.ATTRIBUTE_MODIFIERS,
@@ -89,8 +90,12 @@ public class Items {
                                         NamespaceID.from("defade:no_attack_cooldown"),
                                         10,
                                         AttributeOperation.ADD_VALUE),
-                                EquipmentSlotGroup.ANY)))
-            .with(ItemComponent.HIDE_TOOLTIP);
+                                EquipmentSlotGroup.ANY), false))
+            .with(ItemComponent.HIDE_ADDITIONAL_TOOLTIP)
+            .withLore(MM.deserialize(
+                    "<!i><gray>Spamclick:</gray> <green>✔</green>"
+            ));
+
 
     public static final ItemStack BOW = ItemStack.of(Material.BOW)
             .with(ItemComponent.ENCHANTMENTS, new EnchantmentList(
@@ -102,5 +107,9 @@ public class Items {
 
     public static final ItemStack ARROW = ItemStack.of(Material.ARROW);
 
-    public static final ItemStack COBBLESTONE = ItemStack.of(Material.COBBLESTONE).withAmount(3);
+    public static final ItemStack COBBLESTONE = ItemStack.of(Material.COBBLESTONE)
+            .withAmount(3)
+            .withLore(MM.deserialize(
+                    "<!i><gray>Infinite:</gray> <aqua>∞</aqua>"
+            ));
 }
