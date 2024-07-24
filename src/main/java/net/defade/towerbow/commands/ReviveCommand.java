@@ -24,14 +24,7 @@ public class ReviveCommand extends Command {
         });
 
         ArgumentEntity playerArgument = ArgumentType.Entity("player");
-        var livesArgument = ArgumentType.Integer("lives");
-
-        livesArgument.setCallback((sender, exception) -> {
-            if (!(sender instanceof Player player)) {
-                return;
-            }
-            sender.sendMessage(MM.deserialize("<red>Invalid synthax. Usage: /revive <player> <lives</red>"));
-        });
+        var livesArgument = ArgumentType.Integer("lives").setDefaultValue(1);
 
         playerArgument.setSuggestionCallback((sender, context, suggestion) -> {
             if (!(sender instanceof Player player)) {
@@ -55,7 +48,7 @@ public class ReviveCommand extends Command {
             }
 
             Player target = context.get(playerArgument).findFirstPlayer(player);
-            final int lives = context.get(livesArgument) != null ? context.get(livesArgument) : 1;
+            final int lives = context.get(livesArgument) != null && context.get(livesArgument) > 0  ? context.get(livesArgument) : 1;
 
             if (target == null) {
                 player.sendMessage(MM.deserialize("<red>Unknown player."));

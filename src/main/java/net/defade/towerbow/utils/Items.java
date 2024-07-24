@@ -2,16 +2,19 @@ package net.defade.towerbow.utils;
 
 import net.defade.towerbow.teams.TeamUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.minestom.server.entity.EquipmentSlotGroup;
 import net.minestom.server.entity.PlayerSkin;
+import net.minestom.server.entity.attribute.Attribute;
+import net.minestom.server.entity.attribute.AttributeModifier;
+import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.item.ItemComponent;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
-import net.minestom.server.item.component.DyedItemColor;
-import net.minestom.server.item.component.EnchantmentList;
-import net.minestom.server.item.component.HeadProfile;
-import net.minestom.server.item.component.Unbreakable;
+import net.minestom.server.item.component.*;
 import net.minestom.server.item.enchant.Enchantment;
 import net.minestom.server.scoreboard.Team;
+import net.minestom.server.utils.NamespaceID;
+
 import java.util.Map;
 import java.util.function.Function;
 
@@ -73,10 +76,20 @@ public class Items {
             .with(ItemComponent.ENCHANTMENTS, new EnchantmentList(
                     Map.of(
                             Enchantment.EFFICIENCY, 2,
-                            Enchantment.SHARPNESS, 4
+                            Enchantment.SHARPNESS, 4,
+                            Enchantment.KNOCKBACK, 1
                     )
             ))
             .with(ItemComponent.UNBREAKABLE, new Unbreakable(false))
+            .with(ItemComponent.ATTRIBUTE_MODIFIERS,
+                    new AttributeList(
+                            new AttributeList.Modifier(
+                                Attribute.GENERIC_ATTACK_SPEED,
+                                new AttributeModifier(
+                                        NamespaceID.from("defade:no_attack_cooldown"),
+                                        10,
+                                        AttributeOperation.ADD_VALUE),
+                                EquipmentSlotGroup.ANY)))
             .with(ItemComponent.HIDE_TOOLTIP);
 
     public static final ItemStack BOW = ItemStack.of(Material.BOW)

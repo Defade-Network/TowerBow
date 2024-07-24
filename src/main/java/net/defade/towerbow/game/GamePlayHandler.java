@@ -130,7 +130,7 @@ public class GamePlayHandler {
                     });
 
                     gameEventNode.getEntityInstanceNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
-                        int minimumY = 25 + (tickCounter / 160); // +1Y / 8s
+                        int minimumY = 25 + (tickCounter / 140); // +1Y / 7s
                         double yPlayer = playerTickEvent.getPlayer().getPosition().y();
                         Player player = playerTickEvent.getPlayer();
 

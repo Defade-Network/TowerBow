@@ -24,6 +24,8 @@ import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.attribute.Attribute;
+import net.minestom.server.entity.attribute.AttributeModifier;
+import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.entity.damage.Damage;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityDamageEvent;
@@ -35,9 +37,13 @@ import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
+import net.minestom.server.potion.Potion;
+import net.minestom.server.potion.PotionEffect;
 import net.minestom.server.scoreboard.Team;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
+import net.minestom.server.timer.TaskSchedule;
+import net.minestom.server.utils.NamespaceID;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -52,6 +58,8 @@ public class CombatMechanics {
 
     private static final Tag<Pos> PLAYER_SHOOT_POS = Tag.Structure("arrow_touched_ground", Pos.class); // Position at which the player shot the arrow
     private static final Tag<Boolean> ARROW_TOUCHED_GROUND = Tag.Boolean("arrow_touched_ground"); // Used to check if the arrow can be considered a longshot
+
+    private static final AttributeModifier FREEZE_PLAYER_MODIFIER = new AttributeModifier(NamespaceID.from("defade:freeze_player"), -10000, AttributeOperation.ADD_VALUE);
 
     private final EventNode<EntityInstanceEvent> combatMechanicsNode;
 
@@ -120,8 +128,12 @@ public class CombatMechanics {
         combatMechanicsNode
                 .addListener(EntityShootEvent.class, entityShootEvent -> {
                     entityShootEvent.getProjectile().setTag(PLAYER_SHOOT_POS, entityShootEvent.getEntity().getPosition());
+                    gameInstance.getPlayers().forEach(players -> {
+                        System.out.println(players.getUsername() + " Satu: " + players.getFoodSaturation());
+                        System.out.println(players.getUsername() + " Food: " + players.getFood());
+                    });
                     gameInstance.getEntities().stream().filter(arrow -> arrow.getEntityType().equals(EntityType.ARROW)).forEach(arrow -> {
-                        if(arrow.getAliveTicks() > 6*20 && arrow.hasTag(ARROW_TOUCHED_GROUND)) { // Delete any old arrows on blocks
+                        if(arrow.getAliveTicks() > 15*20 && arrow.hasTag(ARROW_TOUCHED_GROUND)) { // Delete any old arrows on blocks
                             arrow.scheduleNextTick(Entity::remove);
                         }
                     });
@@ -146,6 +158,8 @@ public class CombatMechanics {
                     if (!(entityDamageEvent.getDamage().getSource() instanceof AbstractArrow arrow)) return;
 
                     if (arrow.hasTag(ARROW_TOUCHED_GROUND) && arrow.getTag(ARROW_TOUCHED_GROUND)) {
+                        entityDamageEvent.setCancelled(true); //Cancel every damage from arrow that touched a block
+                        entityDamageEvent.getDamage().getSource().scheduleNextTick(Entity::remove);
                         return; // Arrow touched the ground, can't be considered a longshot
                     }
 
@@ -267,6 +281,10 @@ public class CombatMechanics {
                 deadPlayer.setCanPickupItem(false);
                 deadPlayer.setInvisible(true); // Hide the deadPlayer
 
+                deadPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(4000),Duration.ofMillis(500)));
+                deadPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MORT!</b></dark_red>"));
+                deadPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize(""));
+
                 deadPlayer.getTeam().getPlayers().forEach(players -> {
                     players.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(500)));
                     players.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
@@ -281,9 +299,14 @@ public class CombatMechanics {
             } else { // Reviving the player if he isn't the last player on his team, otherwise he is automatically a final kill
                 revivePlayer(deadPlayer, getRemainingLives(deadPlayer));
 
-                deadPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(4000),Duration.ofMillis(500)));
+                deadPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(5000),Duration.ofMillis(500)));
                 deadPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MORT!</b></dark_red>"));
-                deadPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red><lives> VIES</red>", Placeholder.component("lives", Component.text(getRemainingLives(deadPlayer)))));
+
+                if(getRemainingLives(deadPlayer) > 1) { // Typo : 1 vie, 2 vies
+                    deadPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red><lives> VIES RESTANTES</red>", Placeholder.component("lives", Component.text(getRemainingLives(deadPlayer)))));
+                } else {
+                    deadPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red><lives> VIE RESTANTE</red>", Placeholder.component("lives", Component.text(getRemainingLives(deadPlayer)))));
+                }
 
                 return;
             }
@@ -309,17 +332,50 @@ public class CombatMechanics {
     }
 
     public static void revivePlayer(Player player, int lives) {
+        GameInstance gameInstance = (GameInstance) player.getInstance();
+
         player.setTag(PLAYER_REMAINING_LIVES, lives);
 
         Pos respawnPosition = player.getTeam().getPlayers().stream()
                 .filter(playerPredicate -> playerPredicate != player)
-                .findFirst().get().getPosition();
+                .findFirst().get().getPosition().add(0,10,0);
 
         // Teleports the player to an alive ally.
         player.setRespawnPoint(respawnPosition);
         player.teleport(respawnPosition);
 
+        //Freeze the player for 3 sec
+        player.addEffect(new Potion(PotionEffect.BLINDNESS, (byte) 1, 3 * 20));
+        player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(FREEZE_PLAYER_MODIFIER);
+        player.getAttribute(Attribute.GENERIC_GRAVITY).setBaseValue(0);
+        player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).addModifier(FREEZE_PLAYER_MODIFIER);
+        player.getAttribute(Attribute.PLAYER_BLOCK_INTERACTION_RANGE).setBaseValue(0);
+
+        player.setInvulnerable(true);
+        player.setFlying(true); // Doesn't fall if in the air
+        player.setFlyingSpeed(0);
+
+        gameInstance.scheduler().scheduleTask(() -> {
+            player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).removeModifier(FREEZE_PLAYER_MODIFIER);
+            player.getAttribute(Attribute.GENERIC_GRAVITY).setBaseValue(0.08);
+            player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).removeModifier(FREEZE_PLAYER_MODIFIER);
+            player.getAttribute(Attribute.PLAYER_BLOCK_INTERACTION_RANGE).setBaseValue(4.5);
+
+            player.setInvulnerable(false);
+            player.setFlying(false);
+            player.setFlyingSpeed(0.4F);
+
+            player.setFoodSaturation(0);
+            player.setFood(20);
+
+            player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1500),Duration.ofMillis(500)));
+            player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<green><b>RESPAWNED!</b></green>"));
+            player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize(""));
+            player.playSound(Sound.sound().type(SoundEvent.ENTITY_PLAYER_LEVELUP).pitch(0F).volume(0.5F).build(), player.getPosition());
+        }, TaskSchedule.seconds(4), TaskSchedule.stop());
+
         player.setHealth(20);
+
         player.setGameMode(GameMode.SURVIVAL);
         player.setCanPickupItem(true);
         player.setInvisible(false);
