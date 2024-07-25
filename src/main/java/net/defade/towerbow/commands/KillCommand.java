@@ -9,6 +9,8 @@ import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.command.builder.arguments.minecraft.ArgumentEntity;
 import net.minestom.server.command.builder.suggestion.SuggestionEntry;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.damage.Damage;
+import net.minestom.server.entity.damage.DamageType;
 
 public class KillCommand extends Command {
     private static final MiniMessage MM = MiniMessage.miniMessage();
@@ -53,7 +55,13 @@ public class KillCommand extends Command {
                 return;
             }
 
-            target.setHealth(0);
+            target.damage(new Damage(
+                    DamageType.MAGIC,
+                    null,
+                    null,
+                    null,
+                    10000
+            ));
         }, playerArgument);
     }
 }

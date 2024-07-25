@@ -40,7 +40,7 @@ public class ScoreboardManager {
             BossBar.Overlay.PROGRESS
     );
     private final Map<UUID, Sidebar> playerSidebar = new HashMap<>();
-    private final BelowNameTag belowNameTag = new BelowNameTag("lives-remaining", Component.text("❤").color(NamedTextColor.RED));
+    private final BelowNameTag belowNameTag = new BelowNameTag("lives-remaining", Component.text("Vies").color(NamedTextColor.RED));
 
     public ScoreboardManager(GameInstance gameInstance, GamePlayHandler gamePlayHandler) {
         this.gameInstance = gameInstance;

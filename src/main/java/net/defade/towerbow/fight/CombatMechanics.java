@@ -29,6 +29,7 @@ import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.entity.damage.Damage;
+import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.entity.EntityShootEvent;
@@ -37,6 +38,8 @@ import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent;
 import net.minestom.server.event.player.PlayerDeathEvent;
 import net.minestom.server.event.trait.EntityInstanceEvent;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.item.ItemStack;
+import net.minestom.server.item.Material;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.potion.Potion;
@@ -349,44 +352,69 @@ public class CombatMechanics {
 
     public static void revivePlayer(Player player, int lives) {
         GameInstance gameInstance = (GameInstance) player.getInstance();
-
         player.setTag(PLAYER_REMAINING_LIVES, lives);
 
         Player randomPlayer = player.getTeam().getPlayers().stream()
                 .filter(playerPredicate -> playerPredicate != player)
                 .findFirst().get();
 
-        // Teleports the player to an alive ally.
-        player.setRespawnPoint(randomPlayer.getPosition());
-        player.teleport(randomPlayer.getPosition());
+        if(randomPlayer.getPosition().y() < 30) { // if the ally is not in a good location, respawn him on a platform
+            if(player.getLastDamageSource().getType().equals(DamageType.ARROW)) { // The player died in his base
+                Pos respawnPosition = player.getLastDamageSource().getSource().getPosition();
+
+                player.setRespawnPoint(respawnPosition);
+                player.teleport(respawnPosition);
+            } else { // The played fell (on the y=0 floor)
+                Team opposingTeam = gameInstance.getTeams().firstTeam() == player.getTeam()
+                        ? gameInstance.getTeams().secondTeam()
+                        : gameInstance.getTeams().firstTeam();
+
+                Pos respawnPosition = player.getPosition()
+                        .withY((int) opposingTeam.getPlayers().stream()
+                        .filter(opposingPlayer -> opposingPlayer.getPosition().y() > 30)
+                        .findAny().get().getPosition().y() - 10); //Teleports the player on the game's height
+
+                player.setRespawnPoint(respawnPosition);
+                player.teleport(respawnPosition);
+            }
+        } else {
+            // Teleports the player to a valid alive ally.
+            player.setRespawnPoint(randomPlayer.getPosition());
+            player.teleport(randomPlayer.getPosition());
+
+            randomPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(3000),Duration.ofMillis(500)));
+            randomPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+            randomPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<player> <gray>a revive sur vous !", Placeholder.component("player", player.getName())));
+            randomPlayer.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDERMAN_HURT).pitch(0F).volume(1.5F).build(), randomPlayer.getPosition());
+        }
+
+        //Create a safe platform if the player is in the air
+        int blockX = player.getPosition().blockX();
+        int blockY = player.getPosition().blockY();
+        int blockZ = player.getPosition().blockZ();
+
+        for (int x = blockX - 1; x <= blockX + 1; x++) {
+            for (int z = blockZ - 1; z <= blockZ + 1; z++) {
+                Block blockType = gameInstance.getBlock(x, blockY - 1, z);
+                if (blockType != Block.AIR) continue;
+
+                gameInstance.setBlock(x, blockY - 1, z, Block.COBBLESTONE);
+                gameInstance.getWorldHandler().registerBlockDecay(new Pos(x, blockY - 1, z), 15 * 1000); // 15 seconds
+            }
+        }
 
         player.setHealth(20);
 
         player.setGameMode(GameMode.SURVIVAL);
         player.setCanPickupItem(true);
-        player.setInvisible(true);
         player.setInvulnerable(true);
-        player.setNoGravity(true);
 
         //Freeze the player for 4 sec
         player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(FREEZE_PLAYER_MODIFIER);
         player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).addModifier(FREEZE_PLAYER_MODIFIER);
         player.getAttribute(Attribute.PLAYER_BLOCK_INTERACTION_RANGE).setBaseValue(0);
 
-        gameInstance.scheduler().scheduleTask(() -> player.addEffect(new Potion(PotionEffect.BLINDNESS, (byte) 1, 4 * 20)), TaskSchedule.millis(100), TaskSchedule.stop());
-
-        randomPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(3000),Duration.ofMillis(500)));
-        randomPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
-        randomPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<player> <gray>va revive sur vous !", Placeholder.component("player", player.getName())));
-        randomPlayer.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDERMAN_HURT).pitch(0F).volume(1.5F).build(), randomPlayer.getPosition());
-
-        // Reteleports the player to a member of the team but still while freezed
-        gameInstance.scheduler().scheduleTask(() -> {
-            player.teleport(randomPlayer.getPosition());
-            player.setInvisible(false);
-            player.setNoGravity(false);
-            randomPlayer.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDERMAN_TELEPORT).pitch(0F).volume(1F).build(), randomPlayer.getPosition());
-        }, TaskSchedule.millis(3500), TaskSchedule.stop());
+        gameInstance.scheduler().scheduleTask(() -> player.addEffect(new Potion(PotionEffect.BLINDNESS, (byte) 1, 3 * 20)), TaskSchedule.millis(100), TaskSchedule.stop());
 
         // Unfreeze
         gameInstance.scheduler().scheduleTask(() -> {
@@ -395,9 +423,9 @@ public class CombatMechanics {
             player.getAttribute(Attribute.PLAYER_BLOCK_INTERACTION_RANGE).setBaseValue(4.5);
 
             player.setInvulnerable(false);
-
             player.setFoodSaturation(0);
             player.setFood(20);
+            player.getInventory().addItemStack(ItemStack.of(Material.GOLDEN_APPLE));
 
             player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1500),Duration.ofMillis(500)));
             player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<green><b>RESPAWNED!</b></green>"));
