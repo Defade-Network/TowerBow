@@ -171,7 +171,10 @@ public class CombatMechanics {
 
                     double distance = shootPos.distance(target.getPosition());
                     shooter.setLevel((int) distance); // Distance displayed in xp bar
-                    if (distance > 50) { // If the distance is > 50 blocks then it's a longshot
+
+                    double minDistanceForLongshot = Math.max(40, gameInstance.getWorldBorder().diameter() * 0.8); //scales the longshot distance with the map size, minimum 40blocks
+
+                    if (distance > minDistanceForLongshot) {
                         shooter.setTag(PLAYER_LONGSHOTS, getLongshotCount(shooter) + 1);
 
                         shooter.setHealth(Math.min(shooter.getHealth() + 3, (float) shooter.getAttributeValue(Attribute.GENERIC_MAX_HEALTH)));
@@ -290,14 +293,17 @@ public class CombatMechanics {
                 deadPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MORT!</b></dark_red>"));
                 deadPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize(""));
 
-                deadPlayer.getTeam().getPlayers().forEach(players -> {
-                    players.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(500)));
-                    players.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
-                    players.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Plus qu'une vie!</red>"));
+                deadPlayer.getTeam().getPlayers().forEach(lastPlayer -> {
+                    lastPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(500)));
+                    lastPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+                    lastPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Plus qu'une vie!</red>"));
 
-                    players.sendMessage(MM.deserialize(
+                    lastPlayer.sendMessage(MM.deserialize(
                             "<dark_red><b>ATTENTION!</b><dark_red> <red>Votre dernier allié est mort, il ne vous reste plus qu'une vie!</red>"
                     ));
+
+                    lastPlayer.setTag(PLAYER_REMAINING_LIVES, 1);
+
                 });
 
                 gameInstance.getPlayers().forEach(players -> players.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDER_DRAGON_GROWL).pitch(1.6F).volume(0.5F).build(), players.getPosition()));
@@ -341,34 +347,49 @@ public class CombatMechanics {
 
         player.setTag(PLAYER_REMAINING_LIVES, lives);
 
-        Pos respawnPosition = player.getTeam().getPlayers().stream()
+        Player randomPlayer = player.getTeam().getPlayers().stream()
                 .filter(playerPredicate -> playerPredicate != player)
-                .findFirst().get().getPosition().add(0,10,0);
+                .findFirst().get();
 
         // Teleports the player to an alive ally.
-        player.setRespawnPoint(respawnPosition);
-        player.teleport(respawnPosition);
+        player.setRespawnPoint(randomPlayer.getPosition());
+        player.teleport(randomPlayer.getPosition());
 
-        //Freeze the player for 3 sec
-        player.addEffect(new Potion(PotionEffect.BLINDNESS, (byte) 1, 3 * 20));
+        player.setHealth(20);
+
+        player.setGameMode(GameMode.SURVIVAL);
+        player.setCanPickupItem(true);
+        player.setInvisible(true);
+        player.setInvulnerable(true);
+        player.setNoGravity(true);
+
+        //Freeze the player for 4 sec
         player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(FREEZE_PLAYER_MODIFIER);
-        player.getAttribute(Attribute.GENERIC_GRAVITY).setBaseValue(0);
         player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).addModifier(FREEZE_PLAYER_MODIFIER);
         player.getAttribute(Attribute.PLAYER_BLOCK_INTERACTION_RANGE).setBaseValue(0);
 
-        player.setInvulnerable(true);
-        player.setFlying(true); // Doesn't fall if in the air
-        player.setFlyingSpeed(0);
+        gameInstance.scheduler().scheduleTask(() -> player.addEffect(new Potion(PotionEffect.BLINDNESS, (byte) 1, 4 * 20)), TaskSchedule.millis(100), TaskSchedule.stop());
 
+        randomPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(3000),Duration.ofMillis(500)));
+        randomPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+        randomPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<player> <gray>va revive sur vous !", Placeholder.component("player", player.getName())));
+        randomPlayer.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDERMAN_HURT).pitch(0F).volume(1.5F).build(), randomPlayer.getPosition());
+
+        // Reteleports the player to a member of the team but still while freezed
+        gameInstance.scheduler().scheduleTask(() -> {
+            player.teleport(randomPlayer.getPosition());
+            player.setInvisible(false);
+            player.setNoGravity(false);
+            randomPlayer.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDERMAN_TELEPORT).pitch(0F).volume(1F).build(), randomPlayer.getPosition());
+        }, TaskSchedule.millis(3500), TaskSchedule.stop());
+
+        // Unfreeze
         gameInstance.scheduler().scheduleTask(() -> {
             player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).removeModifier(FREEZE_PLAYER_MODIFIER);
-            player.getAttribute(Attribute.GENERIC_GRAVITY).setBaseValue(0.08);
             player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).removeModifier(FREEZE_PLAYER_MODIFIER);
             player.getAttribute(Attribute.PLAYER_BLOCK_INTERACTION_RANGE).setBaseValue(4.5);
 
             player.setInvulnerable(false);
-            player.setFlying(false);
-            player.setFlyingSpeed(0.4F);
 
             player.setFoodSaturation(0);
             player.setFood(20);
@@ -378,12 +399,6 @@ public class CombatMechanics {
             player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize(""));
             player.playSound(Sound.sound().type(SoundEvent.ENTITY_PLAYER_LEVELUP).pitch(0F).volume(0.5F).build(), player.getPosition());
         }, TaskSchedule.seconds(4), TaskSchedule.stop());
-
-        player.setHealth(20);
-
-        player.setGameMode(GameMode.SURVIVAL);
-        player.setCanPickupItem(true);
-        player.setInvisible(false);
 
         player.sendPacket(new ParticlePacket(
                 Particle.FLAME,

@@ -98,6 +98,7 @@ public class GameStartHandler {
 
                             <light_purple><u>Liste des bonus:</u></light_purple>
                              - Heal complet\s
+                             - Flèche wall
                              - Foudre contre les adversaires
                              - Flèche explosive
                              - Flèche fumigène'>BLOC BONUS</hover></light_purple></b><gray>] [</gray><b><red><hover:show_text:'<b><red>BORDURES</red></b>
