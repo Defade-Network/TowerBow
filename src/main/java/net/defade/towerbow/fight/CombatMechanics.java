@@ -12,6 +12,8 @@ import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.utils.Items;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -164,6 +166,9 @@ public class CombatMechanics {
 
                     if (shooter == null || !arrow.hasTag(PLAYER_SHOOT_POS))
                         return; // Should never happen but just in case
+
+
+                    gameInstance.scheduler().scheduleNextTick(() -> shooter.sendActionBar(generateHealthBar(target)));
 
                     shooter.setTag(PLAYER_DAMAGE_DEALT, getDamageDealt(shooter) + (int) entityDamageEvent.getDamage().getAmount());
 
@@ -416,6 +421,19 @@ public class CombatMechanics {
                 0.3F,
                 75
         ));
+    }
+
+    private Component generateHealthBar(Player player) {
+        Component component = Component.text(player.getUsername() + " ").color(player.getTeam().getTeamColor());
+        for (int i = 0; i < 10 + player.getAdditionalHearts()/2 ; i++) {
+            TextColor heartColor = (int) player.getHealth()/2 > i ? TextColor.color(NamedTextColor.DARK_RED) : TextColor.color(26, 26, 26);
+            if((int) player.getHealth()%2 == 1 && (int) player.getHealth()/2 == i) heartColor = TextColor.color(NamedTextColor.RED); // Half a heart = red
+            if(i >= 10) heartColor = TextColor.color(NamedTextColor.YELLOW); // Absorption hearts
+
+            component = component.append(Component.text("❤").color(heartColor));
+        }
+        component = component.append(Component.text(" " + (int) (player.getHealth() + player.getAdditionalHearts()) + "HP").color(NamedTextColor.RED));
+        return component;
     }
 
     public static EventNode<EntityInstanceEvent> create(GameInstance gameInstance) {

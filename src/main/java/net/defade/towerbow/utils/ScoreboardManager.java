@@ -94,7 +94,7 @@ public class ScoreboardManager {
         if (gamePlayHandler.getPlayingState() != GamePlayHandler.PlayingState.PLAYING) {
             updatePrePlayingScoreboard();
         } else {
-            gameInstance.getPlayers().forEach(player -> player.sendActionBar(generateActionBarForPlayer(player)));
+            //gameInstance.getPlayers().forEach(player -> player.sendActionBar(generateActionBarForPlayer(player)));
         }
     }
 
