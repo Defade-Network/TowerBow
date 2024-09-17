@@ -1,6 +1,6 @@
 package net.defade.towerbow.utils;
 
-import io.github.togar2.pvp.entity.CustomPlayer;
+import io.github.togar2.pvp.player.CombatPlayerImpl;
 import net.defade.towerbow.fight.CombatMechanics;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.coordinate.Pos;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public class TowerBowPlayer extends CustomPlayer {
+public class TowerBowPlayer extends CombatPlayerImpl {
     public TowerBowPlayer(@NotNull UUID uuid, @NotNull String username, @NotNull PlayerConnection playerConnection) {
         super(uuid, username, playerConnection);
     }

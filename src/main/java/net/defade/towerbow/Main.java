@@ -1,6 +1,6 @@
 package net.defade.towerbow;
 
-import io.github.togar2.pvp.PvpExtension;
+import io.github.togar2.pvp.MinestomPvP;
 import net.defade.towerbow.commands.BonusCommand;
 import net.defade.towerbow.commands.KillCommand;
 import net.defade.towerbow.commands.ReviveCommand;
@@ -13,7 +13,12 @@ public class Main {
     public static void main(String[] args) {
         MinecraftServer minecraftServer = MinecraftServer.init();
 
-        PvpExtension.init();
+        MinestomPvP.init();
+        try {
+            Class.forName("net.defade.towerbow.fight.CombatMechanics"); // We need to load the COMBAT_FEATURES variable
+        } catch (ClassNotFoundException exception) {
+            throw new RuntimeException(exception);
+        }
         MinecraftServer.getConnectionManager().setPlayerProvider(TowerBowPlayer::new);
 
         minecraftServer.start();

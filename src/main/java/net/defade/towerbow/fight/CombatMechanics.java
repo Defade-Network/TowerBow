@@ -1,13 +1,9 @@
 package net.defade.towerbow.fight;
 
-import io.github.togar2.pvp.config.ArmorToolConfig;
-import io.github.togar2.pvp.config.AttackConfig;
-import io.github.togar2.pvp.config.DamageConfig;
-import io.github.togar2.pvp.config.FoodConfig;
-import io.github.togar2.pvp.config.PotionConfig;
-import io.github.togar2.pvp.config.ProjectileConfig;
-import io.github.togar2.pvp.config.PvPConfig;
-import io.github.togar2.pvp.projectile.AbstractArrow;
+import io.github.togar2.pvp.entity.projectile.AbstractArrow;
+import io.github.togar2.pvp.feature.CombatFeatureSet;
+import io.github.togar2.pvp.feature.CombatFeatures;
+import io.github.togar2.pvp.utils.CombatVersion;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.utils.Items;
 import net.kyori.adventure.sound.Sound;
@@ -66,6 +62,37 @@ public class CombatMechanics {
 
     private static final AttributeModifier FREEZE_PLAYER_MODIFIER = new AttributeModifier(NamespaceID.from("defade:freeze_player"), -10000, AttributeOperation.ADD_VALUE);
 
+    private static final CombatFeatureSet COMBAT_FEATURES = CombatFeatures.empty()
+            .version(CombatVersion.MODERN)
+            .add(CombatFeatures.VANILLA_ENCHANTMENT)
+            .add(CombatFeatures.VANILLA_ATTACK)
+            .add(CombatFeatures.VANILLA_EXHAUSTION)
+            .add(CombatFeatures.VANILLA_CRITICAL)
+            .add(CombatFeatures.VANILLA_SWEEPING)
+            .add(CombatFeatures.VANILLA_KNOCKBACK)
+
+            .add(CombatFeatures.VANILLA_EQUIPMENT)
+            .add(CombatFeatures.VANILLA_ITEM_COOLDOWN)
+
+            .add(CombatFeatures.VANILLA_DAMAGE)
+            .add(CombatFeatures.VANILLA_BLOCK)
+            .add(CombatFeatures.VANILLA_ARMOR)
+            .add(CombatFeatures.VANILLA_PLAYER_STATE)
+            .add(CombatFeatures.VANILLA_TOTEM)
+            .add(CombatFeatures.VANILLA_ITEM_DAMAGE)
+            .add(CombatFeatures.VANILLA_FALL)
+
+            .add(CombatFeatures.VANILLA_FOOD)
+            .add(CombatFeatures.VANILLA_REGENERATION)
+
+            .add(CombatFeatures.VANILLA_BOW)
+            .add(CombatFeatures.VANILLA_PROJECTILE_ITEM)
+
+            .add(CombatFeatures.VANILLA_EFFECT)
+            .add(CombatFeatures.VANILLA_POTION)
+
+            .build();
+
     private final EventNode<EntityInstanceEvent> combatMechanicsNode;
 
     private CombatMechanics(GameInstance gameInstance) {
@@ -80,25 +107,7 @@ public class CombatMechanics {
     }
 
     private EventNode<EntityInstanceEvent> createPvPNode() {
-        return PvPConfig.emptyBuilder()
-                // Enable all PvP features
-                .attack(AttackConfig.defaultBuilder().attackCooldown(false).build())
-                .armorTool(ArmorToolConfig.DEFAULT)
-                .damage(DamageConfig.defaultBuilder().deathMessages(false)) // We have our own
-                .food(FoodConfig.emptyBuilder(false)
-                        .eating(true)
-                        .eatingSounds(true)
-                        .naturalRegeneration(true)
-                )
-                .projectile(ProjectileConfig.emptyBuilder(false)
-                        .bow(true)
-                )
-                .potion(PotionConfig.emptyBuilder(false)
-                        .applyEffect(true)
-                        .updateEffect(true)
-                )
-                .build()
-                .createNode();
+        return COMBAT_FEATURES.createNode();
     }
 
     private void disableArrowSpread() {
@@ -134,7 +143,7 @@ public class CombatMechanics {
                 .addListener(EntityShootEvent.class, entityShootEvent -> {
                     entityShootEvent.getProjectile().setTag(PLAYER_SHOOT_POS, entityShootEvent.getEntity().getPosition());
                     gameInstance.getEntities().stream().filter(arrow -> arrow.getEntityType().equals(EntityType.ARROW)).forEach(arrow -> {
-                        if(arrow.getAliveTicks() > 15*20 && arrow.hasTag(ARROW_TOUCHED_GROUND)) { // Delete any old arrows on blocks
+                        if(arrow.getAliveTicks() > 15 * 20 && arrow.hasTag(ARROW_TOUCHED_GROUND)) { // Delete any old arrows on blocks
                             arrow.scheduleNextTick(Entity::remove);
                         }
                     });
@@ -453,8 +462,8 @@ public class CombatMechanics {
 
     private Component generateHealthBar(Player player) {
         Component component = Component.text(player.getUsername() + " ").color(player.getTeam().getTeamColor());
-        for (int i = 0; i < 10 + player.getAdditionalHearts()/2 ; i++) {
-            TextColor heartColor = (int) player.getHealth()/2 > i ? TextColor.color(NamedTextColor.DARK_RED) : TextColor.color(26, 26, 26);
+        for (int i = 0; i < 10 + player.getAdditionalHearts() / 2 ; i++) {
+            TextColor heartColor = (int) player.getHealth() / 2 > i ? TextColor.color(NamedTextColor.DARK_RED) : TextColor.color(26, 26, 26);
             if((int) player.getHealth()%2 == 1 && (int) player.getHealth()/2 == i) heartColor = TextColor.color(NamedTextColor.RED); // Half a heart = red
             if(i >= 10) heartColor = TextColor.color(NamedTextColor.YELLOW); // Absorption hearts
 

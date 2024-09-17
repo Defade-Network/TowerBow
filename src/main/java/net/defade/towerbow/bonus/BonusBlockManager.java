@@ -1,6 +1,6 @@
 package net.defade.towerbow.bonus;
 
-import io.github.togar2.pvp.projectile.AbstractArrow;
+import io.github.togar2.pvp.entity.projectile.AbstractArrow;
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.game.GamePlayHandler;
 import net.defade.towerbow.utils.GameEventNode;

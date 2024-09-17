@@ -1,6 +1,6 @@
 package net.defade.towerbow.bonus;
 
-import io.github.togar2.pvp.projectile.Arrow;
+import io.github.togar2.pvp.entity.projectile.Arrow;
 import net.defade.towerbow.game.GameInstance;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Pos;
