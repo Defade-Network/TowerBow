@@ -166,7 +166,7 @@ public class GamePlayHandler {
 
                                 player.damage(
                                         new Damage(
-                                                DamageType.FALL,
+                                                DamageType.MAGIC,
                                                 null,
                                                 null,
                                                 null,

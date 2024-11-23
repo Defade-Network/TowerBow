@@ -179,7 +179,7 @@ public class CombatMechanics {
                     if (shooter == null || !arrow.hasTag(PLAYER_SHOOT_POS))
                         return; // Should never happen but just in case
 
-
+                    if (shooter == target) return;
                     gameInstance.scheduler().scheduleNextTick(() -> shooter.sendActionBar(generateHealthBar(target)));
 
                     shooter.setTag(PLAYER_DAMAGE_DEALT, getDamageDealt(shooter) + (int) entityDamageEvent.getDamage().getAmount());
