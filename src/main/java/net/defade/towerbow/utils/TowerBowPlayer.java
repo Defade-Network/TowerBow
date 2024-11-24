@@ -40,4 +40,11 @@ public class TowerBowPlayer extends CombatPlayerImpl {
             setDisplayName(getName().color(NamedTextColor.WHITE));
         }
     }
+
+    @Override
+    public void setFood(int food) {
+        if (getFood() != 20) {
+            super.setFood(20);
+        }
+    }
 }

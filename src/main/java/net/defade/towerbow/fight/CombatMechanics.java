@@ -66,6 +66,7 @@ public class CombatMechanics {
             .version(CombatVersion.MODERN)
             .add(CombatFeatures.VANILLA_ENCHANTMENT)
             .add(CombatFeatures.VANILLA_ATTACK)
+            .add(CombatFeatures.VANILLA_EXHAUSTION)
             .add(CombatFeatures.VANILLA_CRITICAL)
             .add(CombatFeatures.VANILLA_SWEEPING)
             .add(CombatFeatures.VANILLA_KNOCKBACK)
