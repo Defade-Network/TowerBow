@@ -310,18 +310,20 @@ public class CombatMechanics {
                 deadPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MORT!</b></dark_red>"));
                 deadPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize(""));
 
-                deadPlayer.getTeam().getPlayers().forEach(lastPlayer -> {
-                    lastPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(2000),Duration.ofMillis(500)));
-                    lastPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
-                    lastPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Plus qu'une vie!</red>"));
+                if (deadPlayer.getTeam().getMembers().size() == 1) {
+                    deadPlayer.getTeam().getPlayers().forEach(lastPlayer -> {
+                        lastPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0), Duration.ofMillis(2000), Duration.ofMillis(500)));
+                        lastPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+                        lastPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Plus qu'une vie!</red>"));
 
-                    lastPlayer.sendMessage(MM.deserialize(
-                            "<dark_red><b>ATTENTION!</b><dark_red> <red>Votre dernier allié est mort, il ne vous reste plus qu'une vie!</red>"
-                    ));
+                        lastPlayer.sendMessage(MM.deserialize(
+                                "<dark_red><b>ATTENTION!</b><dark_red> <red>Votre dernier allié est mort, il ne vous reste plus qu'une vie!</red>"
+                        ));
 
-                    lastPlayer.setTag(PLAYER_REMAINING_LIVES, 1);
+                        lastPlayer.setTag(PLAYER_REMAINING_LIVES, 1);
 
-                });
+                    });
+                }
 
                 gameInstance.getPlayers().forEach(players -> players.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDER_DRAGON_GROWL).pitch(1.6F).volume(0.5F).build(), players.getPosition()));
             } else { // Reviving the player if he isn't the last player on his team, otherwise he is automatically a final kill
