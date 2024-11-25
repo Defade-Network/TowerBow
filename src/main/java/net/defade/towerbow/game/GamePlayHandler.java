@@ -32,7 +32,7 @@ import net.minestom.server.utils.NamespaceID;
 import java.time.Duration;
 
 public class GamePlayHandler {
-    public static final int TICKS_BEFORE_WORLD_BORDER_SHRINK = 10 * 60 * 20; // 10 minutes
+    public static final int TICKS_BEFORE_WORLD_BORDER_SHRINK = 8 * 60 * 20; // 8 minutes
     public static final int IMMUNITY_TICKS = 20 * 20; // 20 seconds
     public static final int MIN_TICKS_BEFORE_BLOCK_BONUS_SPAWN = 20 * 20; // 20 seconds
     private static final MiniMessage MM = MiniMessage.miniMessage();
@@ -46,7 +46,8 @@ public class GamePlayHandler {
 
     private PlayingState playingState = PlayingState.IMMOBILE;
     private int tickCounter = 0; // Used to schedule tasks and events like the world border shrinking
-    private int ticksBeforeNextBonusBlock = 2 * 60 * 20; // The first bonus block will spawn after 2 minutes
+    private int ticksBeforeNextBonusBlock = 70 * 20; // The first bonus block will spawn after 1m10s
+    private int horizontalBorderHeight = 10;
 
     public GamePlayHandler(GameInstance gameInstance) {
         this.gameInstance = gameInstance;
@@ -130,26 +131,26 @@ public class GamePlayHandler {
                     });
 
                     gameEventNode.getEntityInstanceNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
-                        int minimumY = 25 + (tickCounter / 140); // +1Y / 7s
-                        double yPlayer = playerTickEvent.getPlayer().getPosition().y();
+                        horizontalBorderHeight = 25 + (tickCounter / 5 * 20); // +1Y / 5s
+                        double playerHeight = playerTickEvent.getPlayer().getPosition().y();
                         Player player = playerTickEvent.getPlayer();
 
                         //Send warning message to the player & show the Y border
-                        if (yPlayer < (minimumY + 14) && yPlayer >= (minimumY + 6)) {
+                        if (playerHeight < (horizontalBorderHeight + 16) && playerHeight >= horizontalBorderHeight + 6) {
                             player.sendPacket(new ParticlePacket(
                                     Particle.DUST.withProperties(new Color(255,0,0),1F),
                                     true,
-                                    player.getPosition().withY(minimumY),
+                                    player.getPosition().withY(horizontalBorderHeight),
                                     new Vec(2, 0, 2),
                                     0F,
                                     20
                             ));
-                        } else if (yPlayer < (minimumY + 6) && yPlayer >= (minimumY)) {
+                        } else if (playerHeight < (horizontalBorderHeight + 6) && playerHeight >= (horizontalBorderHeight)) {
 
                             player.sendPacket(new ParticlePacket(
                                     Particle.DUST.withProperties(new Color(255,0,0),1F),
                                     true,
-                                    player.getPosition().withY(minimumY),
+                                    player.getPosition().withY(horizontalBorderHeight),
                                     new Vec(3, 0, 3),
                                     0F,
                                     40
@@ -161,52 +162,73 @@ public class GamePlayHandler {
                                 player.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
                                 player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Montez! Vous allez suffoquer.</red>"));
                             }
-                        } else if (yPlayer < minimumY && tickCounter % 20 == 1) {
+                        } else if (playerHeight < horizontalBorderHeight) {
                             if (player.getGameMode() == GameMode.SURVIVAL) {
 
-                                player.damage(
-                                        new Damage(
-                                                DamageType.MAGIC,
-                                                null,
-                                                null,
-                                                null,
-                                                3
+                                if (tickCounter % 20 == 1) { // Triggered every 1sec
+                                    player.damage(
+                                            new Damage(
+                                                    DamageType.MAGIC,
+                                                    null,
+                                                    null,
+                                                    null,
+                                                    3
+                                            )
+                                    );
+                                    gameInstance.sendGroupedPacket(new ParticlePacket(
+                                            Particle.DAMAGE_INDICATOR,
+                                            true,
+                                            player.getPosition(),
+                                            new Vec(0.1, 0.2, 0.1),
+                                            0.5F,
+                                            30
+                                    ));
 
-                                        )
-                                );
+                                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_ABOUT_TO_SPAWN_ITEM).pitch(0.7F).volume(0.4F).build(), playerTickEvent.getPlayer().getPosition());
+                                    player.playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_BREAK).pitch(0F).volume(0.5F).build(), playerTickEvent.getPlayer().getPosition());
 
+                                    player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0), Duration.ofMillis(2200), Duration.ofMillis(750)));
+                                    player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MONTEZ VITE!!</b></dark_red>"));
+                                    player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Vous êtes trop bas!</red>"));
+                                }
+
+                                /*
+                                Triggered every tick
+                                 */
                                 gameInstance.sendGroupedPacket(new ParticlePacket(
-                                        Particle.DAMAGE_INDICATOR,
+                                        Particle.DUST.withProperties(new Color(150, 0, 0), 1F),
                                         true,
                                         player.getPosition(),
-                                        new Vec(0.1, 0.2, 0.1),
-                                        0.5F,
-                                        30
+                                        new Vec(3, Math.min(playerHeight - 1, 3), 3),
+                                        0.15F,
+                                        50
                                 ));
                                 gameInstance.sendGroupedPacket(new ParticlePacket(
                                         Particle.DUST.withProperties(new Color(255, 0, 0), 1.5F),
                                         true,
-                                        player.getPosition().withY(minimumY),
+                                        player.getPosition().withY(horizontalBorderHeight),
                                         new Vec(4, 0, 4),
                                         0F,
-                                        200
+                                        80
                                 ));
 
-                                player.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_ABOUT_TO_SPAWN_ITEM).pitch(0.7F).volume(0.4F).build(), playerTickEvent.getPlayer().getPosition());
-                                player.playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_BREAK).pitch(0F).volume(0.5F).build(), playerTickEvent.getPlayer().getPosition());
-
-                                player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0), Duration.ofMillis(2200), Duration.ofMillis(750)));
-                                player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MONTEZ VITE!!</b></dark_red>"));
-                                player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Vous êtes trop bas!</red>"));
                             } else { // The player is in spectator (dead), show the Y border particles only to him
                                 player.sendPacket(new ParticlePacket(
                                         Particle.DUST.withProperties(new Color(255, 0, 0), 1F),
                                         true,
-                                        player.getPosition().withY(minimumY),
+                                        player.getPosition().withY(horizontalBorderHeight),
                                         new Vec(4, 0, 4),
                                         0F,
                                         200
                                         ));
+                                player.sendPacket(new ParticlePacket(
+                                        Particle.DUST.withProperties(new Color(150, 0, 0), 1F),
+                                        true,
+                                        player.getPosition(),
+                                        new Vec(3, Math.min(playerHeight - 1, 3), 3),
+                                        0.15F,
+                                        50
+                                ));
                             }
                         }
                     });
@@ -249,6 +271,10 @@ public class GamePlayHandler {
 
     public int getTickCounter() {
         return tickCounter;
+    }
+
+    public int getHorizontalBorderHeight() {
+        return horizontalBorderHeight;
     }
 
     public int getTicksBeforeNextBonusBlock() {
