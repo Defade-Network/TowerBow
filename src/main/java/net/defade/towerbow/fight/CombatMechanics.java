@@ -47,6 +47,7 @@ import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.utils.NamespaceID;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.UUID;
 
 public class CombatMechanics {
@@ -134,6 +135,7 @@ public class CombatMechanics {
 
             if (player.getTeam() == damager.getTeam()) {
                 entityDamageEvent.setCancelled(true);
+                damageSource.getSource().remove();
             }
         });
     }
@@ -365,38 +367,29 @@ public class CombatMechanics {
         GameInstance gameInstance = (GameInstance) player.getInstance();
         player.setTag(PLAYER_REMAINING_LIVES, lives);
 
-        Player randomPlayer = player.getTeam().getPlayers().stream()
-                .filter(playerPredicate -> playerPredicate != player)
-                .findFirst().get();
+        Optional<Player> matchingPlayer = player.getTeam()
+                .getPlayers()
+                .stream()
+                .filter(playerPredicate -> playerPredicate != player && playerPredicate.getPosition().y() > 30) //TODO Replace 30 with horizontalBorderHeight
+                .findAny();
 
-        if(randomPlayer.getPosition().y() < 30) { // if the ally is not in a good location, respawn him on a platform
-            if(player.getLastDamageSource().getType().equals(DamageType.ARROW)) { // The player died in his base
-                Pos respawnPosition = player.getLastDamageSource().getSource().getPosition();
+        if (matchingPlayer.isPresent()) { // Teleports the player to a valid alive ally (above the border)
+            Player validAlly = matchingPlayer.get();
 
-                player.setRespawnPoint(respawnPosition);
-                player.teleport(respawnPosition);
-            } else { // The played fell (on the y=0 floor)
-                Team opposingTeam = gameInstance.getTeams().firstTeam() == player.getTeam()
-                        ? gameInstance.getTeams().secondTeam()
-                        : gameInstance.getTeams().firstTeam();
+            player.setRespawnPoint(validAlly.getPosition());
+            player.teleport(validAlly.getPosition());
 
-                Pos respawnPosition = player.getPosition()
-                        .withY((int) opposingTeam.getPlayers().stream()
-                        .filter(opposingPlayer -> opposingPlayer.getPosition().y() > 30)
-                        .findAny().get().getPosition().y() - 10); //Teleports the player on the game's height
+            validAlly.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(3000),Duration.ofMillis(500)));
+            validAlly.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+            validAlly.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<player> <gray>a revive sur vous !", Placeholder.component("player", player.getName())));
+            validAlly.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDERMAN_HURT).pitch(0F).volume(1.5F).build(), validAlly.getPosition());
+        } else { // Teleports the player to a random ally but above the border, so he doesn't die again
+            Player randomAlly = player.getTeam().getPlayers().stream()
+                    .filter(playerPredicate -> playerPredicate != player)
+                    .findFirst().get();
 
-                player.setRespawnPoint(respawnPosition);
-                player.teleport(respawnPosition);
-            }
-        } else {
-            // Teleports the player to a valid alive ally.
-            player.setRespawnPoint(randomPlayer.getPosition());
-            player.teleport(randomPlayer.getPosition());
-
-            randomPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(3000),Duration.ofMillis(500)));
-            randomPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
-            randomPlayer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<player> <gray>a revive sur vous !", Placeholder.component("player", player.getName())));
-            randomPlayer.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDERMAN_HURT).pitch(0F).volume(1.5F).build(), randomPlayer.getPosition());
+            player.setRespawnPoint(randomAlly.getPosition().withY(40)); //TODO Replace 40 with horizontalBorderHeight + 10
+            player.teleport(randomAlly.getPosition().withY(40)); //TODO Replace 40 with horizontalBorderHeight + 10
         }
 
         //Create a safe platform if the player is in the air
