@@ -365,15 +365,16 @@ public class CombatMechanics {
 
     public static void revivePlayer(Player player, int lives) {
         GameInstance gameInstance = (GameInstance) player.getInstance();
+        int horizontalBorderHeight = gameInstance.getGamePlayHandler().getHorizontalBorderHeight();
         player.setTag(PLAYER_REMAINING_LIVES, lives);
 
         Optional<Player> matchingPlayer = player.getTeam()
                 .getPlayers()
                 .stream()
-                .filter(playerPredicate -> playerPredicate != player && playerPredicate.getPosition().y() > 30) //TODO Replace 30 with horizontalBorderHeight
+                .filter(playerPredicate -> playerPredicate != player && playerPredicate.getPosition().y() > horizontalBorderHeight)
                 .findAny();
 
-        if (matchingPlayer.isPresent()) { // Teleports the player to a valid alive ally (above the border)
+        if (matchingPlayer.isPresent()) { // Teleports the player to a valid alive ally (= ally above the border)
             Player validAlly = matchingPlayer.get();
 
             player.setRespawnPoint(validAlly.getPosition());
@@ -388,8 +389,8 @@ public class CombatMechanics {
                     .filter(playerPredicate -> playerPredicate != player)
                     .findFirst().get();
 
-            player.setRespawnPoint(randomAlly.getPosition().withY(40)); //TODO Replace 40 with horizontalBorderHeight + 10
-            player.teleport(randomAlly.getPosition().withY(40)); //TODO Replace 40 with horizontalBorderHeight + 10
+            player.setRespawnPoint(randomAlly.getPosition().withY(horizontalBorderHeight + 10));
+            player.teleport(randomAlly.getPosition().withY(horizontalBorderHeight + 10));
         }
 
         //Create a safe platform if the player is in the air

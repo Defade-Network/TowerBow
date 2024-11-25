@@ -131,7 +131,7 @@ public class GamePlayHandler {
                     });
 
                     gameEventNode.getEntityInstanceNode().addListener(PlayerTickEvent.class, playerTickEvent -> {
-                        horizontalBorderHeight = 25 + (tickCounter / 5 * 20); // +1Y / 5s
+                        horizontalBorderHeight = 25 + (tickCounter / (5 * 20) ); // +1Y / 5s
                         double playerHeight = playerTickEvent.getPlayer().getPosition().y();
                         Player player = playerTickEvent.getPlayer();
 

@@ -105,6 +105,10 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
         return worldHandler;
     }
 
+    public GamePlayHandler getGamePlayHandler() {
+        return gamePlayHandler;
+    }
+
     public GameTeams getTeams() {
         return gameTeams;
     }
