@@ -11,6 +11,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.entity.EntityShootEvent;
 import net.minestom.server.event.entity.EntityTickEvent;
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent;
+import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEvent;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
@@ -40,38 +41,16 @@ public class ExplosiveArrowBonusBlock implements BonusBlock {
                     entity.setTag(EXPLOSIVE_ARROW, false); // Remove it so that it doesn't explode again
 
                     if (!isExplosiveArrow) return;
-                    gameInstance.sendGroupedPacket(new ParticlePacket(
-                            Particle.EXPLOSION_EMITTER,
-                            true,
-                            entity.getPosition(),
-                            new Vec(0, 0, 0),
-                            1F,
-                            1
-                    ));
+                    createExplosion(gameInstance, projectileCollideWithBlockEvent.getCollisionPosition(), 3);
+                    entity.scheduleNextTick(Entity::remove);
+                })
+                .addListener(ProjectileCollideWithEntityEvent.class, projectileCollideWithEntityEvent -> {
+                    Entity entity = projectileCollideWithEntityEvent.getEntity();
+                    boolean isExplosiveArrow = entity.hasTag(EXPLOSIVE_ARROW) && entity.getTag(EXPLOSIVE_ARROW);
+                    entity.setTag(EXPLOSIVE_ARROW, false); // Remove it so that it doesn't explode again
 
-                    gameInstance.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_ABOUT_TO_SPAWN_ITEM).pitch(1F).volume(1.5F).build(), entity.getPosition());
-                    gameInstance.playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_BREAK).pitch(0F).volume(1F).build(), entity.getPosition());
-                    gameInstance.playSound(Sound.sound().type(SoundEvent.ENTITY_GENERIC_EXPLODE).pitch(1F).volume(1F).build(), entity.getPosition());
-
-                    // Get all blocks in a 5x5x5 cube around the hit block
-                    int blockX = projectileCollideWithBlockEvent.getCollisionPosition().blockX();
-                    int blockY = projectileCollideWithBlockEvent.getCollisionPosition().blockY();
-                    int blockZ = projectileCollideWithBlockEvent.getCollisionPosition().blockZ();
-                    Pos blockPos = new Pos(blockX, blockY, blockZ);
-
-                    for (int x = blockX - 3; x <= blockX + 3; x++) {
-                        for (int y = Math.max(1, blockY - 3); y <= blockY + 3; y++) { // Don't break the floor
-                            for (int z = blockZ - 3; z <= blockZ + 3; z++) {
-                                Block blockType = gameInstance.getBlock(x, y, z);
-                                if (blockType == Block.AIR) continue;
-                                Pos pos = new Pos(x, y, z);
-                                if (pos.distanceSquared(blockPos) > 3 * 3) continue; // Only break blocks in a 5x5x5 cube (2 blocks away from the hit block
-
-                                gameInstance.setBlock(x, y, z, Block.MOSSY_COBBLESTONE);
-                                gameInstance.getWorldHandler().registerBlockDecay(pos, 2 * 1000); // 2 seconds
-                            }
-                        }
-                    }
+                    if (!isExplosiveArrow) return;
+                    createExplosion(gameInstance, projectileCollideWithEntityEvent.getCollisionPosition(), 4);
                     entity.scheduleNextTick(Entity::remove);
                 })
                 .addListener(EntityTickEvent.class, entityTickEvent -> {
@@ -96,10 +75,42 @@ public class ExplosiveArrowBonusBlock implements BonusBlock {
                                     1
                             ));
                         }
-
                     }
-
                 });
+    }
 
+    public void createExplosion(GameInstance gameInstance, Pos position, int radius) {
+        gameInstance.sendGroupedPacket(new ParticlePacket(
+                Particle.EXPLOSION_EMITTER,
+                true,
+                position,
+                new Vec(0, 0, 0),
+                1F,
+                1
+        ));
+
+        gameInstance.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_ABOUT_TO_SPAWN_ITEM).pitch(1F).volume(1.5F).build(), position);
+        gameInstance.playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_BREAK).pitch(0F).volume(1F).build(), position);
+        gameInstance.playSound(Sound.sound().type(SoundEvent.ENTITY_GENERIC_EXPLODE).pitch(1F).volume(1F).build(), position);
+
+        // Get all blocks in a radius*radius*radius cube around the hit block
+        int blockX = position.blockX();
+        int blockY = position.blockY();
+        int blockZ = position.blockZ();
+        Pos blockPos = new Pos(blockX, blockY, blockZ);
+
+        for (int x = blockX - radius; x <= blockX + radius; x++) {
+            for (int y = Math.max(1, blockY - radius); y <= blockY + radius; y++) { // Don't break the floor
+                for (int z = blockZ - radius; z <= blockZ + radius; z++) {
+                    Block blockType = gameInstance.getBlock(x, y, z);
+                    if (blockType == Block.AIR) continue;
+                    Pos pos = new Pos(x, y, z);
+                    if (pos.distanceSquared(blockPos) > radius * radius) continue; // Only break blocks in a radius*radius*radius sphere
+
+                    gameInstance.setBlock(x, y, z, Block.MOSSY_COBBLESTONE);
+                    gameInstance.getWorldHandler().registerBlockDecay(pos, 2 * 1000); // 2 seconds
+                }
+            }
+        }
     }
 }

@@ -13,6 +13,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.event.entity.EntityShootEvent;
 import net.minestom.server.event.entity.EntityTickEvent;
 import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent;
+import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEvent;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
 import net.minestom.server.potion.Potion;
@@ -51,6 +52,33 @@ public class SmokeArrowBonusBlock implements BonusBlock {
                     if (!isSmokeArrow) return;
 
                     projectile.setTag(IMPACT_TIME, projectile.getAliveTicks());
+                })
+                .addListener(ProjectileCollideWithEntityEvent.class, projectileCollideWithEntityEvent -> {
+                    Entity projectile = projectileCollideWithEntityEvent.getEntity();
+
+                    if (projectileCollideWithEntityEvent.getTarget() instanceof Player player) {
+                        boolean isSmokeArrow = projectile.hasTag(SMOKE_ARROW) && projectile.getTag(SMOKE_ARROW);
+                        projectile.setTag(SMOKE_ARROW, false);
+
+                        if (!isSmokeArrow) return;
+
+                        Potion blindness = new Potion(
+                                PotionEffect.BLINDNESS,
+                                (byte) 1,
+                                12 * 20
+                        );
+
+                        player.addEffect(blindness);
+                        player.playSound(Sound.sound().type(SoundEvent.ENTITY_FIREWORK_ROCKET_LARGE_BLAST_FAR).pitch(0F).volume(0.3F).build(), player.getPosition());
+                        player.playSound(Sound.sound().type(SoundEvent.ENTITY_GUARDIAN_AMBIENT).pitch(0F).volume(1.5F).build(), player.getPosition());
+                        player.playSound(Sound.sound().type(SoundEvent.ENTITY_GUARDIAN_HURT).pitch(0F).volume(1.5F).build(), player.getPosition());
+                        player.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDERMAN_HURT).pitch(0F).volume(1F).build(), player.getPosition());
+
+                        player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(8000),Duration.ofMillis(500)));
+                        player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_gray><b>SMOKE ARROW!</b></dark_gray>"));
+                        player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<gray>Une flèche adverse vous aveugle!</gray>"));
+                    }
+
                 })
                 .addListener(EntityTickEvent.class, entityTickEvent -> {
                     Entity entity = entityTickEvent.getEntity();

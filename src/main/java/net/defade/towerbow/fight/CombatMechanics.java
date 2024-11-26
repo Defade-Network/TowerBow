@@ -135,7 +135,7 @@ public class CombatMechanics {
             if (player.getTeam() == damager.getTeam()) {
                 entityDamageEvent.setCancelled(true);
                 if (damageSource.getSource() instanceof AbstractArrow arrow) {
-                    arrow.remove();
+                    arrow.scheduleNextTick(Entity::remove);
                 }
             }
         });
