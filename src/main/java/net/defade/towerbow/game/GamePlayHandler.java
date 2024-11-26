@@ -5,7 +5,9 @@ import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.utils.GameEventNode;
 import net.defade.towerbow.utils.ScoreboardManager;
 import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.color.Color;
@@ -186,22 +188,25 @@ public class GamePlayHandler {
 
                                     player.playSound(Sound.sound().type(SoundEvent.BLOCK_TRIAL_SPAWNER_ABOUT_TO_SPAWN_ITEM).pitch(0.7F).volume(0.4F).build(), playerTickEvent.getPlayer().getPosition());
                                     player.playSound(Sound.sound().type(SoundEvent.BLOCK_VAULT_BREAK).pitch(0F).volume(0.5F).build(), playerTickEvent.getPlayer().getPosition());
-
-                                    player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0), Duration.ofMillis(2200), Duration.ofMillis(750)));
-                                    player.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MONTEZ VITE!!</b></dark_red>"));
-                                    player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Vous êtes trop bas!</red>"));
                                 }
 
                                 /*
                                 Triggered every tick
                                  */
-                                gameInstance.sendGroupedPacket(new ParticlePacket(
+
+                                player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0), Duration.ofMillis(2200), Duration.ofMillis(750)));
+                                player.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
+                                player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<red>Vous êtes <distance> blocks sous la bordure!</red>",
+                                        Placeholder.component("distance", Component.text(horizontalBorderHeight - (int) playerHeight)))
+                                );
+
+                                player.sendPacket(new ParticlePacket(
                                         Particle.DUST.withProperties(new Color(150, 0, 0), 1F),
                                         true,
-                                        player.getPosition(),
-                                        new Vec(3, Math.min(playerHeight - 1, 3), 3),
-                                        0.15F,
-                                        50
+                                        player.getPosition().withY(Math.clamp(playerHeight, 4, horizontalBorderHeight - 4)),
+                                        new Vec(3, 3, 3),
+                                        0.05F,
+                                        40
                                 ));
                                 gameInstance.sendGroupedPacket(new ParticlePacket(
                                         Particle.DUST.withProperties(new Color(255, 0, 0), 1.5F),
@@ -209,7 +214,7 @@ public class GamePlayHandler {
                                         player.getPosition().withY(horizontalBorderHeight),
                                         new Vec(4, 0, 4),
                                         0F,
-                                        80
+                                        50
                                 ));
 
                             } else { // The player is in spectator (dead), show the Y border particles only to him
@@ -219,7 +224,7 @@ public class GamePlayHandler {
                                         player.getPosition().withY(horizontalBorderHeight),
                                         new Vec(4, 0, 4),
                                         0F,
-                                        200
+                                        80
                                         ));
                                 player.sendPacket(new ParticlePacket(
                                         Particle.DUST.withProperties(new Color(150, 0, 0), 1F),
@@ -227,7 +232,7 @@ public class GamePlayHandler {
                                         player.getPosition(),
                                         new Vec(3, Math.min(playerHeight - 1, 3), 3),
                                         0.15F,
-                                        50
+                                        40
                                 ));
                             }
                         }

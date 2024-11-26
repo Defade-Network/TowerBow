@@ -199,8 +199,8 @@ public class BonusBlockManager implements BlockHandler {
 
                 gameInstance.getPlayers().forEach(player -> {
                     player.sendMessage(MM.deserialize(
-                            "<dark_purple>\uD83C\uDFF9 <b>BLOC BONUS!</b></dark_purple> <shooter> <light_purple>a reçu </light_purple><dark_purple>"
-                                    + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</dark_purple><light_purple> !</light_purple>",
+                            "<dark_purple>\uD83C\uDFF9 <b>BLOC BONUS!</b></dark_purple> <shooter> <light_purple>a reçu <b><gradient:#94E9FF:#3CB0FF>"
+                                    + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</gradient></b> !",
                             Placeholder.component("shooter", shooter.getName())
 
                     ));

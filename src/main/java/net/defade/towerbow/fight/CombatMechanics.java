@@ -25,7 +25,6 @@ import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.entity.attribute.AttributeModifier;
 import net.minestom.server.entity.attribute.AttributeOperation;
 import net.minestom.server.entity.damage.Damage;
-import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.entity.EntityShootEvent;
@@ -309,6 +308,8 @@ public class CombatMechanics {
                 deadPlayer.setGameMode(GameMode.SPECTATOR);
                 deadPlayer.setCanPickupItem(false);
                 deadPlayer.setInvisible(true); // Hide the deadPlayer
+
+                //TODO Remove arrow tags when final-died
 
                 deadPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(4000),Duration.ofMillis(500)));
                 deadPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MORT!</b></dark_red>"));
