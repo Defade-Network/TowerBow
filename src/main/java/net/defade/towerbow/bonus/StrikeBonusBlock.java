@@ -39,12 +39,11 @@ public class StrikeBonusBlock implements BonusBlock {
             } else {
                 player.damage(
                         new Damage(
-                                DamageType.LIGHTNING_BOLT,
+                                DamageType.OUT_OF_WORLD, // Bypass armor protection
                                 null,
                                 null,
                                 null,
                                 8
-
                         )
                 );
             }

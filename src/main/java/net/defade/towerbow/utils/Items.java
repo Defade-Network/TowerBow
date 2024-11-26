@@ -66,7 +66,7 @@ public class Items {
             .with(ItemComponent.ENCHANTMENTS, new EnchantmentList(
                     Map.of(
                             Enchantment.PROTECTION, 2,
-                            Enchantment.FEATHER_FALLING, 6
+                            Enchantment.FEATHER_FALLING, 5
                     )
             ))
             .with(ItemComponent.HIDE_TOOLTIP);
