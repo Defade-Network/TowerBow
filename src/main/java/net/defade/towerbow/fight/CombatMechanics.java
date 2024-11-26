@@ -374,10 +374,12 @@ public class CombatMechanics {
         Optional<Player> matchingPlayer = player.getTeam()
                 .getPlayers()
                 .stream()
-                .filter(playerPredicate -> playerPredicate != player && playerPredicate.getPosition().y() > horizontalBorderHeight)
+                .filter(playerPredicate -> playerPredicate != player
+                        && playerPredicate.getPosition().y() > horizontalBorderHeight
+                        && gameInstance.getWorldBorder().inBounds(playerPredicate))
                 .findAny();
 
-        if (matchingPlayer.isPresent()) { // Teleports the player to a valid alive ally (= ally above the border)
+        if (matchingPlayer.isPresent()) { // Teleports the player to a valid alive ally (= ally above the horizontal border & inside the border)
             Player validAlly = matchingPlayer.get();
 
             player.setRespawnPoint(validAlly.getPosition());

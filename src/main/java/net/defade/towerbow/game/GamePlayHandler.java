@@ -93,7 +93,6 @@ public class GamePlayHandler {
 
             if (playingState == PlayingState.IMMOBILE && tickCounter == 5 * 20) {
                 Potion jumpBoost = new Potion(PotionEffect.JUMP_BOOST, (byte) 2, IMMUNITY_TICKS);
-                Potion speed = new Potion(PotionEffect.SPEED, (byte) 0, IMMUNITY_TICKS);
                 gameInstance.getPlayers().forEach(player -> {
 
                     player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).removeModifier(FREEZE_PLAYER_MODIFIER);
@@ -101,7 +100,6 @@ public class GamePlayHandler {
                     player.getAttribute(Attribute.PLAYER_BLOCK_INTERACTION_RANGE).setBaseValue(4.5);
 
                     player.addEffect(jumpBoost);
-                    player.addEffect(speed);
 
                     // Starting sound
                     player.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDER_DRAGON_GROWL).pitch(1.2F).volume(0.5F).build(), player.getPosition());

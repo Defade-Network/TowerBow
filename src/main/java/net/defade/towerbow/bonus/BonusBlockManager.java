@@ -95,7 +95,7 @@ public class BonusBlockManager implements BlockHandler {
             }
         }
 
-        if (spawnPosition == null) {
+        if (spawnPosition == null || !gameInstance.getWorldBorder().inBounds(spawnPosition)) {
             // Set the position 10 blocks under a random player
             Player randomPlayer = gameInstance.getAlivePlayers().stream()
                     .skip(RANDOM.nextInt(gameInstance.getAlivePlayers().size()))
