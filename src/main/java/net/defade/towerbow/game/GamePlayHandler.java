@@ -71,7 +71,7 @@ public class GamePlayHandler {
     private void immobilizePlayers() {
         // Give blindness to all players for 5 seconds and don't allow them to move
         Potion blindness = new Potion(PotionEffect.BLINDNESS, (byte) 1, 5 * 20);
-        gameInstance.getPlayers().forEach(player -> {
+        gameInstance.getPlayingPlayers().forEach(player -> {
             player.addEffect(blindness);
             player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(FREEZE_PLAYER_MODIFIER);
             player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).addModifier(FREEZE_PLAYER_MODIFIER);
@@ -93,8 +93,7 @@ public class GamePlayHandler {
 
             if (playingState == PlayingState.IMMOBILE && tickCounter == 5 * 20) {
                 Potion jumpBoost = new Potion(PotionEffect.JUMP_BOOST, (byte) 2, IMMUNITY_TICKS);
-                gameInstance.getPlayers().forEach(player -> {
-
+                gameInstance.getPlayingPlayers().forEach(player -> {
                     player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).removeModifier(FREEZE_PLAYER_MODIFIER);
                     player.getAttribute(Attribute.GENERIC_JUMP_STRENGTH).removeModifier(FREEZE_PLAYER_MODIFIER);
                     player.getAttribute(Attribute.PLAYER_BLOCK_INTERACTION_RANGE).setBaseValue(4.5);
@@ -125,7 +124,7 @@ public class GamePlayHandler {
                     gameEventNode.getEntityInstanceNode().addChild(CombatMechanics.create(gameInstance));
 
                     // Invincibility lost sound
-                    gameInstance.getPlayers().forEach(player -> {
+                    gameInstance.getPlayingPlayers().forEach(player -> {
                         player.playSound(Sound.sound().type(SoundEvent.ITEM_TRIDENT_THUNDER).pitch(1F).volume(0.5F).build(), player.getPosition());
                         player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(250),Duration.ofMillis(1500),Duration.ofMillis(250)));
                         player.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));

@@ -21,7 +21,7 @@ public class InventoryManager {
     }
 
     public void giveStartItems() {
-        gameInstance.getPlayers().forEach(this::giveItemsToPlayer);
+        gameInstance.getPlayingPlayers().forEach(this::giveItemsToPlayer);
     }
 
     public void giveItemsToPlayer(Player player) {

@@ -36,6 +36,9 @@ public class Items {
                     "Yzk3MmQ1Zjg4ZWI4ZGM4NjE3NmNjZGIzZSJ9fX0=", ""))
             );
 
+    public static final ItemStack SPECTATE_ITEM = ItemStack.of(Material.ENDER_EYE)
+            .with(ItemComponent.ITEM_NAME, MM.deserialize("<dark_gray>» </dark_gray><gradient:#3EB835:#B2EA80>Spectate</gradient>"));
+
     public static final ItemStack JOIN_NEW_GAME = ItemStack.of(Material.PAPER)
             .with(ItemComponent.ITEM_NAME, MM.deserialize("<bold><yellow>» <aqua>Rejoindre une nouvelle partie</aqua> <yellow>«</yellow></bold>"));
 

@@ -2,6 +2,7 @@ package net.defade.towerbow.teams;
 
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.utils.Items;
+import net.defade.towerbow.utils.TowerBowPlayer;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -32,10 +33,18 @@ public class TeamSelectorGUI extends Inventory {
         }
 
         setItemStack(13, Items.RANDOM_TEAM);
+        setItemStack(26, Items.SPECTATE_ITEM);
         updateItems();
 
         addInventoryCondition((player, slot, clickType, inventoryConditionResult) -> {
             inventoryConditionResult.setCancel(true);
+
+            if (slot == 26) {
+                player.setTag(TowerBowPlayer.SPECTATING, true);
+                player.setTeam(null);
+                player.sendMessage(MM.deserialize("<gray>»</gray> <yellow>Vous avez rejoint le mode</yellow> <gradient:#3EB835:#B2EA80>spectateur</gradient> <yellow>!</yellow>"));
+                return;
+            }
 
             Team team = switch (slot) {
                 case 11 -> gameInstance.getTeams().firstTeam();
@@ -55,6 +64,7 @@ public class TeamSelectorGUI extends Inventory {
             }
 
             player.setTeam(team);
+            player.setTag(TowerBowPlayer.SPECTATING, false);
 
             if (slot == 11 || slot == 15) {
                 player.sendMessage(MM.deserialize(

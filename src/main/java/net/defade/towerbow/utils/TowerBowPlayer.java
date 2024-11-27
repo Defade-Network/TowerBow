@@ -8,12 +8,15 @@ import net.minestom.server.entity.GameMode;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.scoreboard.Team;
+import net.minestom.server.tag.Tag;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class TowerBowPlayer extends CombatPlayerImpl {
+    public static final Tag<Boolean> SPECTATING = Tag.Boolean("spectating");
+
     public TowerBowPlayer(@NotNull UUID uuid, @NotNull String username, @NotNull PlayerConnection playerConnection) {
         super(uuid, username, playerConnection);
     }

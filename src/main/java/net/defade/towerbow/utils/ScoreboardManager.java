@@ -160,7 +160,7 @@ public class ScoreboardManager {
         if (playingState == GamePlayHandler.PlayingState.IMMOBILE) {
             gameInstance.getPlayers().forEach(player -> player.sendActionBar(MM.deserialize("<dark_gray>»</dark_gray> <gray>Préparez vous à monter...</gray> <dark_gray>«</dark_gray>")));
         } else {
-            gameInstance.getPlayers().forEach(player -> {
+            gameInstance.getPlayingPlayers().forEach(player -> {
                 player.sendActionBar(MM.deserialize("<dark_gray>»</dark_gray> <gray>Montez! Vous êtes invincible.</gray> <dark_gray>«</dark_gray>"));
                 gameInstance.sendGroupedPacket(new ParticlePacket(
                         Particle.SOUL_FIRE_FLAME,
@@ -205,7 +205,7 @@ public class ScoreboardManager {
     }
 
     private void createSidebarScoreboards() {
-        gameInstance.getPlayers().forEach(player -> {
+        gameInstance.getPlayingPlayers().forEach(player -> {
             Team team = player.getTeam();
             Sidebar sidebar = playerSidebar.get(player.getUuid());
 

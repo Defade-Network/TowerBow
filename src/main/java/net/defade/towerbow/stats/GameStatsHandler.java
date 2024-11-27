@@ -21,7 +21,7 @@ public class GameStatsHandler {
 
     public void initTracking() {
         gameStartTime = System.currentTimeMillis();
-        gameInstance.getAlivePlayers().forEach(player -> playerStats.put(player.getUuid(), new PlayerStats()));
+        gameInstance.getPlayingPlayers().forEach(player -> playerStats.put(player.getUuid(), new PlayerStats()));
     }
 
     public PlayerStats getPlayerStats(Player player) {

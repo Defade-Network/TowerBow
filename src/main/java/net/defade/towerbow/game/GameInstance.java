@@ -12,6 +12,7 @@ import net.defade.towerbow.teams.GameTeams;
 import net.defade.towerbow.teams.TeamUtils;
 import net.defade.towerbow.utils.GameEventNode;
 import net.defade.towerbow.utils.Items;
+import net.defade.towerbow.utils.TowerBowPlayer;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -83,7 +84,7 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
 
     @Override
     public int getPlayerCount() {
-        return getPlayers().size();
+        return getPlayingPlayers().size();
     }
 
     @Override
@@ -120,12 +121,24 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
         return gameTeams;
     }
 
+    public Set<Player> getPlayingPlayers() {
+        return getPlayers().stream()
+            .filter(player -> !player.hasTag(TowerBowPlayer.SPECTATING) || !player.getTag(TowerBowPlayer.SPECTATING))
+            .collect(Collectors.toSet());
+    }
+
+    public Set<Player> getSpectatingPlayers() {
+        return getPlayers().stream()
+            .filter(player -> player.hasTag(TowerBowPlayer.SPECTATING) && player.getTag(TowerBowPlayer.SPECTATING))
+            .collect(Collectors.toSet());
+    }
+
     public Set<Player> getAlivePlayers() {
-        return getPlayers().stream().filter(CombatMechanics::isAlive).collect(Collectors.toSet());
+        return getPlayingPlayers().stream().filter(CombatMechanics::isAlive).collect(Collectors.toSet());
     }
 
     public Set<Player> getDeadPlayers() {
-        return getPlayers().stream().filter(CombatMechanics::isDead).collect(Collectors.toSet());
+        return getPlayingPlayers().stream().filter(CombatMechanics::isDead).collect(Collectors.toSet());
     }
 
     /**
@@ -137,7 +150,13 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
 
         setAcceptsPlayers(false);
 
-        TeamUtils.giveAllPlayersTeams(gameTeams, getPlayers());
+        getSpectatingPlayers().forEach(player -> {
+            player.setGameMode(GameMode.SPECTATOR);
+            player.setCanPickupItem(false);
+            player.setInvisible(true); // Hide the deadPlayer
+        });
+
+        TeamUtils.giveAllPlayersTeams(gameTeams, getPlayingPlayers());
         inventoryManager.giveStartItems();
 
         gameStartHandler.stop();
@@ -150,7 +169,7 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
     public void finishGame(Team winningTeam, Team loosingTeam) {
         getGameStats().saveStats();
 
-        getPlayers().forEach(player -> {
+        getPlayingPlayers().forEach(player -> {
             PlayerStats playerStats = getGameStats().getPlayerStats(player);
 
             if (player.getTeam() == winningTeam) { // Player won
@@ -192,7 +211,9 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
             player.sendActionBar(MM.deserialize(""));
             //Set all players in "Spectator like" but not in spectator otherwise they won't have a hotbar
             player.teleport(player.getPosition().add(0,0.1,0));
+        });
 
+        getPlayers().forEach(player -> {
             player.setGameMode(GameMode.ADVENTURE);
             player.setAllowFlying(true);
             player.setFlying(true);
@@ -200,13 +221,13 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
 
             player.getInventory().clear();
             player.getInventory().setItemStack(8, Items.JOIN_NEW_GAME);
+        });
 
-            gameEventNode.getPlayerNode().addListener(PlayerUseItemEvent.class, event -> {
-                if (event.getItemStack().isSimilar(Items.JOIN_NEW_GAME)) {
-                    player.sendMessage(MM.deserialize("<gray>Recherche d'une partie...</gray>"));
-                    player.sendToServer("towerbow");
-                }
-            });
+        gameEventNode.getPlayerNode().addListener(PlayerUseItemEvent.class, event -> {
+            if (event.getItemStack().isSimilar(Items.JOIN_NEW_GAME)) {
+                event.getPlayer().sendMessage(MM.deserialize("<gray>Recherche d'une partie...</gray>"));
+                event.getPlayer().sendToServer("towerbow");
+            }
         });
 
         gamePlayHandler.stop();
@@ -234,7 +255,7 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
             }
         }
 
-        int mapSize = switch (getPlayers().size()) {
+        int mapSize = switch (getPlayingPlayers().size()) {
             case 4, 5 -> 60;
             case 6, 7 -> 70;
             case 8, 9 -> 80;
@@ -269,6 +290,9 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
 
         spreadPlayersAcrossPos(gameTeams.firstTeam().getPlayers(), firstTeamStartPos, firstTeamEndPos);
         spreadPlayersAcrossPos(gameTeams.secondTeam().getPlayers(), secondTeamStartPos, secondTeamEndPos);
+
+        Pos midPos = new Pos(mapSize, 1, mapSize).div(2);
+        getSpectatingPlayers().forEach(player -> player.teleport(midPos));
     }
 
     private static void spreadPlayersAcrossPos(Collection<Player> players, Pos firstPos, Pos secondPos) {

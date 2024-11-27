@@ -64,7 +64,7 @@ public class GameManager {
     public GameInstance getAvailableGameInstance() {
         return gameInstances.stream()
                 .filter(GameInstance::acceptPlayers)
-                .max(Comparator.comparingInt(gameInstance -> gameInstance.getPlayers().size()))
+                .max(Comparator.comparingInt(gameInstance -> gameInstance.getPlayingPlayers().size()))
                 .orElse(null);
     }
 

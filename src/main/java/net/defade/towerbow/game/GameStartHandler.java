@@ -21,9 +21,7 @@ import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.event.player.PlayerUseItemEvent;
-import net.minestom.server.instance.Instance;
 import net.minestom.server.sound.SoundEvent;
-
 import java.time.Duration;
 import java.util.Map;
 
@@ -115,10 +113,10 @@ public class GameStartHandler {
             ));
 
             gameInstance.sendMessage(MM.deserialize(
-                    "<gold>🏹 " + player.getUsername() + "</gold><color:#fffb2b> a rejoint la partie.</color> <gray>(" + gameInstance.getPlayers().size() + "/12)</gray>"
+                    "<gold>🏹 " + player.getUsername() + "</gold><color:#fffb2b> a rejoint la partie.</color> <gray>(" + gameInstance.getPlayingPlayers().size() + "/12)</gray>"
             ));
 
-            int connectedPlayers = gameInstance.getPlayers().size();
+            int connectedPlayers = gameInstance.getPlayingPlayers().size();
             if (connectedPlayers >= GameManager.MIN_PLAYERS) {
                 tickCountdown = Math.min(tickCountdown, PLAYER_COUNTDOWN.get(connectedPlayers) * 20);
             }
@@ -132,13 +130,13 @@ public class GameStartHandler {
     private void registerLeaveMessages() {
         startEventNode.getEntityInstanceNode().addListener(RemoveEntityFromInstanceEvent.class, event -> {
             if (!(event.getEntity() instanceof Player player)) return;
-            Instance instance = player.getInstance();
+            GameInstance instance = (GameInstance) player.getInstance();
 
             instance.sendMessage(MM.deserialize(
-                    "<color:#aa0000>❌ " + player.getUsername() + "</color> <red>a quitté la partie.</red> <gray>(" + (gameInstance.getPlayers().size() - 1) + "/12)</gray>"
+                    "<color:#aa0000>❌ " + player.getUsername() + "</color> <red>a quitté la partie.</red> <gray>(" + (gameInstance.getPlayingPlayers().size() - 1) + "/12)</gray>"
             ));
 
-            if (instance.getPlayers().size() - 1 < GameManager.MIN_PLAYERS) {
+            if (instance.getPlayingPlayers().size() - 1 < GameManager.MIN_PLAYERS) {
                 tickCountdown = Integer.MAX_VALUE;
             }
         });
@@ -148,9 +146,9 @@ public class GameStartHandler {
         startEventNode.getInstanceNode().addListener(InstanceTickEvent.class, instanceTickEvent -> {
             GameInstance gameInstance = (GameInstance) instanceTickEvent.getInstance();
 
-            updateBossBar(PLAYER_COUNTDOWN.getOrDefault(gameInstance.getPlayers().size(), 1));
+            updateBossBar(PLAYER_COUNTDOWN.getOrDefault(gameInstance.getPlayingPlayers().size(), 1));
 
-            int connectedPlayers = gameInstance.getPlayers().size();
+            int connectedPlayers = gameInstance.getPlayingPlayers().size();
             if (connectedPlayers < GameManager.MIN_PLAYERS) {
                 return;
             }
@@ -219,7 +217,7 @@ public class GameStartHandler {
     }
 
     private void updateBossBar(int countdownTime) {
-        if (gameInstance.getPlayers().size() < GameManager.MIN_PLAYERS) {
+        if (gameInstance.getPlayingPlayers().size() < GameManager.MIN_PLAYERS) {
             bossBar.name(
                     Component.text("En attente de joueurs... ")
                             .color(NamedTextColor.YELLOW)

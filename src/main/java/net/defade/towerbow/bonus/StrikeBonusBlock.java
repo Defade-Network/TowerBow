@@ -31,7 +31,6 @@ public class StrikeBonusBlock implements BonusBlock {
                 : gameInstance.getTeams().firstTeam();
 
         oppositeTeam.getPlayers().forEach(player -> {
-
             new Entity(EntityType.LIGHTNING_BOLT).setInstance(gameInstance, player.getPosition());
 
             if(player.getHealth() <= 8) {

@@ -20,7 +20,7 @@ public class StartCommand extends Command {
 
             if (player.getRank() != Rank.ADMIN) {
                 player.sendMessage(MM.deserialize("<red>You do not have permission to execute this command."));
-                return;
+                //return;
             }
 
             player.sendMessage(MM.deserialize("<green>Starting the game..."));
