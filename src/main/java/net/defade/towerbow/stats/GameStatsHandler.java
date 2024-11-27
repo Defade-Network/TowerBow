@@ -29,7 +29,7 @@ public class GameStatsHandler {
     }
 
     public void saveStats() {
-        Document gameStats = new Document("game_uuid", gameInstance.getUuid().toString())
+        Document gameStats = new Document("_id", gameInstance.getUuid().toString())
                 .append("start_time", gameStartTime)
                 .append("end_time", System.currentTimeMillis());
         playerStats.forEach((playerUUID, stats) -> gameStats.append(playerUUID.toString(), stats.getMongoDBDocument()));
