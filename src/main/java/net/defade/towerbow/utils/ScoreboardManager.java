@@ -193,7 +193,7 @@ public class ScoreboardManager {
 
         component = component
                 .append(Component.text("| ").color(NamedTextColor.GRAY))
-                .append(Component.text(CombatMechanics.getKills(player) + " kills").color(NamedTextColor.YELLOW))
+                .append(Component.text(gameInstance.getGameStats().getPlayerStats(player).getKills() + " kills").color(NamedTextColor.YELLOW))
                 .append(Component.text(" | ").color(NamedTextColor.GRAY));
 
         for (Player playerInTeam : gameTeams.secondTeam().getAllPlayers()) {

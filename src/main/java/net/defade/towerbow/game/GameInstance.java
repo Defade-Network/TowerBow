@@ -3,10 +3,11 @@ package net.defade.towerbow.game;
 import net.defade.minestom.amethyst.AmethystLoader;
 import net.defade.minestom.amethyst.AmethystSource;
 import net.defade.minestom.servers.minigame.MiniGameInstance;
-import net.defade.towerbow.bonus.BonusBlockManager;
 import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.fight.InventoryManager;
 import net.defade.towerbow.map.WorldHandler;
+import net.defade.towerbow.stats.GameStatsHandler;
+import net.defade.towerbow.stats.PlayerStats;
 import net.defade.towerbow.teams.GameTeams;
 import net.defade.towerbow.teams.TeamUtils;
 import net.defade.towerbow.utils.GameEventNode;
@@ -63,6 +64,8 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
     private final GameStartHandler gameStartHandler = new GameStartHandler(this);
     private final GamePlayHandler gamePlayHandler = new GamePlayHandler(this);
 
+    private final GameStatsHandler gameStatsHandler = new GameStatsHandler(this);
+
     public GameInstance(GameManager gameManager, AmethystSource amethystSource) {
         super(UUID.randomUUID(), TOWERBOW_DIMENSION);
         this.gameManager = gameManager;
@@ -109,6 +112,10 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
         return gamePlayHandler;
     }
 
+    public GameStatsHandler getGameStats() {
+        return gameStatsHandler;
+    }
+
     public GameTeams getTeams() {
         return gameTeams;
     }
@@ -126,6 +133,8 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
      * This function will make sure that everything is ready to start the game.
      */
     public void startGame() {
+        gameStatsHandler.initTracking();
+
         setAcceptsPlayers(false);
 
         TeamUtils.giveAllPlayersTeams(gameTeams, getPlayers());
@@ -139,15 +148,19 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
     }
 
     public void finishGame(Team winningTeam, Team loosingTeam) {
+        getGameStats().saveStats();
+
         getPlayers().forEach(player -> {
+            PlayerStats playerStats = getGameStats().getPlayerStats(player);
+
             if (player.getTeam() == winningTeam) { // Player won
                 player.sendMessage(MM.deserialize(
                         "<st><dark_gray>                                   </dark_gray></st>" +
                                 "\n<gold>\uD83C\uDFF9 <b>VICTOIRE</b> <dark_gray>-</dark_gray> <winners> \uD83C\uDFF9</gold>" +
-                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getDamageDealt(player) / 2 + "</b>❤ Infligés</yellow>" +
-                                "\n<gray>»</gray> <yellow><b>" + CombatMechanics.getKills(player) + "</b> Kills</yellow>" +
-                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getLongshotCount(player) + "</b> Longshots</yellow> <gray>(50+ blocks)</gray>" +
-                                "\n<gray>»</gray> <yellow><b>" + BonusBlockManager.getBonusBlockCount(player) + "</b> Block Bonus</yellow>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + playerStats.getDamageDealt() / 2 + "</b>❤ Infligés</yellow>" +
+                                "\n<gray>»</gray> <yellow><b>" + playerStats.getKills() + "</b> Kills</yellow>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + playerStats.getLongShots() + "</b> Longshots</yellow> <gray>(50+ blocks)</gray>" +
+                                "\n<gray>»</gray> <yellow><b>" + playerStats.getBonusBlocks() + "</b> Block Bonus</yellow>" +
                                 "\n<st><dark_gray>                                   </dark_gray></st>",
                         Placeholder.component("winners", winningTeam.getTeamDisplayName())
 
@@ -161,10 +174,10 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
                 player.sendMessage(MM.deserialize(
                         "<st><dark_gray>                                   </dark_gray></st>" +
                                 "\n<red>\uD83C\uDFF9 <b>DÉFAITE</b> <dark_gray>-</dark_gray> <loosers> \uD83C\uDFF9</red>" +
-                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getDamageDealt(player) / 2 + "</b>❤ Infligés</yellow>" +
-                                "\n<gray>»</gray> <yellow><b>" + CombatMechanics.getKills(player) + "</b> Kills</yellow>" +
-                                "\n\n<gray>»</gray> <yellow><b>" + CombatMechanics.getLongshotCount(player) + "</b> Longshots</yellow> <gray>(50+ blocks)</gray>" +
-                                "\n<gray>»</gray> <yellow><b>" + BonusBlockManager.getBonusBlockCount(player) + "</b> Block Bonus</yellow>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + playerStats.getDamageDealt() / 2 + "</b>❤ Infligés</yellow>" +
+                                "\n<gray>»</gray> <yellow><b>" + playerStats.getKills() + "</b> Kills</yellow>" +
+                                "\n\n<gray>»</gray> <yellow><b>" + playerStats.getLongShots() + "</b> Longshots</yellow> <gray>(50+ blocks)</gray>" +
+                                "\n<gray>»</gray> <yellow><b>" + playerStats.getBonusBlocks() + "</b> Block Bonus</yellow>" +
                                 "\n<st><dark_gray>                                   </dark_gray></st>",
                         Placeholder.component("loosers", loosingTeam.getTeamDisplayName())
 

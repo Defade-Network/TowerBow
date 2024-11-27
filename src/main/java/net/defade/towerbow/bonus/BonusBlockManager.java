@@ -28,7 +28,6 @@ import java.util.Random;
 public class BonusBlockManager implements BlockHandler {
     private static final int MIN_DISTANCE_BETWEEN_PLAYERS = 20;
     private static final Tag<Integer> BONUS_BLOCK_TAG = Tag.Integer("bonus_block");
-    private static final Tag<Integer> PLAYER_BONUS_BLOCK_COUNT = Tag.Integer("bonus_block_count");
 
     private static final Block[] WOOL_BLOCKS = new Block[] {
             Block.WHITE_WOOL,
@@ -154,7 +153,7 @@ public class BonusBlockManager implements BlockHandler {
             if (bonusBlock != null) {
                 bonusBlock.onHit(shooter);
 
-                shooter.setTag(PLAYER_BONUS_BLOCK_COUNT, getBonusBlockCount(shooter) + 1);
+                gameInstance.getGameStats().getPlayerStats(shooter).addBonusBlock();
 
                 gameInstance.setBlock(projectileCollideWithBlockEvent.getCollisionPosition(), Block.AIR);
                 gameInstance.sendGroupedPacket(new ParticlePacket(
@@ -200,9 +199,5 @@ public class BonusBlockManager implements BlockHandler {
         }
 
         return randomBlock;
-    }
-
-    public static int getBonusBlockCount(Player player) {
-        return player.hasTag(PLAYER_BONUS_BLOCK_COUNT) ? player.getTag(PLAYER_BONUS_BLOCK_COUNT) : 0;
     }
 }

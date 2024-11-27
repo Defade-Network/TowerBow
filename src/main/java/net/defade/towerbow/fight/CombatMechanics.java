@@ -51,9 +51,6 @@ import java.util.UUID;
 
 public class CombatMechanics {
     private static final MiniMessage MM = MiniMessage.miniMessage();
-    private static final Tag<Integer> PLAYER_KILLS = Tag.Integer("kills");
-    private static final Tag<Integer> PLAYER_LONGSHOTS = Tag.Integer("longshots");
-    private static final Tag<Integer> PLAYER_DAMAGE_DEALT = Tag.Integer("damage_dealt");
     private static final Tag<Integer> PLAYER_REMAINING_LIVES = Tag.Integer("player_remaining_lives");
     private static final Tag<UUID> LAST_DAMAGER_UUID = Tag.UUID("last_damager"); // Used to store the last player who damaged the player
 
@@ -102,7 +99,7 @@ public class CombatMechanics {
 
         registerLongShots(gameInstance);
 
-        registerKillCounter();
+        registerKillCounter(gameInstance);
         registerDeathHandler();
     }
 
@@ -185,7 +182,7 @@ public class CombatMechanics {
                     if (shooter == target) return;
                     gameInstance.scheduler().scheduleNextTick(() -> shooter.sendActionBar(generateHealthBar(target)));
 
-                    shooter.setTag(PLAYER_DAMAGE_DEALT, getDamageDealt(shooter) + (int) entityDamageEvent.getDamage().getAmount());
+                    gameInstance.getGameStats().getPlayerStats(shooter).addDamageDealt(entityDamageEvent.getDamage().getAmount());
 
                     Pos shootPos = arrow.getTag(PLAYER_SHOOT_POS);
 
@@ -195,7 +192,7 @@ public class CombatMechanics {
                     double minDistanceForLongshot = Math.max(40, gameInstance.getWorldBorder().diameter() * 0.8); //scales the longshot distance with the map size, minimum 40blocks
 
                     if (distance > minDistanceForLongshot) {
-                        shooter.setTag(PLAYER_LONGSHOTS, getLongshotCount(shooter) + 1);
+                        gameInstance.getGameStats().getPlayerStats(shooter).addLongShot();
 
                         shooter.setHealth(Math.min(shooter.getHealth() + 3, (float) shooter.getAttributeValue(Attribute.GENERIC_MAX_HEALTH)));
 
@@ -220,7 +217,7 @@ public class CombatMechanics {
                 });
     }
 
-    private void registerKillCounter() {
+    private void registerKillCounter(GameInstance gameInstance) {
         combatMechanicsNode.addListener(EntityDamageEvent.class, entityDamageEvent -> {
             if (entityDamageEvent.getDamage().getAttacker() == null) return;
             entityDamageEvent.getEntity().setTag(LAST_DAMAGER_UUID, entityDamageEvent.getDamage().getAttacker().getUuid());
@@ -229,7 +226,7 @@ public class CombatMechanics {
             Player killed = playerDeathEvent.getPlayer();
             if (killer == null || killer == playerDeathEvent.getPlayer()) return; // Ignore self kills
 
-            killer.setTag(PLAYER_KILLS, getKills(killer) + 1);
+            gameInstance.getGameStats().getPlayerStats(killer).addKill();
             killer.getInventory().addItemStack(Items.GOLDEN_APPLE);
 
             killer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1500),Duration.ofMillis(500)));
@@ -241,8 +238,6 @@ public class CombatMechanics {
                 killer.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<aqua><b>FINAL KILL!</b></aqua>"));
                 killer.playSound(Sound.sound().type(SoundEvent.ENTITY_WITHER_SPAWN).pitch(1.4F).volume(0.5F).build(), killer.getPosition());
             }
-
-
         });
     }
 
@@ -251,9 +246,10 @@ public class CombatMechanics {
             GameInstance gameInstance = (GameInstance) playerDeathEvent.getPlayer().getInstance();
             Player deadPlayer = playerDeathEvent.getPlayer();
 
-            deadPlayer.setTag(PLAYER_REMAINING_LIVES, getRemainingLives(deadPlayer) - 1);
+            setRemainingLives(deadPlayer, getRemainingLives(deadPlayer) - 1);
+            gameInstance.getGameStats().getPlayerStats(deadPlayer).addDeath();
             if (deadPlayer.getTeam().getMembers().size() == 1) { //If he's alone, final kill him
-                deadPlayer.setTag(PLAYER_REMAINING_LIVES, 0);
+                setRemainingLives(deadPlayer, 0);
             }
 
             new Entity(EntityType.LIGHTNING_BOLT).setInstance(gameInstance, deadPlayer.getPosition());
@@ -325,8 +321,7 @@ public class CombatMechanics {
                                 "<dark_red><b>ATTENTION!</b><dark_red> <red>Votre dernier allié est mort, il ne vous reste plus qu'une vie!</red>"
                         ));
 
-                        lastPlayer.setTag(PLAYER_REMAINING_LIVES, 1);
-
+                        setRemainingLives(lastPlayer, 1);
                     });
                 }
 
@@ -369,7 +364,7 @@ public class CombatMechanics {
     public static void revivePlayer(Player player, int lives) {
         GameInstance gameInstance = (GameInstance) player.getInstance();
         int horizontalBorderHeight = gameInstance.getGamePlayHandler().getHorizontalBorderHeight();
-        player.setTag(PLAYER_REMAINING_LIVES, lives);
+        setRemainingLives(player, lives);
 
         Optional<Player> matchingPlayer = player.getTeam()
                 .getPlayers()
@@ -476,18 +471,6 @@ public class CombatMechanics {
 
     public static EventNode<EntityInstanceEvent> create(GameInstance gameInstance) {
         return new CombatMechanics(gameInstance).combatMechanicsNode;
-    }
-
-    public static int getKills(Player player) {
-        return player.hasTag(PLAYER_KILLS) ? player.getTag(PLAYER_KILLS) : 0;
-    }
-
-    public static int getLongshotCount(Player player) {
-        return player.hasTag(PLAYER_LONGSHOTS) ? player.getTag(PLAYER_LONGSHOTS) : 0;
-    }
-
-    public static int getDamageDealt(Player player) {
-        return player.hasTag(PLAYER_DAMAGE_DEALT) ? player.getTag(PLAYER_DAMAGE_DEALT) : 0;
     }
 
     public static int getRemainingLives(Player player) {
