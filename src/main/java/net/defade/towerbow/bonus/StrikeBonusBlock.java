@@ -63,9 +63,4 @@ public class StrikeBonusBlock implements BonusBlock {
         });
         gameInstance.getPlayers().forEach(players -> gameInstance.playSound(Sound.sound().type(SoundEvent.ENTITY_LIGHTNING_BOLT_THUNDER).pitch(1F).volume(0.5F).build(), players.getPosition()));
     }
-
-    @Override
-    public void registerMechanics(GameInstance gameInstance) {
-
-    }
 }

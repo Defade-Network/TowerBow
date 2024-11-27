@@ -18,6 +18,11 @@ public class HealBonusBlock implements BonusBlock {
 
     @Override
     public void onHit(Player shooter) {
+        shooter.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0), Duration.ofMillis(1500), Duration.ofMillis(500)));
+        shooter.sendTitlePart(TitlePart.TITLE, MM.deserialize(" "));
+        shooter.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<light_purple>Vous recevez </light_purple><dark_purple><b>"
+                + "HEAL BONUS</b></dark_purple><light_purple> !</light_purple>"));
+
         GameInstance gameInstance = (GameInstance) shooter.getInstance();
         Team playerTeam = shooter.getTeam();
 
@@ -38,15 +43,9 @@ public class HealBonusBlock implements BonusBlock {
                     20
             ));
 
-            player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1500),Duration.ofMillis(500)));
+            player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0), Duration.ofMillis(1500), Duration.ofMillis(500)));
             player.sendTitlePart(TitlePart.TITLE, MM.deserialize(" "));
             player.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<light_purple><b>FULL HEAL!</b></light_purple>"));
-
         });
-    }
-
-    @Override
-    public void registerMechanics(GameInstance gameInstance) {
-
     }
 }

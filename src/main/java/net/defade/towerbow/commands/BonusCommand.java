@@ -1,14 +1,14 @@
 package net.defade.towerbow.commands;
 
 import net.defade.minestom.player.Rank;
-import net.defade.towerbow.bonus.BonusBlock;
-import net.defade.towerbow.bonus.BonusBlockManager;
+import net.defade.towerbow.bonus.Bonus;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.minestom.server.command.builder.Command;
 import net.minestom.server.command.builder.arguments.ArgumentString;
 import net.minestom.server.command.builder.arguments.ArgumentType;
 import net.minestom.server.command.builder.suggestion.SuggestionEntry;
 import net.minestom.server.entity.Player;
+import java.util.Arrays;
 
 public class BonusCommand extends Command {
     private static final MiniMessage MM = MiniMessage.miniMessage();
@@ -22,8 +22,8 @@ public class BonusCommand extends Command {
 
         ArgumentString bonusTypeArgument = ArgumentType.String("bonus-type");
         bonusTypeArgument.setSuggestionCallback((sender, context, suggestion) -> {
-            for (String bonusTypes : BonusBlockManager.getBonusBlocks().keySet()) {
-                suggestion.addEntry(new SuggestionEntry(bonusTypes));
+            for (Bonus bonusTypes : Bonus.values()) {
+                suggestion.addEntry(new SuggestionEntry(bonusTypes.getName().replace(" ", "_").toLowerCase()));
             }
         });
 
@@ -39,15 +39,17 @@ public class BonusCommand extends Command {
             }
 
             String bonusType = context.get(bonusTypeArgument);
+            Bonus bonus = Arrays.stream(Bonus.values())
+                    .filter(b -> b.getName().replace(" ", "_").equalsIgnoreCase(bonusType))
+                    .findFirst()
+                    .orElse(null);
 
-            if (BonusBlockManager.getBonusBlock(bonusType) == null) {
+            if (bonus == null) {
                 player.sendMessage(MM.deserialize("<red>Unknown bonus type: " + bonusType));
                 return;
             }
 
-            BonusBlock bonusBlock = BonusBlockManager.getBonusBlock(bonusType);
-            bonusBlock.onHit(player);
-
+            bonus.getBonusBlock().onHit(player);
             player.sendMessage(MM.deserialize("<green>You received the bonus " + bonusType));
         }, bonusTypeArgument);
     }

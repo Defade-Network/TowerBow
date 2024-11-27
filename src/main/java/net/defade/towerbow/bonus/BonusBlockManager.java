@@ -7,8 +7,6 @@ import net.defade.towerbow.utils.GameEventNode;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.title.Title;
-import net.kyori.adventure.title.TitlePart;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
@@ -22,16 +20,14 @@ import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.tag.Tag;
 import net.minestom.server.utils.NamespaceID;
 import org.jetbrains.annotations.NotNull;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 public class BonusBlockManager implements BlockHandler {
     private static final int MIN_DISTANCE_BETWEEN_PLAYERS = 20;
-    private static final Tag<String> BONUS_BLOCK_TAG = Tag.String("bonus_block");
+    private static final Tag<Integer> BONUS_BLOCK_TAG = Tag.Integer("bonus_block");
     private static final Tag<Integer> PLAYER_BONUS_BLOCK_COUNT = Tag.Integer("bonus_block_count");
 
     private static final Block[] WOOL_BLOCKS = new Block[] {
@@ -53,14 +49,6 @@ public class BonusBlockManager implements BlockHandler {
             Block.BLACK_WOOL
     };
 
-    private static final Map<String, BonusBlock> bonusBlocks = Map.of(
-            "explosive_arrow", new ExplosiveArrowBonusBlock(),
-            "smoke_arrow", new SmokeArrowBonusBlock(),
-            "heal_bonus", new HealBonusBlock(),
-            "strike_bonus", new StrikeBonusBlock(),
-            "wall_arrow", new WallArrowBonusBlock()
-    );
-
     private static final Random RANDOM = new Random();
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
@@ -71,7 +59,6 @@ public class BonusBlockManager implements BlockHandler {
         this.gameInstance = gameInstance;
         this.gameEventNode = gamePlayHandler.getGameEventNode();
 
-        bonusBlocks.values().forEach(bonusBlock -> bonusBlock.registerMechanics(gameInstance));
         registerBlockHitListener();
     }
 
@@ -105,11 +92,7 @@ public class BonusBlockManager implements BlockHandler {
             spawnPosition = randomPlayer.getPosition().add(0, 10, 0);
         }
 
-        String bonusBlockId = bonusBlocks.keySet().stream()
-                .skip((int) (bonusBlocks.size() * Math.random()))
-                .findFirst()
-                .orElseThrow();
-
+        int bonusBlockId = RANDOM.nextInt(Bonus.values().length);
         gameInstance.setBlock(spawnPosition, getRandomBlock(null)
                 .withTag(BONUS_BLOCK_TAG, bonusBlockId)
                 .withHandler(this)
@@ -166,7 +149,7 @@ public class BonusBlockManager implements BlockHandler {
                 return;
             }
 
-            BonusBlock bonusBlock = bonusBlocks.get(block.getTag(BONUS_BLOCK_TAG));
+            BonusBlock bonusBlock = Bonus.values()[block.getTag(BONUS_BLOCK_TAG)].getBonusBlock();
 
             if (bonusBlock != null) {
                 bonusBlock.onHit(shooter);
@@ -185,22 +168,10 @@ public class BonusBlockManager implements BlockHandler {
 
                 arrow.scheduleNextTick(Entity::remove);
 
-                if (block.getTag(BONUS_BLOCK_TAG).equals("smoke_arrow") || block.getTag(BONUS_BLOCK_TAG).equals("explosive_arrow") || block.getTag(BONUS_BLOCK_TAG).equals("wall_arrow")) { // If the block is an arrow, show it to the shooter
-                    shooter.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(3500),Duration.ofMillis(500)));
-                    shooter.sendTitlePart(TitlePart.TITLE, MM.deserialize(""));
-                    shooter.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<dark_gray>»</dark_gray> <b><red>"
-                            + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</red></b> <dark_gray>«</dark_gray>"));
-                } else if (!block.getTag(BONUS_BLOCK_TAG).equals("heal_bonus")) {
-                    shooter.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(1500),Duration.ofMillis(500)));
-                    shooter.sendTitlePart(TitlePart.TITLE, MM.deserialize(" "));
-                    shooter.sendTitlePart(TitlePart.SUBTITLE, MM.deserialize("<light_purple>Vous recevez </light_purple><dark_purple><b>"
-                            + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</b></dark_purple><light_purple> !</light_purple>"));
-                }
-
                 gameInstance.getPlayers().forEach(player -> {
                     player.sendMessage(MM.deserialize(
                             "<dark_purple>\uD83C\uDFF9 <b>BLOC BONUS!</b></dark_purple> <shooter> <light_purple>a reçu <b><gradient:#94E9FF:#3CB0FF>"
-                                    + (block.getTag(BONUS_BLOCK_TAG)).replace("_"," ").toUpperCase() + "</gradient></b> !",
+                                    + Bonus.values()[block.getTag(BONUS_BLOCK_TAG)].getName().toUpperCase() + "</gradient></b> !",
                             Placeholder.component("shooter", shooter.getName())
 
                     ));
@@ -233,14 +204,5 @@ public class BonusBlockManager implements BlockHandler {
 
     public static int getBonusBlockCount(Player player) {
         return player.hasTag(PLAYER_BONUS_BLOCK_COUNT) ? player.getTag(PLAYER_BONUS_BLOCK_COUNT) : 0;
-    }
-
-
-    public static Map<String, BonusBlock> getBonusBlocks() {
-        return bonusBlocks;
-    }
-
-    public static BonusBlock getBonusBlock(String id) {
-        return bonusBlocks.get(id);
     }
 }
