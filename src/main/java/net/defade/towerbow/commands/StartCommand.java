@@ -18,7 +18,7 @@ public class StartCommand extends Command {
                 return;
             }
 
-            if (player.getRank() != Rank.ADMIN || player.getRank() != Rank.FRIEND) {
+            if (player.getRank() != Rank.ADMIN && player.getRank() != Rank.FRIEND) {
                 player.sendMessage(MM.deserialize("<red>You do not have permission to execute this command."));
                 return;
             }
