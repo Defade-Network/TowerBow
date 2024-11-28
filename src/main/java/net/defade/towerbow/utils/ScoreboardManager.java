@@ -34,10 +34,10 @@ public class ScoreboardManager {
     private final GamePlayHandler gamePlayHandler;
 
     private final BossBar bossBar = BossBar.bossBar(
-            Component.text(),
-            1.0f,
-            BossBar.Color.BLUE,
-            BossBar.Overlay.PROGRESS
+        Component.text(),
+        1.0f,
+        BossBar.Color.BLUE,
+        BossBar.Overlay.PROGRESS
     );
     private final Map<UUID, Sidebar> playerSidebar = new HashMap<>();
     private final BelowNameTag belowNameTag = new BelowNameTag("lives-remaining", Component.text("Vies").color(NamedTextColor.RED));
@@ -48,40 +48,39 @@ public class ScoreboardManager {
     }
 
     public void init() {
-        gameInstance.getPlayers().forEach(belowNameTag::addViewer);
+        gameInstance.getPlayers().forEach(this::initScoreboardForPlayer);
 
-        createSidebarScoreboards();
         updateScoreboard(); // Immediately update the values
 
         gamePlayHandler.getGameEventNode().getInstanceNode().addListener(InstanceTickEvent.class, event -> updateScoreboard());
     }
 
     public void startGame() {
-        gameInstance.getPlayers().forEach(player -> player.showBossBar(bossBar));
+        gameInstance.getPlayers().forEach(this::initScoreboardForPlayer);
 
         // Remove "starting" text and replace it with immunity timer
         playerSidebar.values().forEach(sidebar -> {
             sidebar.removeLine("starting");
 
             sidebar.createLine(new Sidebar.ScoreboardLine(
-                    "bonus_block",
-                    getBonusBlockComponent("2:00"),
-                    6,
-                    Sidebar.NumberFormat.blank()
+                "bonus_block",
+                getBonusBlockComponent("2:00"),
+                6,
+                Sidebar.NumberFormat.blank()
             ));
 
             sidebar.createLine(new Sidebar.ScoreboardLine(
-                    "border",
-                    getBorderShrinkComponent("8:00"),
-                    5,
-                    Sidebar.NumberFormat.blank()
+                "border",
+                getBorderShrinkComponent("8:00"),
+                5,
+                Sidebar.NumberFormat.blank()
             ));
             sidebar.createLine(new Sidebar.ScoreboardLine(
-                    "lives_remaining",
+                "lives_remaining",
 
-                    Component.text(""),
-                    3,
-                    Sidebar.NumberFormat.blank()
+                Component.text(""),
+                3,
+                Sidebar.NumberFormat.blank()
             ));
         });
 
@@ -95,6 +94,15 @@ public class ScoreboardManager {
             updatePrePlayingScoreboard();
         } else {
             //gameInstance.getPlayers().forEach(player -> player.sendActionBar(generateActionBarForPlayer(player)));
+        }
+    }
+
+    public void initScoreboardForPlayer(Player player) {
+        gameInstance.getPlayers().forEach(belowNameTag::addViewer);
+        createSidebarScoreboard(player);
+
+        if (gamePlayHandler.getPlayingState() != GamePlayHandler.PlayingState.IMMOBILE) {
+            player.showBossBar(bossBar);
         }
     }
 
@@ -135,10 +143,10 @@ public class ScoreboardManager {
         }
 
         bossBar.name(
-                Component.text("Bordure").color(NamedTextColor.RED).decoration(TextDecoration.BOLD, true)
-                        .append(Component.text(" (").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)
-                                .append(Component.text(borderShrinkFormattedTime).color(NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
-                                .append(Component.text(")").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)))
+            Component.text("Bordure").color(NamedTextColor.RED).decoration(TextDecoration.BOLD, true)
+                .append(Component.text(" (").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)
+                    .append(Component.text(borderShrinkFormattedTime).color(NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
+                    .append(Component.text(")").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)))
         );
 
         bossBar.progress(1.0f - ((float) tickCounter / TICKS_BEFORE_WORLD_BORDER_SHRINK));
@@ -149,9 +157,9 @@ public class ScoreboardManager {
         final int tickCounter = gamePlayHandler.getTickCounter();
 
         bossBar.name(Component.text("Invincibilité").color(NamedTextColor.YELLOW).decoration(TextDecoration.BOLD, true)
-                .append(Component.text(" (").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false))
-                .append(Component.text((IMMUNITY_TICKS - tickCounter) / 20 + "s").color(NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
-                .append(Component.text(")").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)));
+            .append(Component.text(" (").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false))
+            .append(Component.text((IMMUNITY_TICKS - tickCounter) / 20 + "s").color(NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false))
+            .append(Component.text(")").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)));
 
         bossBar.color(BossBar.Color.YELLOW);
 
@@ -163,20 +171,20 @@ public class ScoreboardManager {
             gameInstance.getPlayingPlayers().forEach(player -> {
                 player.sendActionBar(MM.deserialize("<dark_gray>»</dark_gray> <gray>Montez! Vous êtes invincible.</gray> <dark_gray>«</dark_gray>"));
                 gameInstance.sendGroupedPacket(new ParticlePacket(
-                        Particle.SOUL_FIRE_FLAME,
-                        true,
-                        player.getPosition(),
-                        new Vec(0, 0, 0),
-                        0.07F,
-                        1
+                    Particle.SOUL_FIRE_FLAME,
+                    true,
+                    player.getPosition(),
+                    new Vec(0, 0, 0),
+                    0.07F,
+                    1
                 ));
                 gameInstance.sendGroupedPacket(new ParticlePacket(
-                        Particle.ENCHANTED_HIT,
-                        true,
-                        player.getPosition().add(0,1,0),
-                        new Vec(0.3, 0.5, 0.3),
-                        0.02F,
-                        1
+                    Particle.ENCHANTED_HIT,
+                    true,
+                    player.getPosition().add(0, 1, 0),
+                    new Vec(0.3, 0.5, 0.3),
+                    0.02F,
+                    1
                 ));
             });
         }
@@ -192,9 +200,9 @@ public class ScoreboardManager {
         }
 
         component = component
-                .append(Component.text("| ").color(NamedTextColor.GRAY))
-                .append(Component.text(gameInstance.getGameStats().getPlayerStats(player).getKills() + " kills").color(NamedTextColor.YELLOW))
-                .append(Component.text(" | ").color(NamedTextColor.GRAY));
+            .append(Component.text("| ").color(NamedTextColor.GRAY))
+            .append(Component.text(gameInstance.getGameStats().getPlayerStats(player).getKills() + " kills").color(NamedTextColor.YELLOW))
+            .append(Component.text(" | ").color(NamedTextColor.GRAY));
 
         for (Player playerInTeam : gameTeams.secondTeam().getAllPlayers()) {
             TextColor heartColor = CombatMechanics.isDead(playerInTeam) ? TextColor.color(26, 26, 26) : gameTeams.secondTeam().getTeamDisplayName().color();
@@ -204,100 +212,98 @@ public class ScoreboardManager {
         return component;
     }
 
-    private void createSidebarScoreboards() {
-        gameInstance.getPlayingPlayers().forEach(player -> {
-            Team team = player.getTeam();
-            Sidebar sidebar = playerSidebar.get(player.getUuid());
+    private void createSidebarScoreboard(Player player) {
+        Team team = player.getTeam();
+        Sidebar sidebar = playerSidebar.get(player.getUuid());
 
-            if (sidebar == null) {
-                sidebar = new Sidebar(
-                        Component.text("»").color(NamedTextColor.DARK_GRAY)
-                                .append(Component.text(" TOWERBOW").color(NamedTextColor.YELLOW).decoration(TextDecoration.BOLD, true))
-                                .append(Component.text(" «").color(NamedTextColor.DARK_GRAY))
-                );
+        if (sidebar == null) {
+            sidebar = new Sidebar(
+                Component.text("»").color(NamedTextColor.DARK_GRAY)
+                    .append(Component.text(" TOWERBOW").color(NamedTextColor.YELLOW).decoration(TextDecoration.BOLD, true))
+                    .append(Component.text(" «").color(NamedTextColor.DARK_GRAY))
+            );
 
-                sidebar.createLine(new Sidebar.ScoreboardLine(
-                        "bar_1",
-                        Component.text("                          ").decoration(TextDecoration.STRIKETHROUGH, true).color(NamedTextColor.DARK_GRAY),
-                        10,
-                        Sidebar.NumberFormat.blank()
-                ));
-                sidebar.createLine(new Sidebar.ScoreboardLine(
-                        "team_name",
+            sidebar.createLine(new Sidebar.ScoreboardLine(
+                "bar_1",
+                Component.text("                          ").decoration(TextDecoration.STRIKETHROUGH, true).color(NamedTextColor.DARK_GRAY),
+                10,
+                Sidebar.NumberFormat.blank()
+            ));
+            sidebar.createLine(new Sidebar.ScoreboardLine(
+                "team_name",
 
-                        Component.text("» ").color(NamedTextColor.GRAY)
-                                .append(Component.text("Vous êtes ").color(NamedTextColor.WHITE))
-                                .append(team.getTeamDisplayName()),
-                        9,
-                        Sidebar.NumberFormat.blank()
-                ));
+                Component.text("» ").color(NamedTextColor.GRAY)
+                    .append(Component.text("Vous êtes ").color(NamedTextColor.WHITE))
+                    .append(team.getTeamDisplayName()),
+                9,
+                Sidebar.NumberFormat.blank()
+            ));
 
-                sidebar.createLine(new Sidebar.ScoreboardLine(
-                        "empty_1",
-                        Component.text(""),
-                        8,
-                        Sidebar.NumberFormat.blank()
-                ));
+            sidebar.createLine(new Sidebar.ScoreboardLine(
+                "empty_1",
+                Component.text(""),
+                8,
+                Sidebar.NumberFormat.blank()
+            ));
 
-                sidebar.createLine(new Sidebar.ScoreboardLine(
-                        "starting",
-                        Component.text("  Démarrage...").color(NamedTextColor.WHITE),
-                        7,
-                        Sidebar.NumberFormat.blank()
-                ));
+            sidebar.createLine(new Sidebar.ScoreboardLine(
+                "starting",
+                Component.text("  Démarrage...").color(NamedTextColor.WHITE),
+                7,
+                Sidebar.NumberFormat.blank()
+            ));
 
-                //Line 6: Border timer
-                //Line 5 Bonus block timer
+            //Line 6: Border timer
+            //Line 5 Bonus block timer
 
-                sidebar.createLine(new Sidebar.ScoreboardLine(
-                        "empty_2",
-                        Component.text(""),
-                        4,
-                        Sidebar.NumberFormat.blank()
-                ));
-                // Line 3: Live remaining
-                sidebar.createLine(new Sidebar.ScoreboardLine(
-                        "empty_3",
-                        Component.text(""),
-                        2,
-                        Sidebar.NumberFormat.blank()
-                ));
-                sidebar.createLine(new Sidebar.ScoreboardLine(
-                        "server_ip",
-                        Component.text("» ").color(NamedTextColor.GRAY)
-                                .append(Component.text("defade.net").color(NamedTextColor.YELLOW)),
-                        1,
-                        Sidebar.NumberFormat.blank()
-                ));
-                sidebar.createLine(new Sidebar.ScoreboardLine(
-                        "bar_2",
-                        Component.text("                          ").decoration(TextDecoration.STRIKETHROUGH, true).color(NamedTextColor.DARK_GRAY),
-                        0,
-                        Sidebar.NumberFormat.blank()
-                ));
+            sidebar.createLine(new Sidebar.ScoreboardLine(
+                "empty_2",
+                Component.text(""),
+                4,
+                Sidebar.NumberFormat.blank()
+            ));
+            // Line 3: Live remaining
+            sidebar.createLine(new Sidebar.ScoreboardLine(
+                "empty_3",
+                Component.text(""),
+                2,
+                Sidebar.NumberFormat.blank()
+            ));
+            sidebar.createLine(new Sidebar.ScoreboardLine(
+                "server_ip",
+                Component.text("» ").color(NamedTextColor.GRAY)
+                    .append(Component.text("defade.net").color(NamedTextColor.YELLOW)),
+                1,
+                Sidebar.NumberFormat.blank()
+            ));
+            sidebar.createLine(new Sidebar.ScoreboardLine(
+                "bar_2",
+                Component.text("                          ").decoration(TextDecoration.STRIKETHROUGH, true).color(NamedTextColor.DARK_GRAY),
+                0,
+                Sidebar.NumberFormat.blank()
+            ));
 
-                playerSidebar.put(player.getUuid(), sidebar);
-            }
+            playerSidebar.put(player.getUuid(), sidebar);
+        }
 
-            sidebar.addViewer(player);
-        });
+        sidebar.addViewer(player);
     }
 
     private static Component getBonusBlockComponent(String time) {
         return Component.text("» ").color(NamedTextColor.GRAY)
-                .append(Component.text("Bloc Bonus: ").color(NamedTextColor.WHITE))
-                .append(Component.text(time).color(NamedTextColor.RED));
+            .append(Component.text("Bloc Bonus: ").color(NamedTextColor.WHITE))
+            .append(Component.text(time).color(NamedTextColor.RED));
     }
 
     private static Component getBorderShrinkComponent(String time) {
         return Component.text("» ").color(NamedTextColor.GRAY)
-                .append(Component.text("Bordure: ").color(NamedTextColor.WHITE))
-                .append(Component.text(time).color(NamedTextColor.RED));
+            .append(Component.text("Bordure: ").color(NamedTextColor.WHITE))
+            .append(Component.text(time).color(NamedTextColor.RED));
     }
 
     private static Component getLivesRemainingComponent(Player player) {
         return Component.text("» ").color(NamedTextColor.GRAY)
-                .append(Component.text("Vies: ").color(NamedTextColor.WHITE))
-                .append(Component.text(CombatMechanics.getRemainingLives(player)).color(NamedTextColor.RED));
+            .append(Component.text("Vies: ").color(NamedTextColor.WHITE))
+            .append(Component.text(CombatMechanics.getRemainingLives(player)).color(NamedTextColor.RED));
     }
 }

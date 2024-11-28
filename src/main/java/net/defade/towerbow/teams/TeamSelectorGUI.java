@@ -2,7 +2,7 @@ package net.defade.towerbow.teams;
 
 import net.defade.towerbow.game.GameInstance;
 import net.defade.towerbow.utils.Items;
-import net.defade.towerbow.utils.TowerBowPlayer;
+import net.defade.towerbow.player.TowerBowPlayer;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;

@@ -1,4 +1,4 @@
-package net.defade.towerbow.utils;
+package net.defade.towerbow.player;
 
 import io.github.togar2.pvp.player.CombatPlayerImpl;
 import net.defade.towerbow.fight.CombatMechanics;

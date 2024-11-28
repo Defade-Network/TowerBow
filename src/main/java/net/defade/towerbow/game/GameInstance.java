@@ -6,13 +6,14 @@ import net.defade.minestom.servers.minigame.MiniGameInstance;
 import net.defade.towerbow.fight.CombatMechanics;
 import net.defade.towerbow.fight.InventoryManager;
 import net.defade.towerbow.map.WorldHandler;
+import net.defade.towerbow.player.DisconnectedPlayerHandler;
 import net.defade.towerbow.stats.GameStatsHandler;
 import net.defade.towerbow.stats.PlayerStats;
 import net.defade.towerbow.teams.GameTeams;
 import net.defade.towerbow.teams.TeamUtils;
 import net.defade.towerbow.utils.GameEventNode;
 import net.defade.towerbow.utils.Items;
-import net.defade.towerbow.utils.TowerBowPlayer;
+import net.defade.towerbow.player.TowerBowPlayer;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -37,6 +38,7 @@ import net.minestom.server.utils.NamespaceID;
 import net.minestom.server.world.DimensionType;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
@@ -57,6 +59,9 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
     private final GameEventNode gameEventNode = new GameEventNode(this, MinecraftServer.getGlobalEventHandler());
 
     private boolean acceptsPlayers = true;
+
+    private boolean isGameRunning = false;
+    private final Set<UUID> playersRequiredToRejoin = new HashSet<>();
 
     private final WorldHandler worldHandler = new WorldHandler(this);
     private final GameTeams gameTeams = TeamUtils.getRandomTeams(this);
@@ -95,6 +100,16 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
     @Override
     public boolean acceptPlayers() {
         return acceptsPlayers;
+    }
+
+    @Override
+    public boolean requirePlayingPlayersToRejoin() {
+        return isGameRunning;
+    }
+
+    @Override
+    public Set<UUID> getPlayersRequiredToRejoin() {
+        return playersRequiredToRejoin;
     }
 
     public void setAcceptsPlayers(boolean acceptsPlayers) {
@@ -146,6 +161,10 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
      * This function will make sure that everything is ready to start the game.
      */
     public void startGame() {
+        isGameRunning = true;
+        new DisconnectedPlayerHandler(this);
+
+        playersRequiredToRejoin.addAll(getPlayingPlayers().stream().map(Player::getUuid).collect(Collectors.toSet()));
         gameStatsHandler.initTracking();
 
         setAcceptsPlayers(false);
@@ -167,6 +186,7 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
     }
 
     public void finishGame(Team winningTeam, Team loosingTeam) {
+        isGameRunning = false;
         getGameStats().saveStats();
 
         getPlayingPlayers().forEach(player -> {

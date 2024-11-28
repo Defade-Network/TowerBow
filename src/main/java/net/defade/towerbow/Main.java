@@ -6,7 +6,7 @@ import net.defade.towerbow.commands.KillCommand;
 import net.defade.towerbow.commands.ReviveCommand;
 import net.defade.towerbow.commands.StartCommand;
 import net.defade.towerbow.game.GameManager;
-import net.defade.towerbow.utils.TowerBowPlayer;
+import net.defade.towerbow.player.TowerBowPlayer;
 import net.minestom.server.MinecraftServer;
 
 public class Main {

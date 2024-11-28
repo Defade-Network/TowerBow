@@ -289,6 +289,10 @@ public class GamePlayHandler {
         return playingState;
     }
 
+    public ScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
+    }
+
     public void stop() {
         gameEventNode.unregister();
     }
