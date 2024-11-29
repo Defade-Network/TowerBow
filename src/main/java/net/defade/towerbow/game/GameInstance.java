@@ -183,6 +183,9 @@ public class GameInstance extends InstanceContainer implements MiniGameInstance 
         gamePlayHandler.start();
 
         createMap(); // Clear the lobby and create the floor and teleport players
+
+        TeamUtils.registerTeamGlowing(this);
+        getPlayingPlayers().forEach(player -> player.setGlowing(true));
     }
 
     public void finishGame(Team winningTeam, Team loosingTeam) {

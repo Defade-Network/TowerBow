@@ -5,15 +5,23 @@ import net.defade.towerbow.game.GameManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.minestom.server.entity.Entity;
+import net.minestom.server.entity.Metadata;
 import net.minestom.server.entity.Player;
+import net.minestom.server.event.player.PlayerPacketOutEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.item.Material;
+import net.minestom.server.network.packet.server.play.EntityMetaDataPacket;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
 import net.minestom.server.scoreboard.Team;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
 public class TeamUtils {
+    private static final int METADATA_OFFSET = 0;
+    private static final byte HAS_GLOWING_EFFECT_BIT = 0x40;
+
     public static final int MAX_PLAYERS_PER_TEAM = GameManager.MAX_PLAYERS / 2;
 
     private static final Supplier<GameTeams> RANDOM_TEAMS_SUPPLIER = () -> {
@@ -97,6 +105,35 @@ public class TeamUtils {
         players.stream()
                 .filter(player -> player.getTeam() == null)
                 .forEach(player -> givePlayerAvailableTeam(gameTeams, player));
+    }
+
+    public static void registerTeamGlowing(GameInstance gameInstance) {
+        gameInstance.getEventNode().getPlayerNode().addListener(PlayerPacketOutEvent.class, playerPacketOutEvent -> {
+            if (playerPacketOutEvent.getPacket() instanceof EntityMetaDataPacket(
+                int entityId, java.util.Map<Integer, Metadata.Entry<?>> entries
+            )) {
+                Player player = playerPacketOutEvent.getPlayer();
+                Entity target = gameInstance.getEntityTracker().getEntityById(entityId);
+                if (!(target instanceof Player targetPlayer)) return;
+
+                Team playerTeam = player.getTeam();
+                Team targetTeam = targetPlayer.getTeam();
+                if (playerTeam == targetTeam) return;
+
+                // Check if the glowing bit is set, if it is, we cancel the event and resend the packet with the glowing bit removed
+                // If the glowing bit is not set, we let the packet go through
+                Metadata.Entry<?> entry = entries.get(METADATA_OFFSET);
+                if (entry != null) {
+                    byte value = (byte) entry.value();
+                    if ((value & HAS_GLOWING_EFFECT_BIT) != 0) {
+                        playerPacketOutEvent.setCancelled(true);
+                        // Modify the packet to remove the glowing effect
+                        Map<Integer, Metadata.Entry<?>> newEntries = Map.of(METADATA_OFFSET, Metadata.Byte((byte) (value & ~HAS_GLOWING_EFFECT_BIT)));
+                        player.sendPacket(new EntityMetaDataPacket(entityId, newEntries));
+                    }
+                }
+            }
+        });
     }
 
     private static void registerTeamSending(GameInstance gameInstance, GameTeams gameTeams) {

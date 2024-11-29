@@ -39,6 +39,7 @@ public class DisconnectedPlayerHandler {
                 disconnectedPlayer.apply(player);
                 gameInstance.getGamePlayHandler().getScoreboardManager().initScoreboardForPlayer(player);
                 CombatMechanics.revivePlayer(player);
+                player.setGlowing(true);
             });
     }
 }
