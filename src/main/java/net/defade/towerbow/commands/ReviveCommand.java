@@ -60,7 +60,8 @@ public class ReviveCommand extends Command {
                 return;
             }
 
-            CombatMechanics.revivePlayer(target, lives);
+            CombatMechanics.setRemainingLives(target, lives);
+            CombatMechanics.revivePlayer(target);
 
             player.sendMessage(MM.deserialize("<green>Revived <player> with <lives> lives !",
                     TagResolver.builder()

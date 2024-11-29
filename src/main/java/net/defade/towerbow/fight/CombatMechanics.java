@@ -327,7 +327,7 @@ public class CombatMechanics {
 
                 gameInstance.getPlayers().forEach(players -> players.playSound(Sound.sound().type(SoundEvent.ENTITY_ENDER_DRAGON_GROWL).pitch(1.6F).volume(0.5F).build(), players.getPosition()));
             } else { // Reviving the player if he isn't the last player on his team, otherwise he is automatically a final kill
-                revivePlayer(deadPlayer, getRemainingLives(deadPlayer));
+                revivePlayer(deadPlayer);
 
                 deadPlayer.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofMillis(0),Duration.ofMillis(5000),Duration.ofMillis(500)));
                 deadPlayer.sendTitlePart(TitlePart.TITLE, MM.deserialize("<dark_red><b>MORT!</b></dark_red>"));
@@ -361,10 +361,9 @@ public class CombatMechanics {
         });
     }
 
-    public static void revivePlayer(Player player, int lives) {
+    public static void revivePlayer(Player player) {
         GameInstance gameInstance = (GameInstance) player.getInstance();
         int horizontalBorderHeight = gameInstance.getGamePlayHandler().getHorizontalBorderHeight();
-        setRemainingLives(player, lives);
 
         Optional<Player> matchingPlayer = player.getTeam()
                 .getPlayers()

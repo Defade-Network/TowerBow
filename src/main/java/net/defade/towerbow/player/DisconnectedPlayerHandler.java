@@ -38,7 +38,7 @@ public class DisconnectedPlayerHandler {
 
                 disconnectedPlayer.apply(player);
                 gameInstance.getGamePlayHandler().getScoreboardManager().initScoreboardForPlayer(player);
-                CombatMechanics.revivePlayer(player, CombatMechanics.getRemainingLives(player));
+                CombatMechanics.revivePlayer(player);
             });
     }
 }
