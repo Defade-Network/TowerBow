@@ -5,6 +5,7 @@ import net.defade.towerbow.game.GameManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.Metadata;
 import net.minestom.server.entity.Player;
@@ -14,6 +15,9 @@ import net.minestom.server.item.Material;
 import net.minestom.server.network.packet.server.play.EntityMetaDataPacket;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
 import net.minestom.server.scoreboard.Team;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -141,6 +145,79 @@ public class TeamUtils {
                 .addListener(PlayerSpawnEvent.class, playerSpawnEvent -> {
                     playerSpawnEvent.getPlayer().sendPacket(gameTeams.firstTeam().createTeamsCreationPacket());
                     playerSpawnEvent.getPlayer().sendPacket(gameTeams.secondTeam().createTeamsCreationPacket());
+                })
+                .addListener(PlayerPacketOutEvent.class, playerPacketOutEvent -> {
+                    if (!(playerPacketOutEvent.getPacket() instanceof TeamsPacket teamsPacket)) return;
+
+                    Player player = playerPacketOutEvent.getPlayer();
+                    String teamName = teamsPacket.teamName();
+                    if (!gameInstance.getTeams().firstTeam().getTeamName().equals(teamName) &&
+                        !gameInstance.getTeams().secondTeam().getTeamName().equals(teamName)) return; // This is a scoreboard packet or something else, not the players team
+
+                    // Remove all the entities in the entity list if they are not in the same instance as the player
+                    if (teamsPacket.action() instanceof TeamsPacket.CreateTeamAction(
+                        Component displayName, byte friendlyFlags, TeamsPacket.NameTagVisibility nameTagVisibility,
+                        TeamsPacket.CollisionRule collisionRule, NamedTextColor teamColor, Component teamPrefix,
+                        Component teamSuffix, Collection<String> entities)) {
+
+                        if (entitiesNeedsToBeRemoved(entities, player)) {
+                            playerPacketOutEvent.setCancelled(true);
+
+                            TeamsPacket.CreateTeamAction newCreateTeamAction = new TeamsPacket.CreateTeamAction(
+                                displayName,
+                                friendlyFlags,
+                                nameTagVisibility,
+                                collisionRule,
+                                teamColor,
+                                teamPrefix,
+                                teamSuffix,
+                                removeEntitiesFromSeparateInstances(entities, player)
+                            );
+
+                            TeamsPacket newTeamsPacket = new TeamsPacket(teamsPacket.teamName(), newCreateTeamAction);
+                            player.sendPacket(newTeamsPacket);
+                        }
+                    } else if (teamsPacket.action() instanceof TeamsPacket.AddEntitiesToTeamAction(Collection<String> entities)) {
+                        if (entitiesNeedsToBeRemoved(entities, player)) {
+                            playerPacketOutEvent.setCancelled(true);
+
+                            TeamsPacket.AddEntitiesToTeamAction newAddPlayerAction = new TeamsPacket.AddEntitiesToTeamAction(
+                                removeEntitiesFromSeparateInstances(entities, player)
+                            );
+
+                            TeamsPacket newTeamsPacket = new TeamsPacket(teamsPacket.teamName(), newAddPlayerAction);
+                            player.sendPacket(newTeamsPacket);
+                        }
+                    } else if (teamsPacket.action() instanceof TeamsPacket.RemoveEntitiesToTeamAction(Collection<String> entities)) {
+                        if (entitiesNeedsToBeRemoved(entities, player)) {
+                            playerPacketOutEvent.setCancelled(true);
+
+                            TeamsPacket.RemoveEntitiesToTeamAction newRemovePlayerAction = new TeamsPacket.RemoveEntitiesToTeamAction(
+                                removeEntitiesFromSeparateInstances(entities, player)
+                            );
+
+                            TeamsPacket newTeamsPacket = new TeamsPacket(teamsPacket.teamName(), newRemovePlayerAction);
+                            player.sendPacket(newTeamsPacket);
+                        }
+                    }
                 });
+    }
+
+    private static boolean entitiesNeedsToBeRemoved(Collection<String> entities, Player player) {
+        return entities.stream().anyMatch(entity -> {
+            Entity target = MinecraftServer.getConnectionManager().getOnlinePlayerByUsername(entity);
+            return target == null || target.getInstance() != player.getInstance();
+        });
+    }
+
+    private static Collection<String> removeEntitiesFromSeparateInstances(Collection<String> entities, Player player) {
+        // entities is an immutable collection, so we need to create a new one
+        List<String> newEntities = new ArrayList<>(entities);
+        newEntities.removeIf(entity -> {
+            Entity target = MinecraftServer.getConnectionManager().getOnlinePlayerByUsername(entity);
+            return target == null || target.getInstance() != player.getInstance();
+        });
+
+        return newEntities;
     }
 }
