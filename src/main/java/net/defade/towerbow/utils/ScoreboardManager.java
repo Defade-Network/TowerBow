@@ -214,6 +214,7 @@ public class ScoreboardManager {
 
     private void createSidebarScoreboard(Player player) {
         Team team = player.getTeam();
+        if (team == null) return; // TODO: the player is in spectator mode, make a custom sidebar for them
         Sidebar sidebar = playerSidebar.get(player.getUuid());
 
         if (sidebar == null) {
