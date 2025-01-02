@@ -26,7 +26,7 @@ public class DisconnectedPlayerHandler {
                 disconnectedPlayers.put(event.getPlayer().getUuid(), disconnectedPlayer);
 
                 // Remove the player from the team
-                event.getPlayer().getTeam().removeMember(event.getPlayer().getUsername());
+                if (event.getPlayer().getTeam() != null) event.getPlayer().getTeam().removeMember(event.getPlayer().getUsername());
             })
             .addListener(PlayerSpawnEvent.class, playerSpawnEvent -> {
                 Player player = playerSpawnEvent.getPlayer();
