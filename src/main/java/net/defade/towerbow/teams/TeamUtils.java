@@ -7,6 +7,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Entity;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Metadata;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerPacketOutEvent;
@@ -117,6 +118,7 @@ public class TeamUtils {
                 int entityId, java.util.Map<Integer, Metadata.Entry<?>> entries
             )) {
                 Player player = playerPacketOutEvent.getPlayer();
+                if (player.getGameMode() == GameMode.SPECTATOR) return; // Spectators can see all entities glowing
                 Entity target = gameInstance.getEntityTracker().getEntityById(entityId);
                 if (!(target instanceof Player targetPlayer)) return;
 
